@@ -1,0 +1,48 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "emdash-astro-sidecar-blog",
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat", "atomics"],
+
+  // KV Namespaces for EmDash content cache
+  "kv_namespaces": [
+    {
+      "binding": "EMDASH_CONTENT_CACHE",
+      "id": "preview",
+      "preview_id": "preview"
+    }
+  ],
+
+  // Environment-specific configuration
+  "env": {
+    "production": {
+      "kv_namespaces": [
+        {
+          "binding": "EMDASH_CONTENT_CACHE",
+          "id": "EMDASH_CONTENT_CACHE_ID",
+          "preview_id": "EMDASH_CONTENT_CACHE_ID"
+        }
+      ]
+    }
+  },
+
+  // Environment variables mapping for EmDash config
+  "vars": {
+    "PUBLIC_SITE_URL": "https://example.com/blog",
+    "EMDASH_HOST": "https://api.emdash.io",
+    "EMDASH_API_VERSION": "v1"
+  },
+
+  // Secret keys - set via wrangler secret put or CI/CD
+  "secret_names": [
+    "EMDASH_API_KEY",
+    "EMDASH_PREVIEW_TOKEN",
+    "CLOUDFLARE_API_TOKEN"
+  ],
+
+  // Tail of Cloudflare Pages specific config
+  "pages": {
+    "build_output_dir": ".output/public",
+    "json_format": "multiline"
+  }
+}

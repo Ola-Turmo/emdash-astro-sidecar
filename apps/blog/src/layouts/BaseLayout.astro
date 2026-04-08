@@ -1,0 +1,80 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  canonicalUrl?: string;
+  pubDate?: Date;
+  author?: string;
+  schemaType?: string;
+}
+
+const {
+  title,
+  description = 'EmDash Blog - Thoughtful articles on web development and design',
+  ogImage = '/images/og-default.png',
+  canonicalUrl,
+  pubDate,
+  author,
+  schemaType = 'BlogPosting',
+} = Astro.props;
+
+const siteUrl = 'https://blog.emdash.dev';
+const fullTitle = title === 'EmDash Blog' ? title : `${title} — EmDash Blog`;
+const canonical = canonicalUrl || new URL(Astro.url.pathname, siteUrl).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- Canonical & Open Graph -->
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={schemaType === 'BlogPosting' ? 'article' : 'website'} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content="EmDash Blog" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    
+    <!-- Article meta -->
+    {pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
+    {author && <meta property="article:author" content={author} />}
+    
+    <title>{fullTitle}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-white text-neutral-900 antialiased">
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  
+  html {
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+  
+  code, pre {
+    font-family: var(--font-mono);
+  }
+</style>

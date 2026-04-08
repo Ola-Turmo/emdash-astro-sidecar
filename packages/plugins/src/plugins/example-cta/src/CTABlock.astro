@@ -1,0 +1,94 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+  variant?: 'default' | 'compact' | 'featured';
+}
+
+const {
+  title = 'Call to Action',
+  description = 'Sign up today to get started',
+  buttonText = 'Get Started',
+  buttonUrl = '/signup',
+  variant = 'default',
+} = Astro.props;
+---
+
+<div class={`cta-block cta-block--${variant}`}>
+  {variant === 'featured' && (
+    <div class="cta-block__badge">Featured</div>
+  )}
+  
+  <h3 class="cta-block__title">{title}</h3>
+  <p class="cta-block__description">{description}</p>
+  
+  <a href={buttonUrl} class="cta-block__button">
+    {buttonText}
+    <svg class="cta-block__icon" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+    </svg>
+  </a>
+</div>
+
+<style>
+  .cta-block {
+    padding: 2rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+  }
+  
+  .cta-block--compact {
+    padding: 1rem;
+  }
+  
+  .cta-block--featured {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+  
+  .cta-block__badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .cta-block__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  
+  .cta-block__description {
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+  }
+  
+  .cta-block__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: #667eea;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .cta-block__button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  
+  .cta-block__icon {
+    width: 1rem;
+    height: 1rem;
+  }
+</style>

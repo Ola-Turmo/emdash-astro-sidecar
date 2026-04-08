@@ -1,0 +1,19 @@
+{
+  "name": "@emdash/design-clone",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "echo 'design-clone: no build step needed'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "playwright": "^1.44.0",
+    "postcss": "^8.4.0",
+    "less": "^4.2.0",
+    "sass": "^1.77.0"
+  }
+}

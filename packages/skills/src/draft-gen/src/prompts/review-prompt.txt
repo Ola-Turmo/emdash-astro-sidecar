@@ -1,0 +1,10 @@
+Review this content draft for:
+- Factual accuracy and claims
+- Keyword density (aim for 1-2% natural keyword usage)
+- Readability and flow
+- Heading hierarchy correctness
+- Call-to-action effectiveness
+- Internal linking opportunities
+- FAQ relevance for target schema type
+
+Provide specific suggestions for improvement.

@@ -1,0 +1,38 @@
+{
+  "name": "@emdash-astro-sidecar/plugins",
+  "version": "0.1.0-alpha",
+  "description": "Plugin SDK for extending EmDash Astro Sidecar blog functionality",
+  "type": "module",
+  "main": "./dist/sdk/index.js",
+  "module": "./dist/sdk/index.js",
+  "types": "./dist/sdk/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/sdk/index.js",
+      "types": "./dist/sdk/index.d.ts"
+    },
+    "./sdk": {
+      "import": "./dist/sdk/index.js",
+      "types": "./dist/sdk/index.d.ts"
+    },
+    "./hooks": {
+      "import": "./dist/sdk/hooks.js",
+      "types": "./dist/sdk/hooks.d.ts"
+    },
+    "./registry": {
+      "import": "./dist/sdk/registry.js",
+      "types": "./dist/sdk/registry.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --emitDeclarationOnly && tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "astro": "^5.1.1",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,47 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+const { title, excerpt, pubDate, featuredImage, category } = post.data;
+const categoryData = post.data.category;
+---
+
+<article class="group">
+  <a href={`/blog/${post.slug}`} class="block">
+    <!-- Image -->
+    {featuredImage ? (
+      <div class="aspect-video overflow-hidden rounded-xl mb-4">
+        <img
+          src={featuredImage.src}
+          alt={featuredImage.alt}
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+        />
+      </div>
+    ) : (
+      <div class="aspect-video bg-neutral-100 rounded-xl mb-4" />
+    )}
+    
+    <!-- Category -->
+    <span class="text-sm font-medium text-blue-600">
+      {typeof categoryData === 'object' ? categoryData.name : categoryData}
+    </span>
+    
+    <!-- Title -->
+    <h3 class="text-xl font-bold text-neutral-900 mt-1 group-hover:text-blue-600 transition-colors">
+      {title}
+    </h3>
+    
+    <!-- Excerpt -->
+    <p class="text-neutral-600 mt-2 line-clamp-2">{excerpt}</p>
+    
+    <!-- Date -->
+    <time class="text-sm text-neutral-500 mt-3 block" datetime={pubDate.toISOString()}>
+      {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+    </time>
+  </a>
+</article>

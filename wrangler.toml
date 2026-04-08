@@ -1,0 +1,95 @@
+# EmDash Astro Sidecar - Cloudflare Deployment Topology
+#
+# This file documents the deployment architecture and coordinates
+# between the blog (Cloudflare Pages) and worker (Cloudflare Workers)
+
+name = "emdash-astro-sidecar"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat", "atomics"]
+
+# =============================================================================
+# DEPLOYMENT TOPOLOGY
+# =============================================================================
+#
+# The EmDash Astro Sidecar deploys to Cloudflare as follows:
+#
+# 1. BLOG (Cloudflare Pages)
+#    - Static site hosted at /blog path
+#    - Built output: .output/public
+#    - Astro handles static page generation
+#    - Configuration: apps/blog/wrangler.jsonc
+#
+# 2. BLOG WORKER (Cloudflare Workers)
+#    - Dynamic API routes requiring SSR
+#    - KV cache for EmDash content
+#    - CORS handling for cross-origin embedding
+#    - Configuration: apps/cloudflare/workers/emdash-worker/wrangler.toml
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Cloudflare Pages - Blog Application
+# -----------------------------------------------------------------------------
+[pages]
+# Point to the blog output directory
+# The actual deployment is managed by wrangler.jsonc in apps/blog/
+
+# -----------------------------------------------------------------------------
+# KV Namespaces (shared across workers)
+# -----------------------------------------------------------------------------
+[[kv_namespaces]]
+binding = "EMDASH_CONTENT_CACHE"
+id = "preview"
+preview_id = "preview"
+# Note: Production IDs should be set via environment variables:
+# ${STATIC_EMDASH_CONTENT_CACHE_ID}
+
+# -----------------------------------------------------------------------------
+# Durable Objects
+# -----------------------------------------------------------------------------
+[[durable_objects.bindings]]
+name = "EMDASH_SESSION_DO"
+class_name = "EmdashSessionDO"
+
+# -----------------------------------------------------------------------------
+# Worker Secrets (set via `wrangler secret put`)
+# -----------------------------------------------------------------------------
+# Required for deployment:
+# - EMDASH_API_KEY: API key for EmDash CMS
+# - EMDASH_HOST: Base URL for EmDash API
+#
+# Set secrets:
+#   wrangler secret put EMDASH_API_KEY --env production
+#   wrangler secret put EMDASH_HOST --env production
+
+# -----------------------------------------------------------------------------
+# Environment Variables
+# -----------------------------------------------------------------------------
+[vars]
+PUBLIC_SITE_URL = "https://example.com/blog"
+EMDASH_HOST = "https://api.emdash.io"
+EMDASH_API_VERSION = "v1"
+
+[env.production.vars]]
+PUBLIC_SITE_URL = "https://example.com/blog"
+
+[env.preview.vars]]
+PUBLIC_SITE_URL = "https://preview.example.com/blog"
+
+# =============================================================================
+# DEPLOYMENT COMMANDS
+# =============================================================================
+#
+# Preview deployment:
+#   cd apps/blog && pnpm run deploy --preview
+#   cd apps/cloudflare/workers/emdash-worker && wrangler deploy --env preview
+#
+# Production deployment:
+#   cd apps/blog && pnpm run deploy --prod
+#   cd apps/cloudflare/workers/emdash-worker && wrangler deploy --env production
+#
+# Set secrets:
+#   wrangler secret put EMDASH_API_KEY
+#   wrangler secret put EMDASH_HOST
+#
+# =============================================================================

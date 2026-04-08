@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "astro",
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src/**/*"]
+}

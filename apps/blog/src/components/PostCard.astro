@@ -1,0 +1,156 @@
+---
+/**
+ * PostCard.astro
+ * 
+ * A reusable post card component for displaying blog posts in a grid or list.
+ * Shows category badge, title, excerpt, author byline, date, and read time.
+ */
+
+import CategoryBadge from './CategoryBadge.astro';
+
+interface Category {
+  name: string;
+  slug: string;
+  color: string;
+}
+
+interface Author {
+  name: string;
+  avatar: string;
+  slug?: string;
+}
+
+interface Props {
+  post: {
+    data: {
+      title: string;
+      description: string;
+      excerpt?: string;
+      publishDate: Date;
+      author: string;
+      category: string;
+      tags?: string[];
+      featuredImage?: string;
+      coverAlt?: string;
+      readingTime?: number;
+      status?: string;
+      featured?: boolean;
+    };
+    slug: string;
+    authorData?: Author;
+    categoryData?: Category;
+  };
+  showCategory?: boolean;
+  showAuthor?: boolean;
+  showImage?: boolean;
+}
+
+const { 
+  post, 
+  showCategory = true, 
+  showAuthor = true,
+  showImage = true 
+} = Astro.props;
+
+const { data, slug } = post;
+
+// Use excerpt or description for preview text
+const previewText = data.excerpt || data.description;
+
+// Format date
+const formattedDate = data.publishDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+
+// Generate category data if slug provided
+const categoryData = post.categoryData || (data.category ? {
+  name: data.category,
+  slug: data.category.toLowerCase().replace(/\s+/g, '-'),
+  color: '#3b82f6'
+} : null);
+
+// Author avatar and name from authorData or fall back
+const authorName = post.authorData?.name || data.author || 'Unknown Author';
+const authorAvatar = post.authorData?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face';
+---
+
+<article class="group relative flex flex-col overflow-hidden rounded-xl border bg-card transition-all duration-200 hover:shadow-lg hover:border-primary/20">
+  {/* Featured Image */}
+  {showImage && data.featuredImage && (
+    <a href={`/${slug}`} class="block overflow-hidden">
+      <img
+        src={data.featuredImage}
+        alt={data.coverAlt || data.title}
+        class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+        loading="lazy"
+      />
+    </a>
+  )}
+  
+  <div class="flex flex-col flex-1 p-5">
+    {/* Category Badge */}
+    {showCategory && categoryData && (
+      <div class="mb-3">
+        <CategoryBadge 
+          name={categoryData.name}
+          slug={categoryData.slug}
+          color={categoryData.color}
+          size="sm"
+        />
+      </div>
+    )}
+    
+    {/* Title */}
+    <h2 class="mb-2 text-xl font-semibold leading-tight">
+      <a 
+        href={`/${slug}`}
+        class="hover:text-primary transition-colors"
+      >
+        {data.title}
+      </a>
+    </h2>
+    
+    {/* Excerpt */}
+    <p class="mb-4 text-sm text-muted-foreground line-clamp-3 flex-1">
+      {previewText}
+    </p>
+    
+    {/* Footer: Author, Date, Read Time */}
+    <div class="flex items-center justify-between mt-auto pt-4 border-t border-border">
+      {showAuthor && (
+        <div class="flex items-center gap-2">
+          <img
+            src={authorAvatar}
+            alt={authorName}
+            class="w-8 h-8 rounded-full object-cover"
+            loading="lazy"
+          />
+          <span class="text-sm font-medium">{authorName}</span>
+        </div>
+      )}
+      
+      <div class="flex items-center gap-3 text-xs text-muted-foreground">
+        <time datetime={data.publishDate.toISOString()}>
+          {formattedDate}
+        </time>
+        {data.readingTime && (
+          <>
+            <span class="opacity-50">•</span>
+            <span>{data.readingTime} min read</span>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+</article>
+
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
