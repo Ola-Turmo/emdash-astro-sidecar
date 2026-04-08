@@ -42,8 +42,8 @@ importers:
         specifier: ^5.4.0
         version: 5.9.3
       zod:
-        specifier: ^3.23.0
-        version: 3.25.76
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@playwright/test':
         specifier: ^1.59.1
@@ -56,7 +56,7 @@ importers:
     dependencies:
       openai:
         specifier: ^4.57.0
-        version: 4.104.0(zod@3.25.76)
+        version: 4.104.0(zod@4.3.6)
     devDependencies:
       '@types/node':
         specifier: ^20.14.0
@@ -5133,7 +5133,7 @@ snapshots:
       regex: 6.1.0
       regex-recursion: 6.0.2
 
-  openai@4.104.0(zod@3.25.76):
+  openai@4.104.0(zod@4.3.6):
     dependencies:
       '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
@@ -5143,7 +5143,7 @@ snapshots:
       formdata-node: 4.4.1
       node-fetch: 2.7.0
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.3.6
     transitivePeerDependencies:
       - encoding
 
