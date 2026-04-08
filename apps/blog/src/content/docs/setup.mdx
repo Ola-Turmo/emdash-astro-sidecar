@@ -1,0 +1,93 @@
+---
+title: Setup Guide
+description: How to install and configure EmDash Astro Sidecar.
+---
+
+# Setup Guide
+
+## Prerequisites
+
+- Node.js 18+ (recommended: 20)
+- pnpm 8+ (or npm/yarn)
+- Git
+
+## Installation
+
+### 1. Clone the template
+
+```bash
+git clone https://github.com/emdashdev/emdash-astro-sidecar my-blog
+cd my-blog
+```
+
+### 2. Install dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Configure site URL
+
+Edit `apps/blog/src/consts.ts`:
+
+```typescript
+export const SITE_URL = 'https://your-blog-domain.com';
+```
+
+### 4. Start development
+
+```bash
+pnpm dev
+```
+
+Visit `http://localhost:4321` to see your blog.
+
+## Content Collections
+
+### Creating a post
+
+Create a new file in `apps/blog/src/content/blog/`:
+
+```mdx
+---
+title: My First Post
+description: A brief description for SEO.
+pubDate: 2024-01-15
+author: editor
+category: tutorials
+tags: [getting-started, tutorial]
+excerpt: The first paragraph of your post.
+schemaType: BlogPosting
+draft: false
+---
+
+# My First Post
+
+Your content here...
+```
+
+### Creating an author
+
+Create a file in `apps/blog/src/content/authors/`:
+
+```mdx
+---
+name: John Doe
+bio: A web developer and technical writer.
+avatar:
+  src: /images/avatars/john.png
+  alt: John Doe
+social:
+  twitter: https://twitter.com/johndoe
+  github: https://github.com/johndoe
+---
+```
+
+## Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `astro.config.mjs` | Astro configuration, integrations |
+| `tailwind.config.mjs` | Tailwind CSS configuration |
+| `tsconfig.json` | TypeScript configuration |
+| `package.json` | Dependencies and scripts |

@@ -1,0 +1,67 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  pubDate?: Date;
+  updatedDate?: Date;
+  author?: string;
+  tags?: string[];
+  schemaType?: string;
+  jsonLdScripts?: string[];
+}
+
+const {
+  title,
+  description,
+  canonical,
+  ogImage,
+  ogType = 'website',
+  pubDate,
+  updatedDate,
+  author,
+  tags,
+  schemaType,
+  jsonLdScripts = [],
+} = Astro.props;
+
+const siteUrl = 'https://blog.emdash.dev';
+const fullTitle = title.includes('EmDash') ? title : `${title} — EmDash Blog`;
+const canonicalUrl = canonical || new URL(Astro.url.pathname, siteUrl).href;
+---
+
+<!-- SEO Meta Tags -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="generator" content={Astro.generator} />
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalUrl} />
+
+<!-- Open Graph -->
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:image" content={ogImage || `${siteUrl}/images/og-default.png`} />
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content="EmDash Blog" />
+<meta property="og:locale" content="en_US" />
+
+{pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
+{updatedDate && <meta property="article:modified_time" content={updatedDate.toISOString()} />}
+{author && <meta property="article:author" content={author} />}
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage || `${siteUrl}/images/og-default.png`} />
+
+<!-- Title -->
+<title>{fullTitle}</title>
+
+<!-- JSON-LD Structured Data -->
+{jsonLdScripts.map(script => (
+  <script type="application/ld+json" set:html={script} />
+))}

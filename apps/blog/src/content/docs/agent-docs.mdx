@@ -1,0 +1,78 @@
+---
+title: AI Agent Documentation
+description: Using AI-agent skills for content generation and publishing.
+---
+
+# AI Agent Documentation
+
+EmDash includes MCP-compatible AI-agent skills for automated content workflows.
+
+## Available Skills
+
+### draft-gen
+
+Generate blog post drafts from a topic:
+
+```
+draft-gen "Getting started with Astro" "web developers" "technical" "astro,static site,jamstack"
+```
+
+**Parameters:**
+- Topic: What the article is about
+- Audience: Who it's written for
+- Tone: professional | conversational | technical | casual
+- Keywords: Comma-separated SEO keywords
+
+### publishing
+
+Validate, preview, and publish content:
+
+```
+publishing validate my-post-slug
+publishing preview my-post-slug
+publishing publish my-post-slug
+```
+
+**Actions:**
+- `validate` — Check frontmatter and content quality
+- `preview` — Generate a preview URL
+- `publish` — Move draft to published
+- `unpublish` — Move published back to draft
+
+### design-import
+
+Clone a website's design and apply it:
+
+```
+design-import cloneDesign https://stripe.com
+design-import listPresets
+design-import applyPreset minimal
+```
+
+## MCP Server Setup
+
+Add to your MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "emdash-skills": {
+      "command": "node",
+      "args": ["./packages/skills/dist/index.js"],
+      "env": {
+        "BLOG_PATH": "./apps/blog"
+      }
+    }
+  }
+}
+```
+
+## Quality Checklist
+
+Before publishing, ensure:
+- [ ] Title under 60 characters
+- [ ] Description under 160 characters
+- [ ] All required frontmatter fields present
+- [ ] Keywords naturally integrated
+- [ ] No placeholder text
+- [ ] Images have alt text

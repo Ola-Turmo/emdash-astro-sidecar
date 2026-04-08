@@ -1,0 +1,89 @@
+---
+title: Migration Guide
+description: Migrate from other blog platforms to EmDash.
+---
+
+# Migration Guide
+
+## From WordPress
+
+### 1. Export content
+
+Use the WordPress REST API or a plugin to export posts as JSON.
+
+### 2. Convert to MDX
+
+```bash
+npx wp-to-mdx --source ./wordpress-export.json --output ./content/blog/
+```
+
+### 3. Update frontmatter
+
+WordPress fields → EmDash frontmatter:
+
+| WordPress | EmDash |
+|-----------|--------|
+| `post_title` | `title` |
+| `post_content` | Content body |
+| `post_date` | `pubDate` |
+| `post_author` | `author` |
+| `category` | `category` |
+| `post_name` | Filename (slug) |
+
+## From Medium
+
+### 1. Export from Medium
+
+Settings → Download your information → Posts (JSON)
+
+### 2. Convert
+
+```bash
+npx medium-to-mdx --source ./medium-export.json --output ./content/blog/
+```
+
+## From Ghost
+
+### 1. Export
+
+Ghost Admin → Labs → Export → JSON
+
+### 2. Convert
+
+```bash
+npx ghost-to-mdx --source ./ghost-export.json --output ./content/blog/
+```
+
+## Manual Migration
+
+For other platforms, manually create MDX files:
+
+```mdx
+---
+title: "Your Post Title"
+description: "Post description for SEO"
+pubDate: 2024-01-15
+author: your-author-slug
+category: category-slug
+tags: [tag1, tag2]
+excerpt: "First 160 chars of content"
+schemaType: BlogPosting
+draft: false
+---
+
+# Your Post Title
+
+Your content converted to Markdown/MDX...
+```
+
+## Image Handling
+
+Move images to `apps/blog/public/images/blog/` and update paths:
+
+```markdown
+# Before (original platform)
+![Image](https://example.com/wp-content/uploads/2024/01/image.jpg)
+
+# After (EmDash)
+![Image](/images/blog/image.jpg)
+```

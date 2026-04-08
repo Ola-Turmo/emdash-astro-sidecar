@@ -1,0 +1,65 @@
+---
+title: Deployment
+description: Deploy EmDash to Cloudflare Pages or any static host.
+---
+
+# Deployment
+
+## Cloudflare Pages (Recommended)
+
+### 1. Connect to Cloudflare
+
+```bash
+npm run deploy
+```
+
+Or connect manually in the Cloudflare dashboard:
+1. Go to **Pages** → **Create a project** → **Connect to Git**
+2. Select your repository
+3. Configure build settings:
+   - **Framework preset**: Astro
+   - **Build command**: `pnpm build`
+   - **Build output directory**: `apps/blog/dist`
+
+### 2. Set environment variables
+
+In Cloudflare Pages settings:
+- `NODE_VERSION`: `20`
+- `SITE_URL`: Your production URL
+
+### 3. Deploy
+
+Push to `main` branch for automatic deployment, or use manual deploys.
+
+## Other Static Hosts
+
+EmDash builds to a static `dist/` directory, compatible with:
+- Vercel
+- Netlify
+- GitHub Pages
+- AWS S3 + CloudFront
+
+### Vercel Example
+
+```bash
+vercel --prod
+```
+
+Set `SITE_URL` in Vercel project settings.
+
+## Preview Deployments
+
+Pull requests automatically get preview URLs via Cloudflare Pages.
+
+## Custom Domain
+
+1. In Cloudflare dashboard, go to **Pages** → your project → **Custom domains**
+2. Add your domain
+3. Update DNS to point to Cloudflare Pages
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SITE_URL` | Production site URL | Yes |
+| `NODE_VERSION` | Node.js version | Yes |
