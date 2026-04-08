@@ -9,7 +9,7 @@
     "test": "node --test test/*.test.ts"
   },
   "dependencies": {
-    "openai": "^4.57.0"
+    "openai": "^6.33.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
