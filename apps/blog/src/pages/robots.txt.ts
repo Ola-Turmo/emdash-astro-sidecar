@@ -1,5 +1,5 @@
 import type { APIContext } from 'astro';
-import { SITE_URL } from '../consts.ts';
+import { SITE_URL } from '../consts';
 
 export async function GET(_context: APIContext) {
   const robots = `User-agent: *

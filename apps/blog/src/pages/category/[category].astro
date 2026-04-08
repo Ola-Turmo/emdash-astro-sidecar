@@ -1,26 +1,27 @@
 ---
 import CategoryLayout from '../../layouts/CategoryLayout.astro';
 import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const categories = await getCollection('categories');
-  const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+  const allPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
   
-  return categories.map(category => ({
+  return categories.map((category: CollectionEntry<'categories'>) => ({
     params: { category: category.slug },
     props: {
       category,
-      posts: allPosts.filter(post => {
+      posts: allPosts.filter((post: CollectionEntry<'blog'>) => {
         const postCategory = post.data.category;
-        const catId = typeof postCategory === 'object' ? (postCategory as any).slug : postCategory;
+        const catId = typeof postCategory === 'object' ? (postCategory as CollectionEntry<'categories'>).slug : postCategory;
         return catId === category.slug;
       }),
     },
   }));
 };
 
-const { category, posts } = Astro.props;
+const { category, posts } = Astro.props as { category: CollectionEntry<'categories'>; posts: CollectionEntry<'blog'>[] };
 ---
 
 <CategoryLayout category={category} posts={posts} />

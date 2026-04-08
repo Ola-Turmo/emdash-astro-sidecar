@@ -42,7 +42,7 @@
 
   // Tail of Cloudflare Pages specific config
   "pages": {
-    "build_output_dir": ".output/public",
+    "build_output_dir": "dist",
     "json_format": "multiline"
   }
 }

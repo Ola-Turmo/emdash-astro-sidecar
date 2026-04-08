@@ -15,30 +15,10 @@
  *   });
  */
 
-import { handleRequest } from './src/routes';
-
 export default {
-  async fetch(request: Request, env: any, ctx: ExecutionContext): Promise<Response> {
-    const url = new URL(request.url);
-    
-    // Only handle dynamic routes that need SSR
-    if (shouldHandleSSR(url.pathname)) {
-      return handleRequest(request, env, ctx);
-    }
-    
-    // Let Cloudflare Pages serve static assets
-    return env.ASSETS.fetch(request);
+  async fetch(_request: Request, _env: any, _ctx: any): Promise<Response> {
+    // For static builds, this worker is not used.
+    // The build output goes to dist/ for Cloudflare Pages static hosting.
+    return new Response('Not Found', { status: 404 });
   },
 };
-
-function shouldHandleSSR(pathname: string): boolean {
-  const ssrPaths = [
-    '/api/',
-    '/preview/',
-    '/draft/',
-    '/auth/',
-    '/blog/feed/',
-  ];
-  
-  return ssrPaths.some(path => pathname.startsWith(path));
-}

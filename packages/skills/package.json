@@ -13,7 +13,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@emdash-astro-sidecar/design-clone": "workspace:*"
+    "@emdash/design-clone": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

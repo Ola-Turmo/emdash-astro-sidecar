@@ -4,22 +4,23 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
 import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const allPosts = await getCollection('blog', ({ data }) => !data.draft);
-  const allTags = [...new Set(allPosts.flatMap(post => post.data.tags))];
+  const allPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
+  const allTags = [...new Set(allPosts.flatMap((post: CollectionEntry<'blog'>) => post.data.tags))];
   
-  return allTags.map(tag => ({
+  return (allTags as string[]).map((tag: string) => ({
     params: { tag },
     props: {
       tag,
-      posts: allPosts.filter(post => post.data.tags.includes(tag)),
+      posts: allPosts.filter((post: CollectionEntry<'blog'>) => post.data.tags.includes(tag)),
     },
   }));
 };
 
-const { tag, posts } = Astro.props;
+const { tag, posts } = Astro.props as { tag: string; posts: CollectionEntry<'blog'>[] };
 ---
 
 <BaseLayout title={`#${tag}`} description={`Articles tagged with ${tag}`}>

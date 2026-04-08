@@ -4,27 +4,28 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
 import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const authors = await getCollection('authors');
-  const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+  const allPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
   
-  return authors.map(author => ({
+  return authors.map((author: CollectionEntry<'authors'>) => ({
     params: { author: author.id },
     props: {
       author,
-      posts: allPosts.filter(post => {
+      posts: allPosts.filter((post: CollectionEntry<'blog'>) => {
         const postAuthor = post.data.author;
         return typeof postAuthor === 'object' 
-          ? (postAuthor as any).id === author.id 
+          ? (postAuthor as CollectionEntry<'authors'>).id === author.id 
           : postAuthor === author.id;
       }),
     },
   }));
 };
 
-const { author, posts } = Astro.props;
+const { author, posts } = Astro.props as { author: CollectionEntry<'authors'>; posts: CollectionEntry<'blog'>[] };
 const { name, bio, avatar, social } = author.data;
 ---
 

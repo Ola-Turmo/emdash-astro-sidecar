@@ -7,8 +7,6 @@
 
 import OpenAI from 'openai';
 import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 // Types
 
@@ -356,7 +354,7 @@ export class DraftGenerator {
     }
 
     // Build full MDX
-    const fullMdx = this.buildFullMdx(frontmatter, body);
+    const fullMdx = this.buildFullMdx(frontmatter as unknown as DraftFrontmatter, body);
 
     // Validate the draft
     const validation = this.validateDraft(fullMdx);
@@ -365,7 +363,7 @@ export class DraftGenerator {
     const keywords = this.extractKeywords(frontmatter, body, primaryKeyword, secondaryKeywords);
 
     return {
-      frontmatter,
+      frontmatter: frontmatter as unknown as DraftFrontmatter,
       body,
       fullMdx,
       wordCount,
@@ -420,7 +418,7 @@ export class DraftGenerator {
     const warnings: string[] = [];
 
     // Extract frontmatter
-    const frontmatter = this.extractFrontmatter(mdx);
+    const frontmatter = this.extractFrontmatter(mdx) as unknown as DraftFrontmatter;
     const body = this.stripFrontmatter(mdx);
 
     // Check required frontmatter fields
@@ -652,7 +650,7 @@ export class DraftGenerator {
    */
   private extractKeywords(
     frontmatter: Record<string, unknown>,
-    body: string,
+    _body: string,
     primaryKeyword: string,
     secondaryKeywords: string[]
   ): string[] {

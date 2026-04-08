@@ -24,7 +24,7 @@ export function generateCanonicalUrl(path: string, baseUrl = 'https://blog.emdas
  * Generate Open Graph meta tags
  */
 export function generateOgTags(config: SeoConfig): Record<string, string> {
-  const { title, description, url, ogImage, ogType, pubDate, author, tags } = config;
+  const { title, description, url, ogImage, ogType, pubDate, updatedDate, author, tags } = config;
   const image = ogImage || `${url}/images/og-default.png`;
   
   return {

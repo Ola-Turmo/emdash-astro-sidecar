@@ -74,10 +74,9 @@ const hasNext = safeCurrentPage < totalPages;
     <div class="hidden sm:flex items-center gap-1">
       {pageNumbers.map((page, index) => (
         page === '...' ? (
-          <span key={`ellipsis-${index}`} class="px-3 py-2 text-muted-foreground">...</span>
+          <span class="px-3 py-2 text-muted-foreground">...</span>
         ) : (
           <a
-            key={`page-${page}`}
             href={getPageUrl(page as number)}
             class={`inline-flex items-center justify-center w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
               page === safeCurrentPage

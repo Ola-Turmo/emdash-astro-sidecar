@@ -12,6 +12,6 @@ export {
   DraftFrontmatter,
   GeneratedDraft,
   DraftValidationResult,
-} from './draft-generator.js';
+} from './draft-generator';
 
-export default DraftGenerator;
+export { DraftGenerator as default } from './draft-generator';

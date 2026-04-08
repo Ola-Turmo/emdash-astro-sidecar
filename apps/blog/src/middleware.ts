@@ -4,7 +4,6 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   const response = await next();
   
   // Add security headers
-  const url = new URL(context.request.url);
   
   // Only add headers for HTML responses
   if (response.headers.get('content-type')?.includes('text/html')) {

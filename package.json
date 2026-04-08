@@ -9,7 +9,8 @@
     "typecheck": "pnpm -r run typecheck",
     "lint": "pnpm -r run lint",
     "dev": "pnpm --filter @emdash/blog dev",
-    "clean": "pnpm -r run clean && rm -rf node_modules .astro dist"
+    "clean": "pnpm -r run clean && rm -rf node_modules .astro dist",
+    "test": "pnpm --filter @emdash/blog test"
   },
   "workspaces": ["apps/*", "packages/*"],
   "devDependencies": {

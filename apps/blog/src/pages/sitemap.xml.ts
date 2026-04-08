@@ -1,24 +1,25 @@
 import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import type { APIContext } from 'astro';
-import { SITE_URL } from '../consts.ts';
+import { SITE_URL } from '../consts';
 
 export async function GET(context: APIContext) {
-  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const posts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
   const categories = await getCollection('categories');
   const authors = await getCollection('authors');
   
-  const postPages = posts.map(post => ({
+  const postPages = posts.map((post: CollectionEntry<'blog'>) => ({
     url: `${SITE_URL}/blog/${post.slug}/`,
     lastMod: post.data.updatedDate || post.data.pubDate,
     priority: 0.8,
   }));
   
-  const categoryPages = categories.map(cat => ({
+  const categoryPages = categories.map((cat: CollectionEntry<'categories'>) => ({
     url: `${SITE_URL}/category/${cat.data.slug}/`,
     priority: 0.6,
   }));
   
-  const authorPages = authors.map(author => ({
+  const authorPages = authors.map((author: CollectionEntry<'authors'>) => ({
     url: `${SITE_URL}/author/${author.id}/`,
     priority: 0.5,
   }));
