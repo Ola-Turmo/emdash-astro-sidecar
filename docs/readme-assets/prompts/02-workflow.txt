@@ -1,0 +1,8 @@
+Create an image for a GitHub README workflow section.
+Audience: developers who need to understand how the project works at a glance.
+Subject: a three-stage visual pipeline that starts with host-site analysis, moves through design-cloning and content shaping, and ends with Cloudflare deployment under a mounted path.
+Composition: wide 16:9 frame, three connected panels flowing from left to right, each panel represented by elegant product cards and browser windows rather than text labels, subtle arrows or motion cues connecting them, enough empty space that the composition feels premium.
+Style: refined technical illustration, product design system aesthetic, soft white backgrounds with deep teal and slate accents, minimal but high-end.
+Lighting/Camera: orthographic or near-orthographic product shot, gentle shadows, bright neutral lighting.
+Constraints: no people, no watermark, no giant unreadable UI text, no clutter, no terminal wall of text, no purple, no cheap infographic look.
+Output: 16:9 README image that visually communicates analyze -> clone -> write -> deploy.

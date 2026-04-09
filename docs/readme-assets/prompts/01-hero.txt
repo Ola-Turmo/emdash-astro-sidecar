@@ -1,0 +1,8 @@
+Create an image for a GitHub README hero section.
+Audience: developers, operators, and founders evaluating an Astro sidecar that adds a knowledge layer to an existing site.
+Subject: one polished desktop workspace showing an existing commercial site on the left and a matching mounted guide or blog on the right, clearly related in visual style but serving different jobs.
+Composition: wide 16:9 frame, cinematic product-marketing composition, one large screen in front view, a subtle split between host site and /guide content, soft abstract depth elements around the screen, strong focal point in the center.
+Style: premium editorial SaaS illustration, realistic UI mockup blended with refined 3D shapes, Scandinavian restraint, clean typography rhythm, crisp edges, modern product-shot feel.
+Lighting/Camera: soft studio daylight, front-facing, gentle reflections, high clarity.
+Constraints: no people, no watermark, no code editor, no purple palette, no dense readable UI text, no fake dashboard numbers, keep the interface believable and calm.
+Output: 16:9 repository hero image that communicates "mount a blog sidecar onto an existing site without rebuilding the main product site."
