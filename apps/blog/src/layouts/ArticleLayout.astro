@@ -2,7 +2,9 @@
 import BaseLayout from './BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { getEntry } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
+import { MAIN_SITE_URL, blogPath } from '../consts';
 
 interface Props {
   post: CollectionEntry<'blog'>;
@@ -11,8 +13,13 @@ interface Props {
 const { post } = Astro.props;
 const { title, description, pubDate, updatedDate, author, category, tags, featuredImage, excerpt, schemaType } = post.data;
 
-const authorData = post.data.author;
-const categoryData = post.data.category;
+const authorId = typeof author === 'string' ? author : ('id' in author ? author.id : author.slug);
+const categoryId = typeof category === 'string' ? category : ('id' in category ? category.id : category.slug);
+const authorEntry = authorId ? await getEntry('authors', authorId) : undefined;
+const categoryEntry = categoryId ? await getEntry('categories', categoryId) : undefined;
+const authorName = authorEntry?.data.name ?? authorId ?? 'Kurs.ing';
+const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
+const categorySlug = categoryEntry?.slug ?? categoryId ?? '';
 ---
 
 <BaseLayout
@@ -20,73 +27,93 @@ const categoryData = post.data.category;
   description={excerpt || description}
   ogImage={featuredImage?.src}
   pubDate={pubDate}
-  author={typeof authorData === 'object' ? authorData.name : authorData}
+  author={authorName}
   schemaType={schemaType}
 >
   <Header />
-  
-  <main class="max-w-3xl mx-auto px-4 py-8">
+
+  <main class="mx-auto max-w-5xl px-4 py-10 md:py-14">
     <article>
-      <!-- Featured image -->
+      <div class="mx-auto max-w-3xl">
+        <a href={blogPath(`/category/${categorySlug}`)} class="eyebrow inline-block">
+          {categoryName}
+        </a>
+        <h1 class="display-title mt-4 text-4xl font-black leading-[1.05] text-slate-950 md:text-6xl">
+          {title}
+        </h1>
+        <p class="mt-5 text-lg leading-8 text-slate-600">{excerpt || description}</p>
+        <div class="mt-6 flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500">
+          <time datetime={pubDate.toISOString()}>{pubDate.toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+          <span>{authorName}</span>
+          {updatedDate && (
+            <span>Oppdatert <time datetime={updatedDate.toISOString()}>{updatedDate.toLocaleDateString('nb-NO')}</time></span>
+          )}
+        </div>
+      </div>
+
       {featuredImage && (
-        <figure class="mb-8">
+        <figure class="shell-card mx-auto mt-10 max-w-4xl overflow-hidden p-3">
           <img
             src={featuredImage.src}
             alt={featuredImage.alt}
-            class="w-full h-auto rounded-xl"
+            class="h-auto w-full rounded-[1.35rem]"
             loading="eager"
           />
         </figure>
       )}
-      
-      <!-- Header -->
-      <header class="mb-8">
-        <!-- Category -->
-        <a
-          href={`/category/${categoryData.slug}`}
-          class="inline-block text-sm font-medium text-blue-600 hover:text-blue-700 mb-4"
-        >
-          {typeof categoryData === 'object' ? categoryData.name : categoryData}
-        </a>
-        
-        <!-- Title -->
-        <h1 class="text-4xl font-bold text-neutral-900 mb-4 leading-tight">
-          {title}
-        </h1>
-        
-        <!-- Meta -->
-        <div class="flex items-center gap-4 text-sm text-neutral-500">
-          <time datetime={pubDate.toISOString()}>
-            {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </time>
-          {updatedDate && (
-            <span>Updated <time datetime={updatedDate.toISOString()}>{updatedDate.toLocaleDateString()}</time></span>
+
+      <div class="mx-auto mt-10 grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr),18rem]">
+        <div class="shell-card overflow-hidden p-6 md:p-10">
+          <div class="article-prose prose prose-lg max-w-none prose-headings:scroll-mt-28">
+            <slot />
+          </div>
+
+          {tags && tags.length > 0 && (
+            <footer class="mt-10 border-t border-slate-200/80 pt-8">
+              <div class="flex flex-wrap gap-2">
+                {tags.map((tag: string) => (
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </footer>
           )}
         </div>
-      </header>
-      
-      <!-- Content -->
-      <div class="prose prose-neutral prose-lg max-w-none">
-        <slot />
-      </div>
-      
-      <!-- Tags -->
-      {tags && tags.length > 0 && (
-        <footer class="mt-8 pt-8 border-t border-neutral-200">
-          <div class="flex flex-wrap gap-2">
-            {tags.map((tag: string) => (
-              <a
-                href={`/tag/${tag}`}
-                class="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
-              >
-                #{tag}
-              </a>
-            ))}
+
+        <aside class="space-y-5">
+          <div class="shell-card p-5">
+            <p class="eyebrow">Neste steg</p>
+            <p class="mt-3 text-sm leading-7 text-slate-600">
+              Når du er klar for pensum, oppgaver og eksamenstrening, går du videre til kurspakken på hovedsiden.
+            </p>
+            <div class="mt-4 flex flex-col gap-3">
+              <a href={`${MAIN_SITE_URL}/kasse.html`} class="cta-primary text-sm">Kjøp kurset</a>
+              <a href={MAIN_SITE_URL} class="cta-secondary text-sm">Til kurs.ing</a>
+            </div>
           </div>
-        </footer>
-      )}
+
+          <div class="shell-card p-5">
+            <p class="eyebrow">Om artikkelen</p>
+            <dl class="mt-4 space-y-3 text-sm">
+              <div>
+                <dt class="font-bold text-slate-900">Kategori</dt>
+                <dd class="text-slate-600">{categoryName}</dd>
+              </div>
+              <div>
+                <dt class="font-bold text-slate-900">Forfatter</dt>
+                <dd class="text-slate-600">{authorName}</dd>
+              </div>
+              <div>
+                <dt class="font-bold text-slate-900">Formål</dt>
+                <dd class="text-slate-600">Forklare krav tydelig og lede videre til riktig kurs.</dd>
+              </div>
+            </dl>
+          </div>
+        </aside>
+      </div>
     </article>
   </main>
-  
+
   <Footer />
 </BaseLayout>

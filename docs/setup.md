@@ -1,102 +1,116 @@
-# Setup Guide
+# Setup
 
 ## Prerequisites
 
 - Node.js 20+
-- pnpm 10+
-- Cloudflare account (for deployment)
+- pnpm 9+
+- Cloudflare account if you will deploy
 
-## Installation
+## Install
 
-1. Clone the repository:
 ```bash
-git clone https://github.com/emdash/emdash-astro-sidecar.git
+git clone <repo-url>
 cd emdash-astro-sidecar
-```
-
-2. Install dependencies:
-```bash
 pnpm install
 ```
 
-## Configuration
+## Why `.npmrc` Exists
 
-### Environment Variables
+This repo includes a Windows-friendly pnpm setup:
 
-Create `.env` files as needed:
+- `node-linker=hoisted`
+- `package-import-method=copy`
 
-```env
-# Blog URL
-SITE_URL=https://example.com
+This reduces rename/link failures in synced folders such as Google Drive, which has already been a real issue in this repo.
 
-# Cloudflare (for deployment)
-CLOUDFLARE_ACCOUNT_ID=your_account_id
-CLOUDFLARE_API_TOKEN=your_api_token
-```
+## Local Development
 
-### Blog Configuration
-
-Edit `apps/blog/astro.config.mjs` to configure your blog:
-
-```js
-export default defineConfig({
-  site: 'https://your-blog-url.com',
-  output: 'static',
-  // ... other config
-});
-```
-
-### EmDash Configuration
-
-EmDash provides the CMS layer. Configure it in `apps/blog/src/content/config.ts` by defining your content collection schemas.
-
-## Development
-
-Start the development server:
+Run:
 
 ```bash
 pnpm dev
 ```
 
-The blog will be available at `http://localhost:4321`.
+Astro will start the blog app from `apps/blog`.
 
-## Project Structure
+## First Files To Read Before Adapting The Repo
 
-```
-apps/blog/           # Main blog application
-├── src/
-│   ├── components/  # Astro components
-│   ├── layouts/      # Page layouts
-│   ├── pages/        # Astro pages
-│   ├── content/      # Content collections
-│   └── styles/       # Global styles
-├── public/          # Static assets
-└── wrangler.jsonc   # Cloudflare config
-```
+1. `apps/blog/src/site-config.ts`
+2. `apps/blog/astro.config.mjs`
+3. `apps/blog/wrangler.jsonc`
+4. `apps/cloudflare/workers/guide-proxy/wrangler.toml`
 
-## Adding Content
+## Verification Before Any Deploy
 
-Create new posts in `apps/blog/src/content/posts/` as MDX files:
-
-```mdx
----
-title: My First Post
-description: A description of the post
-publishDate: 2024-12-01
-author: author-name
-category: tutorials
-tags: ["astro", "emdash"]
----
-
-# My First Post
-
-Your content here...
-```
-
-## Building
+Run:
 
 ```bash
-pnpm build
+pnpm verify
 ```
 
-Output will be in `apps/blog/.output/`.
+This is the minimum standard before shipping.
+
+## Design Analysis
+
+To inspect a host site:
+
+```bash
+pnpm design:clone -- analyze https://example.com
+```
+
+To also generate theme output:
+
+```bash
+pnpm design:clone -- clone https://example.com
+```
+
+Generated output goes to:
+
+```text
+packages/theme-core/theme-output/<host>/
+```
+
+## What To Edit For A New Host Site
+
+### 1. Host profile
+
+Edit:
+
+- `apps/blog/src/site-config.ts`
+
+### 2. Astro path mounting
+
+Edit:
+
+- `apps/blog/astro.config.mjs`
+
+Keep `site` and `base` aligned with `site-config.ts`.
+
+### 3. Cloudflare Pages runtime variables
+
+Edit:
+
+- `apps/blog/wrangler.jsonc`
+
+### 4. Route worker
+
+Edit:
+
+- `apps/cloudflare/workers/guide-proxy/wrangler.toml`
+
+Update:
+
+- route patterns
+- `GUIDE_ORIGIN`
+
+## Typical Local Checks
+
+```bash
+pnpm --filter @emdash/blog check
+pnpm --filter @emdash/blog build
+pnpm --filter @emdash-astro-sidecar/skills typecheck
+```
+
+## If Install Or Build Fails
+
+Go straight to [troubleshooting.md](./troubleshooting.md).

@@ -1,6 +1,11 @@
-import { analyzePage } from '../../../../design-clone/src/extract/analyzer.js';
-import { generateTheme } from '../../../../design-clone/src/generate/output.js';
-import { saveDraft, listDrafts, approveTheme, regenerateTheme } from '../../../../design-clone/src/generate/review-workflow.js';
+import {
+  analyzePage,
+  generateTheme,
+  saveDraft,
+  listDrafts,
+  approveTheme,
+  regenerateTheme,
+} from '@emdash/design-clone';
 
 export interface CloneResult {
   success: boolean;
@@ -127,7 +132,7 @@ export function applyPreset(presetName: string): CloneResult {
  */
 export async function reviewTheme(themeId: string): Promise<{ success: boolean; message: string; drafts?: any[] }> {
   const drafts = await listDrafts();
-  const draft = drafts.find(d => d.id === themeId);
+  const draft = drafts.find((d: { id: string; name?: string }) => d.id === themeId);
   
   if (!draft) {
     return { success: false, message: `Theme draft '${themeId}' not found` };

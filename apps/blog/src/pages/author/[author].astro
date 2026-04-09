@@ -3,23 +3,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
-import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
+import { getActiveAuthors, getPostAuthorSlug, getPublishedPosts } from '../../lib/published-content';
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const authors = await getCollection('authors');
-  const allPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
-  
+  const [authors, allPosts] = await Promise.all([
+    getActiveAuthors(),
+    getPublishedPosts(),
+  ]);
+
   return authors.map((author: CollectionEntry<'authors'>) => ({
-    params: { author: author.id },
+    params: { author: author.slug },
     props: {
       author,
       posts: allPosts.filter((post: CollectionEntry<'blog'>) => {
-        const postAuthor = post.data.author;
-        return typeof postAuthor === 'object' 
-          ? (postAuthor as CollectionEntry<'authors'>).id === author.id 
-          : postAuthor === author.id;
+        const postAuthorSlug = getPostAuthorSlug(post);
+        return postAuthorSlug === author.slug || postAuthorSlug === author.id;
       }),
     },
   }));
@@ -31,46 +31,45 @@ const { name, bio, avatar, social } = author.data;
 
 <BaseLayout title={name} description={bio}>
   <Header />
-  
-  <main class="max-w-4xl mx-auto px-4 py-12">
-    <!-- Author header -->
-    <header class="flex items-start gap-6 mb-12">
+
+  <main class="mx-auto max-w-6xl px-4 py-12">
+    <header class="shell-card mb-12 flex items-start gap-6 p-6 md:p-8">
       {avatar && (
         <img
           src={avatar.src}
           alt={avatar.alt}
-          class="w-20 h-20 rounded-full object-cover"
+          class="h-20 w-20 rounded-full object-cover"
         />
       )}
       <div>
-        <h1 class="text-3xl font-bold text-neutral-900">{name}</h1>
-        <p class="text-neutral-600 mt-2">{bio}</p>
+        <p class="eyebrow">Forfatter</p>
+        <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">{name}</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{bio}</p>
         {social && (
-          <div class="flex gap-4 mt-4">
+          <div class="mt-4 flex gap-4">
             {social.twitter && (
-              <a href={social.twitter} class="text-sm text-blue-600 hover:underline" target="_blank" rel="noopener">Twitter</a>
+              <a href={social.twitter} class="text-sm font-semibold text-teal-700 hover:underline" target="_blank" rel="noopener">Twitter</a>
             )}
             {social.github && (
-              <a href={social.github} class="text-sm text-neutral-600 hover:underline" target="_blank" rel="noopener">GitHub</a>
+              <a href={social.github} class="text-sm font-semibold text-slate-600 hover:underline" target="_blank" rel="noopener">GitHub</a>
             )}
           </div>
         )}
       </div>
     </header>
-    
-    <!-- Posts -->
+
     <section>
-      <h2 class="text-xl font-bold text-neutral-900 mb-6">Articles</h2>
-      <div class="grid md:grid-cols-2 gap-8">
-        {posts.map(post => (
+      <h2 class="display-title text-3xl font-bold text-slate-950">Artikler</h2>
+      <div class="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {posts.map((post) => (
           <ArticleCard post={post} />
         ))}
       </div>
       {posts.length === 0 && (
-        <p class="text-neutral-500">No articles by this author yet.</p>
+        <p class="text-slate-500">Ingen artikler fra denne forfatteren ennå.</p>
       )}
     </section>
   </main>
-  
+
   <Footer />
 </BaseLayout>

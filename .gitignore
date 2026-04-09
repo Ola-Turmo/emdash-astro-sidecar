@@ -13,3 +13,6 @@ dist/
 *.tgz
 .vercel
 .output
+.wrangler/
+packages/theme-core/theme-output/
+output/

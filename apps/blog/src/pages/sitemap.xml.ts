@@ -1,30 +1,38 @@
-import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import type { APIContext } from 'astro';
 import { SITE_URL } from '../consts';
+import { getActiveAuthors, getActiveCategories, getPublishedPosts } from '../lib/published-content';
 
-export async function GET(context: APIContext) {
-  const posts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
-  const categories = await getCollection('categories');
-  const authors = await getCollection('authors');
-  
-  const postPages = posts.map((post: CollectionEntry<'blog'>) => ({
+interface SitemapPage {
+  url: string;
+  priority: number;
+  lastMod?: Date;
+}
+
+export async function GET(_context: APIContext) {
+  const [posts, categories, authors] = await Promise.all([
+    getPublishedPosts(),
+    getActiveCategories(),
+    getActiveAuthors(),
+  ]);
+
+  const postPages: SitemapPage[] = posts.map((post: CollectionEntry<'blog'>) => ({
     url: `${SITE_URL}/blog/${post.slug}/`,
     lastMod: post.data.updatedDate || post.data.pubDate,
     priority: 0.8,
   }));
-  
-  const categoryPages = categories.map((cat: CollectionEntry<'categories'>) => ({
-    url: `${SITE_URL}/category/${cat.data.slug}/`,
+
+  const categoryPages: SitemapPage[] = categories.map((cat: CollectionEntry<'categories'>) => ({
+    url: `${SITE_URL}/category/${cat.slug}/`,
     priority: 0.6,
   }));
-  
-  const authorPages = authors.map((author: CollectionEntry<'authors'>) => ({
-    url: `${SITE_URL}/author/${author.id}/`,
+
+  const authorPages: SitemapPage[] = authors.map((author: CollectionEntry<'authors'>) => ({
+    url: `${SITE_URL}/author/${author.slug}/`,
     priority: 0.5,
   }));
-  
-  const allPages = [
+
+  const allPages: SitemapPage[] = [
     { url: SITE_URL, priority: 1.0 },
     ...postPages,
     ...categoryPages,

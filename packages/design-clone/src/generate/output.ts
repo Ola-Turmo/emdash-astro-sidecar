@@ -1,7 +1,7 @@
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import type { ExtractedDesign } from '../types.js';
-import { convertColors, convertTypography, convertSpacing, convertBorders, convertShadows, convertComponents } from './theme-builder.js';
+import type { ExtractedDesign } from '../types.ts';
+import { convertColors, convertTypography, convertSpacing, convertBorders, convertShadows, convertComponents } from './theme-builder.ts';
 
 export interface ThemeOutput {
   tokens: {

@@ -1,38 +1,24 @@
-# EmDash Astro Sidecar Documentation
+# Documentation
 
-Welcome to the EmDash Astro Sidecar documentation!
+Use these docs as the operational runbook for the sidecar.
 
-## Overview
+- [architecture.md](./architecture.md)
+  System map of the Astro app, design-clone pipeline, skills, and Cloudflare topology.
+- [setup.md](./setup.md)
+  Local install, development, and verification.
+- [host-rollout.md](./host-rollout.md)
+  End-to-end process for adapting the sidecar to a new host site.
+- [deployment.md](./deployment.md)
+  Cloudflare Pages deployment and subpath route-worker setup.
+- [troubleshooting.md](./troubleshooting.md)
+  Known failure modes, especially subpath asset failures and Cloudflare routing mistakes.
+- [quality-gates.md](./quality-gates.md)
+  Release gates, what they check, and how to use them before every deploy.
+- [deployed-url-audit.md](./deployed-url-audit.md)
+  Screenshot and analytics workflow for every live deployed URL.
+- [editorial-workflow.md](./editorial-workflow.md)
+  Content model, drafting rules, and publishing expectations.
+- [copy-guidelines.md](./copy-guidelines.md)
+  Reader-first writing rules that ban internal jargon in user-facing UI and content.
 
-EmDash Astro Sidecar is an Astro-native blog engine that provides a complete CMS, content management system, and publishing workflow for existing Astro sites.
-
-## Key Concepts
-
-### Architecture
-
-The monorepo is organized into:
-
-- **apps/blog** - Main Astro blog application with EmDash integration
-- **packages/theme-core** - Shared design tokens and UI components
-- **packages/design-clone** - Design cloning pipeline
-- **packages/skills** - AI-agent skills for Hermes integration
-- **packages/plugins** - Plugin SDK for extending functionality
-
-### EmDash Integration
-
-EmDash serves as the CMS layer, providing:
-- Content management APIs
-- Blog post, author, category, and tag data models
-- Publishing workflow
-- Query APIs for fetching content
-
-## Getting Started
-
-Follow the [Setup Guide](./setup.md) to get up and running.
-
-## Documentation Sections
-
-- [Setup Guide](./setup.md) - Installation and configuration
-- [Deployment](./deployment.md) - Cloudflare Workers/Pages deployment
-- [Plugin Development](./plugin-dev.md) - Building plugins
-- [Editorial Workflow](./editorial-workflow.md) - Content publishing workflow
+Legacy docs in this folder are still available, but the files above are the maintained onboarding path.

@@ -1,4 +1,4 @@
-import type { ExtractedDesign } from '../types.js';
+import type { ExtractedDesign } from '../types.ts';
 
 /**
  * Convert extracted colors to CSS custom properties

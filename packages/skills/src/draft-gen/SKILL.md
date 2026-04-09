@@ -9,6 +9,8 @@ user-invocable: true
 
 Generate a blog post draft as MDX with full frontmatter and structured sections.
 
+Read `docs/copy-guidelines.md` before generating copy that users will see.
+
 ## Input Parameters
 
 When invoked with arguments, parse as:
@@ -81,6 +83,7 @@ draft: true
 8. **Image placeholders**: Include `<!-- image:alt:description -->` comments
 9. **Schema hints**: Include JSON-LD structure hints as comments
 10. **Word count**: Target 800-1500 words for standard articles
+11. **End-user language**: Do not use internal phrases like sidecar, GEO layer, content wave, support layer, or other operator jargon unless the article is explicitly written for internal or technical readers
 
 ## Quality Checklist
 
@@ -93,6 +96,7 @@ draft: true
 - [ ] No placeholder text like "lorem ipsum" or "your content here"
 - [ ] Internal link suggestions are contextually relevant
 - [ ] FAQ questions are natural, common search queries
+- [ ] Visible copy sounds like something a real customer would say, ask, or understand immediately
 
 ## Usage Examples
 

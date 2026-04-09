@@ -17,8 +17,8 @@ test.describe('Blog Smoke Tests', () => {
     const content = readFileSync(indexPath, 'utf-8');
     
     expect(content).toContain('<!DOCTYPE html>');
-    expect(content).toContain('<title>EmDash Blog</title>');
-    expect(content).toContain('EmDash');
+    expect(content).toContain('<title>Kurs.ing Blogg</title>');
+    expect(content).toContain('Forklart enkelt');
   });
 
   test('index.html has proper meta tags', () => {
@@ -40,6 +40,6 @@ test.describe('Blog Smoke Tests', () => {
     expect(content).toContain('<header');
     expect(content).toContain('<main');
     expect(content).toContain('<footer');
-    expect(content).toContain('Latest Articles');
+    expect(content).toContain('Dette lurer mange på før de går opp til prøve');
   });
 });

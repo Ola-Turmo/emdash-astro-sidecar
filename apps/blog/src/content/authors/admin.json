@@ -1,9 +1,11 @@
 {
-  "name": "Admin",
-  "bio": "The administrative user and primary content creator for the EmDash blog. Passionate about sharing insights on modern web development, developer tools, and the future of content management.",
-  "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
-  "slug": "admin",
-  "twitter": "emdash_admin",
-  "linkedin": "emdash",
-  "website": "https://emdash.dev"
+  "name": "Kurs.ing-redaksjonen",
+  "bio": "Redaksjonell reserveprofil for Kurs.ing-bloggen. Brukes kun når en artikkel ikke er skrevet av Ola Turmo direkte.",
+  "avatar": {
+    "src": "/images/avatars/editor.png",
+    "alt": "Kurs.ing-redaksjonen"
+  },
+  "social": {
+    "website": "https://www.kurs.ing"
+  }
 }

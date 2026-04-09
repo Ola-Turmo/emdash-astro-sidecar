@@ -1,28 +1,58 @@
 ---
+import { COURSE_LINKS, MAIN_SITE_URL, SUPPORT_EMAIL, blogPath } from '../consts';
+
 const currentYear = new Date().getFullYear();
-const footerLinks = [
-  { href: '/rss.xml', label: 'RSS' },
-  { href: '/sitemap.xml', label: 'Sitemap' },
-];
 ---
 
-<footer class="bg-neutral-900 text-neutral-400 py-12 mt-16">
-  <div class="max-w-4xl mx-auto px-4">
-    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-      <p class="text-sm">
-        &copy; {currentYear} EmDash. Built with Astro.
+<footer class="mt-24 bg-slate-950 text-slate-300">
+  <div class="mx-auto grid max-w-6xl gap-12 px-4 py-14 md:grid-cols-[1.1fr,1fr]">
+    <div class="space-y-4">
+      <p class="eyebrow text-emerald-300">Kurs.ing blogg</p>
+      <h2 class="display-title text-3xl font-bold text-white md:text-4xl">
+        Artikler som hjelper deg å forstå kravene før du kjøper eller går opp til prøve.
+      </h2>
+      <p class="max-w-2xl text-sm leading-7 text-slate-400">
+        Her finner du forklaringer og råd som gjør det lettere å forstå kravene rundt etablererprøven, skjenkebevilling og salgsbevilling.
       </p>
-      
-      <nav class="flex gap-6">
-        {footerLinks.map(link => (
-          <a
-            href={link.href}
-            class="text-sm hover:text-white transition-colors"
-          >
-            {link.label}
-          </a>
-        ))}
-      </nav>
+      <div class="flex flex-wrap gap-3">
+        <a href={`${MAIN_SITE_URL}/kasse.html`} class="cta-primary text-sm">
+          Start kurset
+        </a>
+        <a href={`mailto:${SUPPORT_EMAIL}`} class="cta-secondary text-sm !border-slate-700 !bg-slate-900 !text-white">
+          Kontakt Ola
+        </a>
+      </div>
+    </div>
+
+    <div class="grid gap-10 sm:grid-cols-2">
+      <div>
+        <p class="text-sm font-bold uppercase tracking-[0.18em] text-white">Kurs</p>
+        <div class="mt-4 space-y-4">
+          {COURSE_LINKS.map((link) => (
+            <a href={link.href} class="block transition-colors hover:text-white">
+              <span class="block text-sm font-semibold">{link.label}</span>
+              <span class="block text-sm text-slate-500">{link.description}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p class="text-sm font-bold uppercase tracking-[0.18em] text-white">Teknisk</p>
+        <div class="mt-4 space-y-4 text-sm">
+          <a href={blogPath('/rss.xml')} class="block transition-colors hover:text-white">RSS-feed</a>
+          <a href={blogPath('/sitemap.xml')} class="block transition-colors hover:text-white">Sitemap</a>
+          <a href={MAIN_SITE_URL} class="block transition-colors hover:text-white">kurs.ing</a>
+          <a href={`mailto:${SUPPORT_EMAIL}`} class="block transition-colors hover:text-white">{SUPPORT_EMAIL}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-slate-800/80">
+    <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+      <p>&copy; {currentYear} Kurs.ing. Innhold for Norge, skrevet på norsk.</p>
+      <p>Beståttgaranti og produktinformasjon finner du på hovedsiden.</p>
     </div>
   </div>
 </footer>

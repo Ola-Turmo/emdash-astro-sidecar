@@ -1,4 +1,5 @@
 import type { CollectionEntry } from 'astro:content';
+import { MAIN_SITE_URL, SITE_LOCALE, SITE_NAME, SITE_URL } from '../consts';
 
 export interface SeoConfig {
   title: string;
@@ -13,28 +14,22 @@ export interface SeoConfig {
   schemaType?: string;
 }
 
-/**
- * Generate canonical URL
- */
-export function generateCanonicalUrl(path: string, baseUrl = 'https://blog.emdash.dev'): string {
+export function generateCanonicalUrl(path: string, baseUrl = SITE_URL): string {
   return `${baseUrl}${path.replace(/\/$/, '')}`;
 }
 
-/**
- * Generate Open Graph meta tags
- */
 export function generateOgTags(config: SeoConfig): Record<string, string> {
   const { title, description, url, ogImage, ogType, pubDate, updatedDate, author, tags } = config;
-  const image = ogImage || `${url}/images/og-default.png`;
-  
+  const image = ogImage || `${MAIN_SITE_URL}/images/etablerer_hero.png`;
+
   return {
     'og:title': title,
     'og:description': description,
     'og:url': url,
     'og:image': image,
     'og:type': ogType || 'website',
-    'og:site_name': 'EmDash Blog',
-    'og:locale': 'en_US',
+    'og:site_name': SITE_NAME,
+    'og:locale': SITE_LOCALE.replace('-', '_'),
     ...(pubDate && { 'article:published_time': pubDate.toISOString() }),
     ...(updatedDate && { 'article:modified_time': updatedDate.toISOString() }),
     ...(author && { 'article:author': author }),
@@ -42,25 +37,19 @@ export function generateOgTags(config: SeoConfig): Record<string, string> {
   };
 }
 
-/**
- * Generate Twitter Card meta tags
- */
 export function generateTwitterCard(config: SeoConfig): Record<string, string> {
   const { title, description, ogImage } = config;
-  
+
   return {
     'twitter:card': 'summary_large_image',
     'twitter:title': title,
     'twitter:description': description,
-    'twitter:image': ogImage || '/images/og-default.png',
+    'twitter:image': ogImage || `${MAIN_SITE_URL}/images/etablerer_hero.png`,
   };
 }
 
-/**
- * Generate BreadcrumbList JSON-LD
- */
 export function generateBreadcrumbJsonLd(items: { name: string; url: string }[]): string {
-  const jsonLd = {
+  return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: items.map((item, index) => ({
@@ -69,56 +58,46 @@ export function generateBreadcrumbJsonLd(items: { name: string; url: string }[])
       name: item.name,
       item: item.url,
     })),
-  };
-  
-  return JSON.stringify(jsonLd);
+  });
 }
 
-/**
- * Generate Article JSON-LD for structured data
- */
 export function generateArticleJsonLd(config: SeoConfig): string {
   const { title, description, url, ogImage, pubDate, updatedDate, author, schemaType } = config;
-  
-  const jsonLd = {
+
+  return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': schemaType || 'Article',
     headline: title,
     description,
     url,
-    image: ogImage ? [ogImage] : undefined,
+    image: ogImage ? [ogImage] : [`${MAIN_SITE_URL}/images/etablerer_hero.png`],
     datePublished: pubDate?.toISOString(),
     dateModified: (updatedDate || pubDate)?.toISOString(),
     author: {
       '@type': 'Person',
-      name: author || 'Editorial Team',
-      url: `${url}/author/editor`,
+      name: author || 'Kurs.ing',
+      url: `${SITE_URL}/author/ola-turmo/`,
     },
     publisher: {
       '@type': 'Organization',
-      name: 'EmDash',
+      name: 'Kurs.ing',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://blog.emdash.dev/images/logo.png',
+        url: `${MAIN_SITE_URL}/favicon.svg`,
       },
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': url,
     },
-  };
-  
-  return JSON.stringify(jsonLd);
+  });
 }
 
-/**
- * Generate FAQPage JSON-LD
- */
 export function generateFaqJsonLd(faqs: { question: string; answer: string }[]): string {
-  const jsonLd = {
+  return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqs.map(faq => ({
+    mainEntity: faqs.map((faq) => ({
       '@type': 'Question',
       name: faq.question,
       acceptedAnswer: {
@@ -126,32 +105,22 @@ export function generateFaqJsonLd(faqs: { question: string; answer: string }[]):
         text: faq.answer,
       },
     })),
-  };
-  
-  return JSON.stringify(jsonLd);
+  });
 }
 
-/**
- * Generate Person JSON-LD for author pages
- */
 export function generatePersonJsonLd(author: CollectionEntry<'authors'>): string {
-  const jsonLd = {
+  return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Person',
     name: author.data.name,
     description: author.data.bio,
     ...(author.data.social?.website && { url: author.data.social.website }),
     ...(author.data.social?.twitter && { sameAs: [author.data.social.twitter] }),
-  };
-  
-  return JSON.stringify(jsonLd);
+  });
 }
 
-/**
- * Generate ItemList JSON-LD for category/tag archives
- */
-export function generateItemListJsonLd(items: { name: string; url: string }[], listType: 'Category' | 'Tag'): string {
-  const jsonLd = {
+export function generateItemListJsonLd(items: { name: string; url: string }[]): string {
+  return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     itemListElement: items.map((item, index) => ({
@@ -161,36 +130,25 @@ export function generateItemListJsonLd(items: { name: string; url: string }[], l
       name: item.name,
     })),
     numberOfItems: items.length,
-    ...(listType === 'Category' && { '@type': 'BreadcrumbList' }),
-  };
-  
-  return JSON.stringify(jsonLd);
+  });
 }
 
-/**
- * Generate complete SEO head meta tags
- */
 export function generateSeoMeta(config: SeoConfig): { meta: Record<string, string>; jsonLd: string[] } {
   const canonical = config.url;
   const ogTags = generateOgTags({ ...config, url: canonical });
   const twitterTags = generateTwitterCard(config);
-  
-  const jsonLdScripts: string[] = [];
-  
+  const jsonLd = [generateBreadcrumbJsonLd([{ name: SITE_NAME, url: SITE_URL }, { name: config.title, url: config.url }])];
+
   if (config.schemaType === 'Article' || config.schemaType === 'BlogPosting' || config.schemaType === 'TechArticle') {
-    jsonLdScripts.push(generateArticleJsonLd(config));
+    jsonLd.push(generateArticleJsonLd(config));
   }
-  
-  jsonLdScripts.push(generateBreadcrumbJsonLd([
-    { name: 'Home', url: 'https://blog.emdash.dev' },
-    { name: config.title, url: config.url },
-  ]));
-  
-  const meta: Record<string, string> = {
-    canonical,
-    ...ogTags,
-    ...twitterTags,
+
+  return {
+    meta: {
+      canonical,
+      ...ogTags,
+      ...twitterTags,
+    },
+    jsonLd,
   };
-  
-  return { meta, jsonLd: jsonLdScripts };
 }

@@ -1,0 +1,17 @@
+name = "kurs-ing-guide-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+routes = [
+  { pattern = "www.kurs.ing/guide*", zone_name = "kurs.ing" },
+  { pattern = "kurs.ing/guide*", zone_name = "kurs.ing" },
+  { pattern = "www.kurs.ing/blog*", zone_name = "kurs.ing" },
+  { pattern = "kurs.ing/blog*", zone_name = "kurs.ing" },
+  { pattern = "www.kurs.ing/category*", zone_name = "kurs.ing" },
+  { pattern = "kurs.ing/category*", zone_name = "kurs.ing" },
+  { pattern = "www.kurs.ing/author*", zone_name = "kurs.ing" },
+  { pattern = "kurs.ing/author*", zone_name = "kurs.ing" },
+]
+
+[vars]
+GUIDE_ORIGIN = "https://master.emdash-astro-sidecar.pages.dev"

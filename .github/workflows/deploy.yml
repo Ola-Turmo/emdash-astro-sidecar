@@ -41,17 +41,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
-        env:
-          SITE_URL: ${{ vars.PREVIEW_SITE_URL }}
+      - name: Verify repo
+        run: pnpm verify
 
       - name: Deploy to Cloudflare Pages (Preview)
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: emdash-blog-preview
+          projectName: emdash-astro-sidecar
           directory: apps/blog/dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: '3'
@@ -78,18 +76,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
-        env:
-          NODE_ENV: production
-          SITE_URL: ${{ vars.PRODUCTION_SITE_URL }}
+      - name: Verify repo
+        run: pnpm verify
 
       - name: Deploy to Cloudflare Pages (Production)
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: emdash-blog
+          projectName: emdash-astro-sidecar
           directory: apps/blog/dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: '3'

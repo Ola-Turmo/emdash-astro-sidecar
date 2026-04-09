@@ -52,10 +52,18 @@ const categories = defineCollection({
 
 // Tag collection schema
 const tags = defineCollection({
-  type: 'content',
+  type: 'data',
   schema: z.object({
     name: z.string(),
   }),
+});
+
+const docs = defineCollection({
+  type: 'content',
+});
+
+const postsBak = defineCollection({
+  type: 'content',
 });
 
 export const collections = {
@@ -63,4 +71,6 @@ export const collections = {
   authors,
   categories,
   tags,
+  docs,
+  'posts.bak': postsBak,
 };

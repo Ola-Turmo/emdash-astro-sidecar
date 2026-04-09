@@ -1,2 +1,18 @@
-export const SITE_URL = 'https://blog.emdash.dev';
-export const SITE_NAME = 'EmDash Blog';
+export {
+  BLOG_BASE_PATH,
+  SITE_URL,
+  MAIN_SITE_URL,
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  SITE_LOCALE,
+  SUPPORT_EMAIL,
+  CLOUDFLARE_PAGES_PROJECT,
+  CLOUDFLARE_PAGES_PREVIEW_ALIAS,
+  CLOUDFLARE_ROUTE_WORKER,
+  DEPLOY_AUDIT_SITEMAPS,
+  DEPLOY_AUDIT_EXTRA_URLS,
+  MAIN_NAV,
+  COURSE_LINKS,
+  blogPath,
+  siteConfig,
+} from './site-config';

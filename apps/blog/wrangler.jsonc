@@ -1,8 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "emdash-astro-sidecar-blog",
+  "name": "emdash-astro-sidecar",
   "compatibility_date": "2024-12-01",
   "compatibility_flags": ["nodejs_compat", "atomics"],
+  "pages_build_output_dir": "dist",
 
   // KV Namespaces for EmDash content cache
   "kv_namespaces": [
@@ -28,21 +29,13 @@
 
   // Environment variables mapping for EmDash config
   "vars": {
-    "PUBLIC_SITE_URL": "https://example.com/blog",
+    "PUBLIC_SITE_URL": "https://www.kurs.ing/guide",
     "EMDASH_HOST": "https://api.emdash.io",
     "EMDASH_API_VERSION": "v1"
   },
 
-  // Secret keys - set via wrangler secret put or CI/CD
-  "secret_names": [
-    "EMDASH_API_KEY",
-    "EMDASH_PREVIEW_TOKEN",
-    "CLOUDFLARE_API_TOKEN"
-  ],
-
-  // Tail of Cloudflare Pages specific config
-  "pages": {
-    "build_output_dir": "dist",
-    "json_format": "multiline"
-  }
+  // Secrets should be set in Cloudflare directly when needed:
+  // - EMDASH_API_KEY
+  // - EMDASH_PREVIEW_TOKEN
+  // - CLOUDFLARE_API_TOKEN
 }

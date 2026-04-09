@@ -1,4 +1,4 @@
-import type { ExtractedDesign, ExtractedReport } from '../types.js';
+import type { ExtractedDesign, ExtractedReport } from '../types.ts';
 
 /**
  * Convert extracted design to a JSON report

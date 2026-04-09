@@ -47,31 +47,16 @@ jobs:
         run: pnpm install --frozen-lockfile
         timeout-minutes: 10
 
-      - name: Type checking
-        run: pnpm run typecheck
-        timeout-minutes: 5
-        continue-on-error: true
+      - name: Verify repo
+        run: pnpm verify
+        timeout-minutes: 15
 
-      - name: Build Astro blog
-        run: pnpm run build
-        timeout-minutes: 10
-        working-directory: apps/blog
-
-      - name: Run EmDash content sync
-        run: npx emdash migrate --push
-        timeout-minutes: 5
-        continue-on-error: true
-        env:
-          EMDASH_API_KEY: ${{ secrets.EMDASH_API_KEY }}
-          EMDASH_HOST: ${{ secrets.EMDASH_HOST }}
-
-      # Preview deployment on PR or staging branch
       - name: Deploy Preview to Cloudflare Pages
         id: deploy
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/staging')
         run: |
           DEPLOY_OUTPUT=$(pnpm exec wrangler pages deploy apps/blog/dist \
-            --project-name=emdash-astro-sidecar-blog \
+            --project-name=emdash-astro-sidecar \
             --branch=${{ github.head_ref || github.ref_name }} \
             --commit-message="${{ github.event.head_commit.message || 'Preview deployment' }}" 2>&1)
           echo "$DEPLOY_OUTPUT"
@@ -87,8 +72,8 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           pnpm exec wrangler pages deploy apps/blog/dist \
-            --project-name=emdash-astro-sidecar-blog \
-            --env=production \
+            --project-name=emdash-astro-sidecar \
+            --branch=main \
             --commit-message="${{ github.event.head_commit.message || 'Production deployment' }}"
         timeout-minutes: 5
         env:
@@ -102,8 +87,8 @@ jobs:
           echo "Trigger: ${{ github.event_name }}"
           echo "Branch: ${{ github.ref_name }}"
 
-  deploy-worker:
-    name: Deploy EmDash Blog Worker
+  deploy-workers:
+    name: Deploy Cloudflare Workers
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: deploy-blog
@@ -129,38 +114,50 @@ jobs:
         run: pnpm install --frozen-lockfile
         timeout-minutes: 10
 
-      - name: Type check Worker
-        run: |
-          cd apps/cloudflare/workers/emdash-worker
-          pnpm exec tsc --noEmit
-        timeout-minutes: 5
-        continue-on-error: true
+      - name: Sync guide SEO artifacts
+        run: pnpm sync:guide-seo
 
-      # Deploy Worker on changes to worker files
-      - name: Deploy Worker to Cloudflare Workers
+      - name: Deploy guide route worker
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
         run: |
-          cd apps/cloudflare/workers/emdash-worker
-          pnpm exec wrangler deploy --env=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+          pnpm exec wrangler deploy --config apps/cloudflare/workers/guide-proxy/wrangler.toml
         timeout-minutes: 5
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          EMDASH_API_KEY: ${{ secrets.EMDASH_API_KEY }}
-          EMDASH_HOST: ${{ secrets.EMDASH_HOST }}
+
+      - name: Deploy root SEO files worker
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+        run: |
+          pnpm exec wrangler deploy --config apps/cloudflare/workers/seo-files/wrangler.toml
+        timeout-minutes: 5
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Worker Deployment Status
         if: always()
         run: |
-          echo "Worker deployment completed"
-          echo "Environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}"
+          echo "Cloudflare worker deployment completed"
+
+      - name: Run deployed URL audit
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: pnpm audit:deployed
+
+      - name: Upload deployed audit artifacts
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployed-url-audit
+          path: output/playwright/deployed-audit
+          if-no-files-found: error
 
   # Optional: Run tests after deployment
   test-deployment:
     name: Test Deployment
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [deploy-blog, deploy-worker]
+    needs: [deploy-blog, deploy-workers]
     if: github.event_name == 'pull_request'
     
     steps:

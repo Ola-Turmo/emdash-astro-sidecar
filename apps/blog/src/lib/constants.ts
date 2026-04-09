@@ -1,3 +1,1 @@
-export const SITE_URL = 'https://blog.emdash.dev';
-export const SITE_NAME = 'EmDash Blog';
-export const SITE_DESCRIPTION = 'Thoughtful articles on web development, design systems, and AI-assisted content workflows.';
+export { SITE_URL, SITE_NAME, SITE_DESCRIPTION, MAIN_SITE_URL, SITE_LOCALE } from '../consts';

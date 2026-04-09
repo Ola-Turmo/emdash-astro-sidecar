@@ -1,0 +1,16 @@
+name = "kurs-ing-seo-files"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+routes = [
+  { pattern = "www.kurs.ing/robots.txt", zone_name = "kurs.ing" },
+  { pattern = "kurs.ing/robots.txt", zone_name = "kurs.ing" },
+  { pattern = "www.kurs.ing/sitemap.xml", zone_name = "kurs.ing" },
+  { pattern = "kurs.ing/sitemap.xml", zone_name = "kurs.ing" },
+  { pattern = "www.kurs.ing/sitemap-index.xml", zone_name = "kurs.ing" },
+  { pattern = "kurs.ing/sitemap-index.xml", zone_name = "kurs.ing" }
+]
+
+[vars]
+MAIN_SITE_URL = "https://www.kurs.ing"
+GUIDE_SITE_URL = "https://www.kurs.ing/guide"

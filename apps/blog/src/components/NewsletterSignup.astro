@@ -34,7 +34,7 @@ const {
     
     <form 
       class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-      onsubmit="event.preventDefault(); alert('Newsletter signup is a placeholder for MVP. In production, this would submit to your email service provider.');"
+      onsubmit="window.alert('Newsletter signup is a placeholder for MVP. In production, this would submit to your email service provider.'); return false;"
     >
       <label for="newsletter-email" class="sr-only">Email address</label>
       <input

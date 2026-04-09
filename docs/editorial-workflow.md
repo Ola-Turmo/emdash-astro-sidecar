@@ -1,125 +1,107 @@
 # Editorial Workflow
 
-EmDash Astro Sidecar provides a structured editorial workflow for blog content management.
+## Purpose
 
-## Content Types
+The sidecar is not a generic blog dump. It is a GEO/SEO support layer for the host site.
 
-### Posts
+Every article should do at least one of these clearly:
 
-Blog posts are MDX files in `src/content/posts/`:
+- answer a real pre-purchase question
+- reduce friction before checkout
+- explain a regulatory or operational concept
+- strengthen topical authority for AI and search retrieval
 
-```mdx
----
-title: Post Title
-description: Brief description
-publishDate: 2024-12-01
-author: author-slug
-category: category-slug
-tags: ["tag1", "tag2"]
-draft: false
-featured: true
----
+## End-User Language Rule
 
-Post content here...
-```
+Read [copy-guidelines.md](./copy-guidelines.md) before writing homepage copy, article intros, section labels, or CTA text.
 
-### Authors
+Non-technical users should never see internal strategy language such as:
 
-Author profiles in `src/content/authors/`:
+- sidecar
+- GEO layer
+- content wave
+- cluster
+- “how the blog is connected to the main site”
 
-```yaml
-name: Author Name
-bio: Author biography
-avatar: /authors/avatar.jpg
-email: author@example.com
-twitter: authorhandle
-github: author-github
-```
+Those are internal operating terms, not reader-facing language.
 
-### Categories
+## Current Content Model
 
-Category definitions in `src/content/categories/`:
+Defined in:
 
-```yaml
-name: Category Name
-slug: category-slug
-description: Category description
-color: "#3b82f6"
-parent: parent-category-slug  # optional
-```
+- `apps/blog/src/content.config.ts`
 
-## Workflow Stages
+Collections:
 
-### 1. Draft
+- `blog`
+- `authors`
+- `categories`
+- `tags`
+- `docs`
+- `posts.bak`
 
-Create a new post with `draft: true`:
+## Required Blog Frontmatter
 
-```mdx
----
-title: My Draft Post
-draft: true
----
+Each article in `apps/blog/src/content/blog/` needs:
 
-Draft content...
-```
+- `title`
+- `description`
+- `pubDate`
+- `author`
+- `category`
+- `tags`
+- `excerpt`
+- `schemaType`
+- `draft`
 
-### 2. Review
+Optional:
 
-Move draft to review by:
-1. Completing the content
-2. Adding proper frontmatter
-3. Setting `draft: false` (or removing it)
+- `updatedDate`
+- `featuredImage`
+- `relatedPosts`
 
-### 3. Scheduled
+## Publishing Rules
 
-Set `publishDate` to schedule publication:
+- keep demo or experimental content as `draft: true`
+- publish only host-relevant articles in the active sidecar
+- prefer explicit, question-driven titles
+- keep excerpts usable as standalone search snippets
+- prefer categories that map to host-site commercial or informational clusters
 
-```yaml
-publishDate: 2024-12-15  # Future date for scheduling
-```
+## Recommended Article Shapes
 
-### 4. Published
+Use these heavily:
 
-Posts with `publishDate` in the past and `draft: false` are published.
+- explainer
+- requirement guide
+- how-to
+- FAQ-heavy article
+- role/responsibility breakdown
+- comparison article when it supports a commercial question
 
-### 5. Updated
+## Internal Linking
 
-Update `updatedDate` when modifying published posts:
+Every published article should have:
 
-```yaml
-publishDate: 2024-12-01
-updatedDate: 2024-12-10
-```
+- at least one link back to the relevant commercial page on the host site
+- tags that create connected topic clusters
+- category placement that reflects the commercial/user-intent structure
 
-## Querying Content
+## Initial Content Checklist For A New Host Site
 
-### Get Published Posts
+1. Create the active author profile.
+2. Create host-specific categories.
+3. Mark old demo articles as drafts.
+4. Publish 3-5 core articles that answer high-intent questions.
+5. Verify category, author, tag, RSS, and sitemap pages build cleanly.
 
-```typescript
-import { getCollection } from 'astro:content';
+## Content Quality Gates
 
-const posts = await getCollection('posts', ({ data }) => {
-  return !data.draft;
-});
-```
+Before publishing:
 
-### Get Posts by Author
-
-```typescript
-const authorPosts = posts.filter(post => post.data.author === 'author-slug');
-```
-
-### Get Featured Posts
-
-```typescript
-const featuredPosts = posts.filter(post => post.data.featured);
-```
-
-## Publishing with Skills
-
-AI agents can handle publishing via skills:
-
-1. **draft-gen** - Generate post drafts
-2. **publishing** - Validate and publish content
-
-See `packages/skills/src/` for skill definitions.
+- article answers one concrete question clearly
+- title and excerpt are not generic
+- visible copy sounds natural to an end user, not to an internal operator
+- article links back to the host site
+- frontmatter matches the schema
+- `pnpm --filter @emdash/blog build` succeeds

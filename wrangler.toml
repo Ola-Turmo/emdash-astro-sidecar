@@ -70,10 +70,10 @@ PUBLIC_SITE_URL = "https://example.com/blog"
 EMDASH_HOST = "https://api.emdash.io"
 EMDASH_API_VERSION = "v1"
 
-[env.production.vars]]
+[env.production.vars]
 PUBLIC_SITE_URL = "https://example.com/blog"
 
-[env.preview.vars]]
+[env.preview.vars]
 PUBLIC_SITE_URL = "https://preview.example.com/blog"
 
 # =============================================================================

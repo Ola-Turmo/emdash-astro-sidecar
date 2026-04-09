@@ -1,110 +1,123 @@
 # Deployment
 
-EmDash Astro Sidecar is designed for edge-first deployment on Cloudflare Workers and Pages.
+## Recommended Production Shape
 
-## Deployment Targets
+Use:
 
-1. **Cloudflare Pages** - Primary deployment for static assets
-2. **Cloudflare Workers** - For dynamic API routes (future)
+1. Cloudflare Pages for the static Astro build
+2. A small Worker for the host-site mount path
 
-## Cloudflare Pages Setup
+This is the correct shape when the blog lives under a host path such as:
 
-### Using Wrangler
+- `/guide/`
+- `/blog/`
+- `/academy/`
 
-1. Install Wrangler CLI:
+## Pages Deployment
+
+Build first:
+
 ```bash
-pnpm add -D wrangler
+pnpm --filter @emdash/blog build
 ```
 
-2. Configure `apps/blog/wrangler.jsonc`:
-```jsonc
-{
-  "name": "your-blog-worker",
-  "compatibility_date": "2024-12-01",
-  "assets": {
-    "directory": ".output/public",
-    "binding": "ASSETS"
-  }
-}
-```
+Deploy the generated `dist` folder:
 
-3. Deploy:
 ```bash
 cd apps/blog
-pnpm build
-wrangler pages deploy .output/public
+pnpm exec wrangler pages deploy dist --project-name=<pages-project> --branch=<branch> --commit-dirty=true
 ```
 
-### Using GitHub Actions
+After building the blog, sync the feed and sitemap artifacts into the guide worker:
 
-Create `.github/workflows/deploy.yml`:
-
-```yaml
-name: Deploy
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install
-      - run: pnpm build
-      - uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: blog
-          directory: apps/blog/.output/public
-```
-
-## Configuration
-
-### Routes
-
-Configure blog mounting at `/blog` path:
-
-```jsonc
-"routes": [
-  {
-    "pattern": "example.com/blog",
-    "zone_name": "example.com"
-  }
-]
-```
-
-### Environment Variables
-
-Set these in Cloudflare dashboard or via `wrangler secret`:
-
-- `SITE_URL` - Production blog URL
-- EmDash API keys (if using hosted EmDash)
-
-## Preview Deployments
-
-Preview deployments are automatically created for pull requests via Cloudflare Pages.
-
-## Troubleshooting
-
-### Build Failures
-
-Check the build output in `.output/`:
 ```bash
-ls -la apps/blog/.output/
+pnpm sync:guide-seo
 ```
 
-### Assets Not Loading
+Important:
 
-Verify the `assets.directory` path matches your build output:
-```jsonc
-"assets": {
-  "directory": ".output/public"
-}
+- `apps/blog/wrangler.jsonc` must include `pages_build_output_dir: "dist"`
+- the project name in `apps/blog/wrangler.jsonc` and `apps/blog/deploy.ts` must match the real Pages project
+
+## Route Worker Deployment
+
+When the blog is mounted under a subpath, deploy:
+
+```bash
+cd apps/cloudflare/workers/guide-proxy
+npx wrangler deploy
 ```
+
+Key file:
+
+- `apps/cloudflare/workers/guide-proxy/src/index.ts`
+
+Key rule:
+
+- strip the mount prefix before requesting the Pages origin
+- serve `/guide/rss.xml`, `/guide/sitemap.xml`, and `/guide/robots.txt` from synced artifacts so feed correctness does not depend on stale Pages XML behavior
+- redirect legacy top-level content paths such as `/blog/*` to the mounted sidecar path when old host pages still exist
+- block `/guide/preview/*` from public access
+
+Example:
+
+- incoming request: `https://www.example.com/guide/_astro/app.css`
+- origin request must become: `https://<pages-alias>/_astro/app.css`
+
+Not:
+
+- `https://<pages-alias>/guide/_astro/app.css`
+
+If you get that wrong, CSS requests return HTML and the live site appears unstyled.
+
+## Current Repo Defaults
+
+Current settings are stored in:
+
+- `apps/blog/src/site-config.ts`
+
+That file includes:
+
+- Pages project name
+- Pages preview alias
+- route worker name
+
+## Deploy Script
+
+There is a convenience script at:
+
+- `apps/blog/deploy.ts`
+
+It now assumes:
+
+- Astro output lives in `dist`
+- the Pages project is `emdash-astro-sidecar`
+
+## Live Verification Checklist
+
+After deployment, verify all of these:
+
+1. `https://host/path/` returns `200`
+2. `https://host/path/_astro/<asset>.css` returns `200` with `text/css`
+3. `https://host/path/rss.xml` resolves
+4. `https://host/path/sitemap.xml` resolves
+5. HTML canonical URLs point at the mounted host path
+6. page HTML matches the intended sidecar, not the old deployment
+7. legacy `/blog/...` URLs redirect to the mounted path or return an intentional `404`
+8. `pnpm audit:deployed` produces screenshots and analytics for every public route
+
+## Branch / Alias Notes
+
+Cloudflare Pages aliases matter.
+
+If the production branch on the Pages project is not the one you are actively deploying, you may need the route worker to point at a stable preview alias such as:
+
+- `master.<project>.pages.dev`
+
+That is acceptable as an operational workaround, but it should be documented and normalized later.
+
+## Unsupported `wrangler.jsonc` Fields
+
+Pages deployment will warn if you keep unsupported top-level fields in `apps/blog/wrangler.jsonc`.
+
+Keep that file limited to supported Pages config plus the variables/bindings you actually use.

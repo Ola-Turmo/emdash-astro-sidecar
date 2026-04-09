@@ -1,5 +1,7 @@
 ---
+import { getEntry } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
+import { MAIN_SITE_URL, blogPath } from '../consts';
 
 interface Props {
   post: CollectionEntry<'blog'>;
@@ -7,41 +9,54 @@ interface Props {
 
 const { post } = Astro.props;
 const { title, excerpt, pubDate, featuredImage, category } = post.data;
-const categoryData = post.data.category;
+const categoryId = typeof category === 'string' ? category : ('id' in category ? category.id : category.slug);
+const categoryEntry = categoryId ? await getEntry('categories', categoryId) : undefined;
+const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
 ---
 
-<article class="group">
-  <a href={`/blog/${post.slug}`} class="block">
-    <!-- Image -->
+<article class="shell-card group overflow-hidden p-5 md:p-6">
+  <a href={blogPath(`/blog/${post.slug}`)} class="block">
     {featuredImage ? (
-      <div class="aspect-video overflow-hidden rounded-xl mb-4">
+      <div class="mb-5 aspect-[1.4] overflow-hidden rounded-[1.35rem] bg-slate-100">
         <img
           src={featuredImage.src}
           alt={featuredImage.alt}
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
       </div>
     ) : (
-      <div class="aspect-video bg-neutral-100 rounded-xl mb-4" />
+      <div class="mb-5 rounded-[1.35rem] bg-gradient-to-br from-teal-50 via-white to-slate-100 p-6">
+        <span class="eyebrow">Guide</span>
+        <div class="mt-5 flex items-end justify-between gap-4">
+          <div>
+            <p class="display-title text-2xl font-bold text-slate-900">{categoryName}</p>
+            <p class="mt-2 max-w-xs text-sm leading-6 text-slate-600">{excerpt}</p>
+          </div>
+          <span class="rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-teal-700">
+            På norsk
+          </span>
+        </div>
+      </div>
     )}
-    
-    <!-- Category -->
-    <span class="text-sm font-medium text-blue-600">
-      {typeof categoryData === 'object' ? categoryData.name : categoryData}
-    </span>
-    
-    <!-- Title -->
-    <h3 class="text-xl font-bold text-neutral-900 mt-1 group-hover:text-blue-600 transition-colors">
+
+    <span class="eyebrow">{categoryName}</span>
+    <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 transition-colors group-hover:text-teal-800">
       {title}
     </h3>
-    
-    <!-- Excerpt -->
-    <p class="text-neutral-600 mt-2 line-clamp-2">{excerpt}</p>
-    
-    <!-- Date -->
-    <time class="text-sm text-neutral-500 mt-3 block" datetime={pubDate.toISOString()}>
-      {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-    </time>
+    <p class="mt-3 line-clamp-3 text-sm leading-7 text-slate-600">{excerpt}</p>
+
+    <div class="mt-5 flex items-center justify-between gap-4 text-sm">
+      <time class="font-semibold text-slate-500" datetime={pubDate.toISOString()}>
+        {pubDate.toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
+      </time>
+      <span class="font-bold text-teal-700">Les artikkel</span>
+    </div>
   </a>
+
+  <div class="mt-5 border-t border-slate-200/80 pt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+    <a href={MAIN_SITE_URL} class="transition-colors hover:text-slate-900">Til hovedsiden</a>
+    <span class="mx-2">/</span>
+    <a href={`${MAIN_SITE_URL}/kasse.html`} class="transition-colors hover:text-slate-900">Kjøp kurset</a>
+  </div>
 </article>

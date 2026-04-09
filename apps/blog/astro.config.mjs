@@ -5,7 +5,8 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://blog.emdash.dev',
+  site: 'https://www.kurs.ing/guide',
+  base: '/guide',
   output: 'static',
   integrations: [
     tailwind(),
