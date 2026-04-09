@@ -1,0 +1,216 @@
+name: Cloudflare Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    branches:
+      - main
+      - staging
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  deploy-blog:
+    name: Deploy Blog to Cloudflare Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      preview-url: ${{ steps.deploy.outputs.url }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            apps/blog/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        timeout-minutes: 10
+
+      - name: Type checking
+        run: pnpm run typecheck
+        timeout-minutes: 5
+        continue-on-error: true
+
+      - name: Build Astro blog
+        run: pnpm run build
+        timeout-minutes: 10
+        working-directory: apps/blog
+
+      - name: Run EmDash content sync
+        run: npx emdash migrate --push
+        timeout-minutes: 5
+        continue-on-error: true
+        env:
+          EMDASH_API_KEY: ${{ secrets.EMDASH_API_KEY }}
+          EMDASH_HOST: ${{ secrets.EMDASH_HOST }}
+
+      # Preview deployment on PR or staging branch
+      - name: Deploy Preview to Cloudflare Pages
+        id: deploy
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/staging')
+        run: |
+          DEPLOY_OUTPUT=$(pnpm exec wrangler pages deploy apps/blog/dist \
+            --project-name=emdash-astro-sidecar-blog \
+            --branch=${{ github.head_ref || github.ref_name }} \
+            --commit-message="${{ github.event.head_commit.message || 'Preview deployment' }}" 2>&1)
+          echo "$DEPLOY_OUTPUT"
+          # Extract and set the preview URL
+          echo "url=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.pages\.dev' | head -1)" >> $GITHUB_OUTPUT
+        timeout-minutes: 5
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Production deployment on main branch
+      - name: Deploy Production to Cloudflare Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          pnpm exec wrangler pages deploy apps/blog/dist \
+            --project-name=emdash-astro-sidecar-blog \
+            --env=production \
+            --commit-message="${{ github.event.head_commit.message || 'Production deployment' }}"
+        timeout-minutes: 5
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deployment Status
+        if: always()
+        run: |
+          echo "Deployment completed"
+          echo "Trigger: ${{ github.event_name }}"
+          echo "Branch: ${{ github.ref_name }}"
+
+  deploy-worker:
+    name: Deploy EmDash Blog Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: deploy-blog
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        timeout-minutes: 10
+
+      - name: Type check Worker
+        run: |
+          cd apps/cloudflare/workers/emdash-worker
+          pnpm exec tsc --noEmit
+        timeout-minutes: 5
+        continue-on-error: true
+
+      # Deploy Worker on changes to worker files
+      - name: Deploy Worker to Cloudflare Workers
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+        run: |
+          cd apps/cloudflare/workers/emdash-worker
+          pnpm exec wrangler deploy --env=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+        timeout-minutes: 5
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          EMDASH_API_KEY: ${{ secrets.EMDASH_API_KEY }}
+          EMDASH_HOST: ${{ secrets.EMDASH_HOST }}
+
+      - name: Worker Deployment Status
+        if: always()
+        run: |
+          echo "Worker deployment completed"
+          echo "Environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}"
+
+  # Optional: Run tests after deployment
+  test-deployment:
+    name: Test Deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [deploy-blog, deploy-worker]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test deployment URL
+        run: |
+          # Get the preview URL from deployment output
+          PREVIEW_URL="${{ needs.deploy-blog.outputs.preview-url }}"
+          if [ -z "$PREVIEW_URL" ]; then
+            echo "No preview URL available, skipping tests"
+            exit 0
+          fi
+          
+          echo "Testing preview deployment at: $PREVIEW_URL"
+          
+          # Basic smoke test
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL")
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 301 ] || [ "$HTTP_CODE" -eq 302 ]; then
+            echo "✓ Preview site is accessible (HTTP $HTTP_CODE)"
+          else
+            echo "✗ Preview site returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+        timeout-minutes: 5
+
+  # Notify on failure
+  notify-failure:
+    name: Notify Deployment Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-blog, deploy-worker]
+    if: failure()
+    
+    steps:
+      - name: Notify failure
+        run: |
+          echo "Cloudflare deployment failed"
+          echo "Failed job: ${{ failed() }}"

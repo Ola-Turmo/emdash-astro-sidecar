@@ -1,0 +1,96 @@
+---
+title: Plugin Development
+description: Build plugins to extend EmDash functionality.
+---
+
+# Plugin Development
+
+EmDash has a plugin system for extending functionality with custom content blocks and lifecycle hooks.
+
+## Creating a Plugin
+
+### 1. Create plugin structure
+
+```
+packages/plugins/src/plugins/my-plugin/
+├── src/
+│   ├── index.ts       # Plugin definition
+│   └── MyBlock.astro  # Component
+└── package.json
+```
+
+### 2. Define the plugin
+
+```typescript
+// index.ts
+import type { Plugin } from '../../../../sdk/types.js';
+
+export const myPlugin: Plugin = {
+  name: '@emdash/my-plugin',
+  version: '0.1.0',
+  enabled: true,
+  hooks: {
+    onInit: async (ctx) => {
+      ctx.logger.info('My plugin initialized');
+    },
+  },
+  contentBlocks: {
+    MyBlock: {
+      name: 'MyBlock',
+      component: './MyBlock.astro',
+      props: {
+        title: 'Default Title',
+      },
+    },
+  },
+};
+```
+
+### 3. Create the component
+
+```astro
+---
+interface Props {
+  title?: string;
+}
+const { title = 'My Block' } = Astro.props;
+---
+
+<div class="my-block">
+  <h3>{title}</h3>
+  <slot />
+</div>
+```
+
+## Using Content Blocks in MDX
+
+```mdx
+import MyBlock from '@emdash/my-plugin/MyBlock.astro';
+
+<MyBlock title="Custom Title">
+  Block content here...
+</MyBlock>
+```
+
+## Hooks
+
+| Hook | Timing | Use Case |
+|------|--------|----------|
+| `onInit` | Plugin loaded | Initialize plugin state |
+| `onBuild` | Before build | Modify config, add assets |
+| `onRender` | Each page render | Inject content, modify HTML |
+| `onPublish` | After publish | Notify external services |
+
+## Registering Plugins
+
+Edit `apps/blog/astro.config.mjs`:
+
+```javascript
+import { myPlugin } from '@emdash/my-plugin';
+
+export default defineConfig({
+  integrations: [
+    // ... other integrations
+  ],
+});
+```

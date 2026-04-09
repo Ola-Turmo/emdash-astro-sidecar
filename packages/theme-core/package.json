@@ -1,0 +1,17 @@
+{
+  "name": "@emdash/theme-core",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./tokens": "./src/tokens/index.ts",
+    "./components": "./src/components/index.ts",
+    "./styles": "./src/styles/tokens.css"
+  },
+  "scripts": {
+    "build": "echo 'theme-core: no build step needed'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "astro": "^5.0.0"
+  }
+}

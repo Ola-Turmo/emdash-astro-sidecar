@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+const allPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
+const sortedPosts = allPosts.sort((a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const featuredPosts = sortedPosts.slice(0, 6);
+---
+
+<BaseLayout title="EmDash Blog" description="Thoughtful articles on web development, design systems, and AI-assisted content workflows.">
+  <Header />
+  
+  <main>
+    <!-- Hero -->
+    <section class="bg-neutral-50 py-20">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        <h1 class="text-5xl font-bold text-neutral-900 mb-6">
+          EmDash Blog
+        </h1>
+        <p class="text-xl text-neutral-600 max-w-2xl mx-auto">
+          Thoughtful articles on web development, design systems, and AI-assisted content workflows.
+        </p>
+      </div>
+    </section>
+    
+    <!-- Latest posts -->
+    <section class="max-w-4xl mx-auto px-4 py-16">
+      <h2 class="text-2xl font-bold text-neutral-900 mb-8">Latest Articles</h2>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        {featuredPosts.map((post: CollectionEntry<'blog'>) => (
+          <ArticleCard post={post} />
+        ))}
+      </div>
+      
+      {featuredPosts.length === 0 && (
+        <p class="text-center text-neutral-500 py-12">
+          No posts yet. Check back soon!
+        </p>
+      )}
+    </section>
+  </main>
+  
+  <Footer />
+</BaseLayout>

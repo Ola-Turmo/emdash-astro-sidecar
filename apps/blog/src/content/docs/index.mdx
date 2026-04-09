@@ -1,0 +1,54 @@
+---
+title: EmDash Astro Sidecar
+description: An embeddable blog engine for any existing website, built with Astro.
+---
+
+# EmDash Astro Sidecar
+
+EmDash is an **embeddable blog engine** for any existing website. Drop it into your Astro, Next.js, or static site project and get a full-featured blog with:
+
+- **Design cloning** — Match your host site's aesthetics automatically
+- **AI-agent publishing** — Generate and publish content via MCP skills
+- **Strong SEO defaults** — Structured data, JSON-LD, and sitemap built-in
+- **Plugin system** — Extend with custom content blocks and hooks
+
+## Quick Start
+
+```bash
+# Clone the template
+git clone https://github.com/emdashdev/emdash-astro-sidecar my-blog
+cd my-blog
+
+# Install dependencies
+pnpm install
+
+# Start development
+pnpm dev
+```
+
+## Project Structure
+
+```
+emdash-astro-sidecar/
+├── apps/blog/          # Astro blog application
+│   ├── src/
+│   │   ├── content/    # Blog posts, authors, categories
+│   │   ├── components/ # Astro UI components
+│   │   ├── layouts/    # Page layouts
+│   │   ├── lib/        # Utilities (SEO, helpers)
+│   │   └── pages/      # Routes
+│   └── public/         # Static assets
+├── packages/
+│   ├── theme-core/    # Design tokens
+│   ├── design-clone/   # Design extraction
+│   ├── skills/         # AI-agent skills
+│   ├── plugins/        # Plugin SDK
+│   └── ai/            # AI utilities
+```
+
+## Next Steps
+
+- [Setup Guide](/docs/setup) — Full installation instructions
+- [Deployment](/docs/deployment) — Deploy to Cloudflare Pages
+- [AI Agent Docs](/docs/agent-docs) — Using AI-agent skills
+- [Plugin Development](/docs/plugin-dev) — Building plugins

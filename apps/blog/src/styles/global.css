@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: hsl(217 91% 60%);
+    --color-secondary: hsl(270 50% 50%);
+    --color-accent: hsl(33 100% 50%);
+    --color-muted: hsl(210 20% 96%);
+    --color-muted-foreground: hsl(215 16% 47%);
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+}

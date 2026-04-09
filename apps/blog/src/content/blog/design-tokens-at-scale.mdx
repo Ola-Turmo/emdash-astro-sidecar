@@ -1,0 +1,66 @@
+---
+title: "Design Tokens at Scale: From 3 to 300 Components"
+description: "How we built a scalable design token system that powers 300+ UI components across 5 products."
+pubDate: 2024-02-20
+author: editor
+category: strategy
+tags: [design-systems, design-tokens, css, scaling]
+featuredImage:
+  src: /images/blog/design-tokens.jpg
+  alt: Abstract geometric shapes representing design tokens
+excerpt: "Design tokens transform how teams build UIs. Here's the system we built to manage them at scale."
+schemaType: Article
+draft: false
+---
+
+# Design Tokens at Scale: From 3 to 300 Components
+
+Two years ago, our design system had **3 components** and **no token strategy**. Today, we ship **300+ components** powered by a single token system that works across web, mobile, and email.
+
+## What Are Design Tokens?
+
+Design tokens are **named design decisions** stored as data:
+
+```json
+{
+  "color": {
+    "primary": {
+      "value": "#3b82f6",
+      "description": "Primary brand blue"
+    }
+  }
+}
+```
+
+Instead of hardcoding `#3b82f6` everywhere, you reference `--color-primary`.
+
+## Our Token Hierarchy
+
+We organize tokens in **4 tiers**:
+
+1. **Primitives** — Raw values (all the blues in your palette)
+2. **Semantic** — Meaning-driven references (success, danger)
+3. **Component** — Component-specific tokens
+4. **Theme** — Complete theme compositions
+
+## The Build Pipeline
+
+```bash
+tokens.json → Transform → CSS Variables
+                        → Tailwind Config
+                        → iOS Swift
+                        → Android XML
+                        → Email CSS
+```
+
+A single source of truth generates **all platform outputs**.
+
+## Key Lessons
+
+- **Name tokens by purpose**, not appearance (`--color-text-primary`, not `--color-gray-900`)
+- **Separate semantic from primitive** tokens
+- **Version your themes** like APIs
+- **Document token usage** in component docs
+
+{/* faq:How do design tokens work with CSS frameworks?: Most frameworks (Tailwind, CSS-in-JS) can consume design tokens as CSS custom properties. */}
+{/* faq:What's the difference between tokens and variables?: Variables are a technical implementation. Tokens are intentional design decisions with metadata. */}

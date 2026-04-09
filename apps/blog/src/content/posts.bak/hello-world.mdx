@@ -1,0 +1,81 @@
+---
+title: "Welcome to EmDash: A New Era in Content Management"
+description: "Introducing EmDash, the modern content management system built for developers who demand flexibility, performance, and a seamless authoring experience."
+publishDate: 2026-04-08
+author: admin
+category: announcements
+tags:
+  - Product Launch
+  - CMS
+  - Announcement
+featuredImage: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&h=630&fit=crop"
+coverAlt: "Modern workspace with laptop showing code"
+excerpt: "We're thrilled to announce the launch of EmDash, a revolutionary content management system designed from the ground up for modern web development workflows."
+readingTime: 5
+status: published
+featured: true
+keywords:
+  - EmDash
+  - CMS
+  - Content Management
+  - Developer Tools
+schemaType: Article
+ctaText: "Get Started"
+ctaUrl: "/docs/getting-started"
+---
+
+## What is EmDash?
+
+EmDash represents a fundamental shift in how developers approach content management. Built on modern principles and designed for the way developers actually work, EmDash eliminates the friction that has plagued traditional CMS platforms for years.
+
+> "EmDash isn't just another CMS — it's a complete rethinking of what content management can be when you put developers first." — The EmDash Team
+
+### Key Features
+
+Our platform offers a comprehensive set of features designed to make your content workflow seamless:
+
+- **MDX Native Support**: Write your content in MDX with full access to React components within your markdown
+- **Content Collections**: Type-safe content schemas ensure your data is always structured correctly
+- **Static Generation**: Every page is pre-rendered at build time for optimal performance
+- **Developer-First Design**: Full TypeScript support, hot module replacement, and a development experience that feels modern
+
+### How It Works
+
+EmDash combines the best practices from static site generators with the flexibility of modern JavaScript frameworks. Here's a quick overview:
+
+```typescript
+// Define your content schema
+const postsCollection = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    publishDate: z.date(),
+    author: reference('authors'),
+  }),
+});
+
+// Fetch and render your content
+const posts = await getCollection('posts');
+const { Content, headings } = await render(post);
+```
+
+### Why We Built This
+
+The content management landscape has been stagnant for too long.要么忍受WordPress的笨拙，要么 dealing with Jekyll's limitations — there never seemed to be a solution that just worked for developers.
+
+EmDash changes this by providing:
+
+1. **First-class TypeScript support** throughout the entire system
+2. **Built-in MDX support** that makes writing rich content intuitive
+3. **A component-based architecture** that scales from simple blogs to complex applications
+4. **Optimized performance** through static generation and smart caching
+
+### Get Started Today
+
+Ready to experience the future of content management? Head over to our [documentation](/docs/getting-started) to learn how to set up your first EmDash project.
+
+Whether you're building a personal blog, a corporate website, or a complex content-heavy application, EmDash provides the tools you need to succeed. Our focus on developer experience means you'll spend less time fighting your tools and more time creating amazing content.
+
+---
+
+We're excited to see what you'll build with EmDash. The community is growing, and we can't wait to welcome you aboard.

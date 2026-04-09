@@ -1,0 +1,363 @@
+/* ============================================
+   PROSE / MARKDOWN CONTENT STYLES
+   ============================================ 
+   
+   These styles are designed for markdown-rendered
+   content within articles and blog posts.
+*/
+
+/* ============================================
+// HEADINGS
+// ============================================ */
+
+.prose h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.prose h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.prose h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.prose h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.prose h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ============================================
+// PARAGRAPHS
+// ============================================ */
+
+.prose p {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.75;
+}
+
+.prose p:first-child {
+  margin-top: 0;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================
+// LINKS
+// ============================================ */
+
+.prose a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: hsl(var(--primary) / 0.4);
+  transition: text-decoration-color 0.15s ease;
+}
+
+.prose a:hover {
+  text-decoration-color: hsl(var(--primary));
+}
+
+/* External links indicator */
+.prose a[href^="http"]::after,
+.prose a[href^="https"]::after {
+  content: '';
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  margin-left: 0.125em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.6;
+}
+
+/* ============================================
+// LISTS
+// ============================================ */
+
+.prose ul,
+.prose ol {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.prose li > ul,
+.prose li > ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Nested list styles */
+.prose ul ul {
+  list-style-type: circle;
+}
+
+.prose ul ul ul {
+  list-style-type: square;
+}
+
+/* ============================================
+// BLOCKQUOTES
+// ============================================ */
+
+.prose blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid hsl(var(--primary));
+  background-color: hsl(var(--muted) / 0.5);
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+}
+
+.prose blockquote p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.prose blockquote p:not(:last-child) {
+  margin-bottom: 0.75rem;
+}
+
+.prose blockquote cite {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-style: normal;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ============================================
+// CODE - INLINE & BLOCK
+// ============================================ */
+
+.prose :not(pre) > code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+  font-weight: 400;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--destructive));
+  padding: 0.125em 0.375em;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+}
+
+.prose pre {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: hsl(var(--code-bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* ============================================
+// IMAGES
+// ============================================ */
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+}
+
+.prose figure {
+  margin: 1.5rem 0;
+}
+
+.prose figcaption {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ============================================
+// TABLES
+// ============================================ */
+
+.prose table {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  display: block;
+}
+
+.prose thead {
+  background-color: hsl(var(--muted));
+  border-bottom: 2px solid hsl(var(--border));
+}
+
+.prose th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.prose tbody tr:hover {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+/* Horizontal rule / divider */
+.prose hr {
+  margin: 2.5rem 0;
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+}
+
+/* ============================================
+// DETAILS & SUMMARY (Accordions)
+// ============================================ */
+
+.prose details {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  background-color: hsl(var(--card));
+}
+
+.prose summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin: -1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s ease;
+}
+
+.prose summary:hover {
+  background-color: hsl(var(--muted));
+}
+
+/* ============================================
+// ABBREVIATIONS
+// ============================================ */
+
+.prose abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+/* ============================================
+// MARK (HIGHLIGHTED TEXT)
+// ============================================ */
+
+.prose mark {
+  background-color: hsl(var(--warning) / 0.3);
+  color: inherit;
+  padding: 0.125em 0.25em;
+  border-radius: 0.25rem;
+}
+
+/* ============================================
+// KBD (KEYBOARD INPUTS)
+// ============================================ */
+
+.prose kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  padding: 0.125em 0.5em;
+  background-color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-bottom-width: 2px;
+  border-radius: 0.25rem;
+}
+
+/* ============================================
+// RESPONSIVE ADJUSTMENTS
+// ============================================ */
+
+@media (max-width: 640px) {
+  .prose h1 {
+    font-size: 2rem;
+  }
+  
+  .prose h2 {
+    font-size: 1.5rem;
+  }
+  
+  .prose h3 {
+    font-size: 1.25rem;
+  }
+  
+  .prose ul,
+  .prose ol {
+    padding-left: 1.25rem;
+  }
+  
+  .prose table {
+    font-size: 0.8rem;
+  }
+}

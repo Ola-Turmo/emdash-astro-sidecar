@@ -1,0 +1,29 @@
+# Cloudflare Deployment - Development Variables Example
+# Copy this file to .dev.vars and fill in the actual values
+
+# Cloudflare Configuration
+CLOUDFLARE_ACCOUNT_ID=your_account_id_here
+CLOUDFLARE_API_TOKEN=your_api_token_here
+
+# EmDash CMS Configuration
+EMDASH_HOST=https://api.emdash.io
+EMDASH_API_KEY=your_emdash_api_key_here
+EMDASH_API_VERSION=v1
+
+# Site Configuration
+PUBLIC_SITE_URL=https://example.com/blog
+
+# Optional: Preview authentication
+PREVIEW_TOKEN=your_preview_token_here
+
+# Optional: Database (if using hybrid rendering)
+DATABASE_URL=your_database_url_here
+
+# Optional: Analytics
+ANALYTICS_ID=your_analytics_id_here
+
+# Optional: External services
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_smtp_user
+SMTP_PASSWORD=your_smtp_password

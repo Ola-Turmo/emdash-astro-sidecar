@@ -1,0 +1,64 @@
+name = "emdash-blog-worker"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat", "atomics"]
+
+# Cloudflare Workers v5 configuration
+
+# Assets binding (for serving static files)
+[assets]
+binding = "ASSETS"
+directory = ".output/public"
+
+# KV Namespace for EmDash content cache
+[[kv_namespaces]]
+binding = "EMDASH_CONTENT_CACHE"
+id = "preview"
+preview_id = "preview"
+
+# Environment-specific configuration
+[env.production]
+name = "emdash-blog-worker"
+
+[[env.production.kv_namespaces]]
+binding = "EMDASH_CONTENT_CACHE"
+id = "EMDASH_CONTENT_CACHE_ID"
+
+[env.preview]
+name = "emdash-blog-worker-preview"
+
+[[env.preview.kv_namespaces]]
+binding = "EMDASH_CONTENT_CACHE"
+id = "preview"
+
+# Worker secrets (set via `wrangler secret put`)
+#
+# Required secrets:
+# - EMDASH_API_KEY: API key for EmDash CMS
+# - EMDASH_PREVIEW_TOKEN: Token for preview authentication
+# - EMDASH_HOST: Base URL for EmDash API
+
+# Environment variables
+[vars]
+EMDASH_HOST = "https://api.emdash.io"
+PUBLIC_SITE_URL = "https://example.com/blog"
+
+# Tail workers for logging (optional)
+# [tails]
+# enable = true
+# filename = "src/tail.ts"
+
+# Build configuration
+[build]
+command = "pnpm run build:worker"
+cwd = "apps/cloudflare/workers/emdash-worker"
+watch_dir = "src"
+
+# Runtime settings
+[runtime]
+experimental_http_external_requests_allowed = true
+
+# Thresholds for garbage collection
+[limits]
+cpu_max_parse_ms = 100
+memory = 128

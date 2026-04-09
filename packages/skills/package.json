@@ -1,0 +1,22 @@
+{
+  "name": "@emdash-astro-sidecar/skills",
+  "version": "0.1.0-alpha",
+  "description": "AI-agent skills for EmDash Astro Sidecar (Hermes/skills format)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --emitDeclarationOnly && tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@emdash/design-clone": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

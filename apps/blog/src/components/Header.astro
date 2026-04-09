@@ -1,0 +1,32 @@
+---
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/category/tutorials', label: 'Tutorials' },
+  { href: '/category/strategy', label: 'Strategy' },
+];
+---
+
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-neutral-200">
+  <div class="max-w-4xl mx-auto px-4">
+    <nav class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="/" class="text-xl font-bold text-neutral-900">
+        EmDash
+      </a>
+      
+      <!-- Nav links -->
+      <ul class="flex items-center gap-8">
+        {navLinks.map(link => (
+          <li>
+            <a
+              href={link.href}
+              class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>

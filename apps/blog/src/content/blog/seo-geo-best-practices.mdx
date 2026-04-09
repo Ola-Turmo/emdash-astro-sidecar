@@ -1,0 +1,108 @@
+---
+title: "SEO and GEO Best Practices for Modern Blogs"
+description: "How to optimize your blog for both search engines and AI systems. Covers structured data, semantic HTML, entity metadata, and answer-engine readiness."
+pubDate: 2024-06-01
+author: editor
+category: strategy
+tags: [seo, geo, structured-data, content]
+featuredImage:
+  src: /images/blog/seo-geo-guide.jpg
+  alt: Search engine and AI system diagram
+excerpt: "Modern blogs need to rank in traditional search AND be easily cited by AI answer engines. Here's how to optimize for both."
+schemaType: Article
+draft: false
+---
+
+# SEO and GEO Best Practices for Modern Blogs
+
+In 2024, a successful blog must do two things simultaneously: rank well in Google AND be easily consumed by AI systems like ChatGPT, Perplexity, and Copilot. This guide covers both.
+
+## What is GEO?
+
+GEO (Generative Engine Optimization) is the practice of making your content easy for AI systems to understand, summarize, and cite. Unlike traditional SEO, GEO prioritizes:
+
+- Clear semantic structure
+- Concise, factual summaries
+- Entity-rich metadata
+- Source attribution patterns
+- FAQ-style content that answers specific questions
+
+## Technical SEO Foundations
+
+Before optimizing for AI, ensure your traditional SEO bases are covered:
+
+- Clean URL structure (/blog/post-name, not /?p=123)
+- Canonical tags pointing to the preferred URL
+- XML sitemap with all posts
+- Robots.txt allowing crawlers
+- Proper heading hierarchy (single H1, logical H2-H3 flow)
+- Internal linking between related posts
+- Fast Core Web Vitals (LCP < 2.5s, CLS < 0.1)
+
+## Structured Data (Schema Markup)
+
+Add JSON-LD structured data to every article page:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Your Article Title",
+  "author": {
+    "@type": "Person",
+    "name": "Author Name"
+  },
+  "datePublished": "2024-06-01",
+  "dateModified": "2024-06-01",
+  "description": "Article description",
+  "image": "https://example.com/image.jpg",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Your Blog Name"
+  }
+}
+```
+
+## GEO-Specific Optimizations
+
+### Use Descriptive Headings
+
+AI systems extract answers from headings. Make your H2s and H3s read like answers:
+
+❌ "Tips for Better Performance"
+✅ "5 Ways to Reduce Your Page Load Time"
+
+### Write Concise Summaries
+
+Include a clear summary in the first 160 characters of your excerpt. AI systems use this for answer extraction.
+
+### Add FAQ Sections
+
+Articles with FAQ sections are frequently cited in AI answers. Structure FAQs as:
+- Clear question as H2
+- Direct, concise answer
+- JSON-LD FAQPage schema
+
+### Source Attribution
+
+Include author bylines with links to author pages. AI systems use these as citation anchors.
+
+### Entity-Rich Metadata
+
+Ensure your article frontmatter includes:
+- Author name (as entity, not just string)
+- Publication date
+- Category (as entity)
+- Tags (as entities)
+
+## Monitoring GEO Performance
+
+Track how your content performs in AI systems:
+- Perplexity analytics (if available)
+- Google Search Console AI overview impressions
+- Direct traffic from AI referral sources
+- Brand mentions in AI-generated answers
+
+## Conclusion
+
+SEO and GEO are complementary disciplines. Strong SEO foundations (fast pages, clean structure, internal links) directly support GEO success. Invest in both to maximize your content's reach.

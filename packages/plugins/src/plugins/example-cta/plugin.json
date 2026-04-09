@@ -1,0 +1,9 @@
+{
+  "id": "example-cta",
+  "name": "Example CTA Plugin",
+  "version": "0.1.0-alpha",
+  "description": "Example plugin demonstrating CTA banner functionality",
+  "author": "EmDash Team",
+  "emdashVersion": ">=0.1.0-alpha",
+  "main": "src/index.ts"
+}
