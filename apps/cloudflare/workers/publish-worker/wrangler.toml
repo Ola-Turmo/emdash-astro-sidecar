@@ -8,7 +8,7 @@ cpu_ms = 5000
 [[d1_databases]]
 binding = "AUTONOMOUS_DB"
 database_name = "emdash-autonomous-control-plane"
-database_id = "local-dev"
+database_id = "a1cd1a45-8a71-48e1-a067-df7f1e6924ea"
 
 [vars]
 JOB_LEASE_SECONDS = "120"

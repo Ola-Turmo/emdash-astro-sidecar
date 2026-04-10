@@ -14,6 +14,15 @@ function parseArgs(argv) {
 
 function run(command, args) {
   console.log(`Running: ${[command, ...args].join(' ')}`);
+  if (process.platform === 'win32') {
+    execFileSync(process.env.ComSpec || 'cmd.exe', ['/c', command, ...args], {
+      cwd: repoRoot,
+      stdio: 'inherit',
+      env: process.env,
+    });
+    return;
+  }
+
   execFileSync(command, args, {
     cwd: repoRoot,
     stdio: 'inherit',
@@ -26,7 +35,7 @@ function main() {
   const workers = registry.workers.filter((worker) => !options.kind || worker.kind === options.kind);
 
   for (const worker of workers) {
-    run(process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm', [
+    run(process.platform === 'win32' ? 'pnpm' : 'pnpm', [
       'exec',
       'wrangler',
       'deploy',

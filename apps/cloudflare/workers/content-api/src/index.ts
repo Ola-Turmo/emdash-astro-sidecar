@@ -153,7 +153,8 @@ function clampLimit(requested: string | null, envLimit: string | undefined): num
 }
 
 function isAuthorized(request: Request, env: Env): boolean {
-  if (!env.CONTENT_API_TOKEN) return true;
-  const authHeader = request.headers.get('authorization');
-  return authHeader === `Bearer ${env.CONTENT_API_TOKEN}`;
+  const expectedToken = env.CONTENT_API_TOKEN?.trim();
+  if (!expectedToken) return true;
+  const authHeader = request.headers.get('authorization')?.trim();
+  return authHeader === `Bearer ${expectedToken}`;
 }

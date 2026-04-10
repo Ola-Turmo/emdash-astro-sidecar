@@ -3,7 +3,7 @@ import {
   defaultCloudflareGuardrails,
   parseCloudflareGuardMode,
   parseCloudflarePlanTier,
-} from '@emdash/cloudflare-guardrails';
+} from '../../../../../packages/cloudflare-guardrails/src/index';
 
 interface Env {
   CF_PLAN_TIER?: string;

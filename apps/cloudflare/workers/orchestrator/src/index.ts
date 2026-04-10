@@ -4,13 +4,13 @@ import {
   isHostMode,
   type HostBudgets,
   type HostMode,
-} from '@emdash/content-policy';
+} from '../../../../../packages/content-policy/src/index';
 import {
   buildExecutionEnvelope,
   defaultCloudflareGuardrails,
   parseCloudflareGuardMode,
   parseCloudflarePlanTier,
-} from '@emdash/cloudflare-guardrails';
+} from '../../../../../packages/cloudflare-guardrails/src/index';
 import {
   acquireHostRun,
   createInitialHostRuntimeState,
@@ -18,12 +18,12 @@ import {
   releaseHostRun,
   type HostLockDecision,
   type HostRuntimeState,
-} from '@emdash/host-control';
+} from '../../../../../packages/host-control/src/index';
 import {
   seedJobsFromRunPlan,
   type HostJobRow,
   type SeededHostJob,
-} from '@emdash/host-jobs';
+} from '../../../../../packages/host-jobs/src/index';
 
 export interface Env {
   SYSTEM_NAME: string;

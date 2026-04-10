@@ -105,7 +105,7 @@ async function runDraftStep(
       .prepare(
         `
           INSERT INTO drafts (id, host_id, topic_candidate_id, slug, status)
-          VALUES (?1, ?2, ?3, ?4, 'draft')
+          VALUES (?1, ?2, ?3, ?4, 'queued_eval')
         `,
       )
       .bind(draftId, job.payload.hostId, candidate.id, slug)
@@ -153,6 +153,7 @@ async function runDraftStep(
       status: 'completed',
       step: job.step,
       draftId,
+      draftStatus: 'queued_eval',
       draftSectionsCreated: sections.length,
       topicCandidateId: candidate.id,
     };

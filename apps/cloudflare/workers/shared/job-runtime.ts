@@ -1,4 +1,10 @@
-import { nextLeaseExpiry, workerSupportsStep, type HostJobPayload, type HostJobRow, type HostWorkerKind } from '@emdash/host-jobs';
+import {
+  nextLeaseExpiry,
+  workerSupportsStep,
+  type HostJobPayload,
+  type HostJobRow,
+  type HostWorkerKind,
+} from '../../../../packages/host-jobs/src/index';
 
 export async function claimNextJob(
   db: D1Database,

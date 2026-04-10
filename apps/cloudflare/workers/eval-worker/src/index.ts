@@ -130,6 +130,24 @@ async function runEvalStep(
     await db
       .prepare(
         `
+          INSERT INTO draft_evals (id, draft_id, criterion_id, passed, reason, created_at)
+          VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+          ON CONFLICT(id) DO NOTHING
+        `,
+      )
+      .bind(
+        crypto.randomUUID(),
+        draft.id,
+        criterion.id,
+        criterion.passed ? 1 : 0,
+        criterion.reason,
+        now,
+      )
+      .run();
+
+    await db
+      .prepare(
+        `
           UPDATE draft_evals
           SET passed = ?1, reason = ?2, created_at = ?3
           WHERE draft_id = ?4 AND criterion_id = ?5

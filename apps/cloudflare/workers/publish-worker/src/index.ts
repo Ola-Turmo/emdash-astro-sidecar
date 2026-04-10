@@ -1,5 +1,5 @@
 import { claimNextJob, clampLeaseSeconds, completeJob, failJob } from '../../shared/job-runtime';
-import { buildPublicationArtifact } from '@emdash/publish-engine';
+import { buildPublicationArtifact } from '../../../../../packages/publish-engine/src/index';
 
 interface Env {
   AUTONOMOUS_DB: D1Database;

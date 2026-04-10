@@ -16,6 +16,7 @@ const requiredFiles = [
   'apps/cloudflare/d1/migrations/0004_content_artifacts.sql',
   'apps/cloudflare/d1/migrations/0005_publication_artifacts.sql',
   'apps/cloudflare/d1/migrations/0006_publication_materializations.sql',
+  'apps/cloudflare/d1/migrations/0007_host_jobs_publish_worker.sql',
   'apps/cloudflare/workers/scheduler/wrangler.toml',
   'apps/cloudflare/workers/orchestrator/wrangler.toml',
   'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',
