@@ -35,7 +35,7 @@ export interface DraftArtifactForEval {
 }
 
 const INTERNAL_JARGON_PATTERN =
-  /\b(?:seo|geo|sidecar|innholdsbølge|programmatic seo|ai crawler|serp|top funnel)\b/i;
+  /\b(?:seo|geo|sidecar|innholdsbolge|innholdsbølge|programmatic seo|ai crawler|serp|top funnel)\b/i;
 
 export function scoreEvalSuite(results: BinaryEvalResult[]): EvalSuiteResult['totalPassed'] {
   return results.filter((result) => result.passed).length;

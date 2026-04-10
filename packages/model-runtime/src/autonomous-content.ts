@@ -36,6 +36,7 @@ const BANNED_VISIBLE_TERMS = [
   'geo',
   'seo',
   'sidecar',
+  'innholdsbolge',
   'innholdsbølge',
   'programmatic seo',
   'ai crawler',
@@ -48,7 +49,7 @@ export function buildAutonomousDraftPrompt(input: AutonomousDraftRequest): strin
     ? input.internalLinks
         .map((link) => `- ${link.label}: ${link.url}${link.reason ? ` (${link.reason})` : ''}`)
         .join('\n')
-    : '- Hjemmeside: ingen tilgjengelige lenker oppgitt';
+    : '- Ingen interne lenker tilgjengelig';
   const sourceLines = input.sourceExcerpts.length
     ? input.sourceExcerpts
         .map((source, index) => {
@@ -65,11 +66,11 @@ export function buildAutonomousDraftPrompt(input: AutonomousDraftRequest): strin
     `Hovedside: ${input.siteUrl}`,
     `Guide-rot: ${guideUrl}`,
     '',
-    'Synlig tekst må være leserrettet og konkret.',
-    'Ikke bruk intern terminologi som SEO, GEO, sidecar, innholdsbølge, topp-trakt eller lignende.',
+    'Synlig tekst må være konkret, leserrettet og fri for intern fagjargon.',
+    'Ikke bruk ord som SEO, GEO, sidecar, innholdsbølge, topp-trakt eller lignende i brukerrettet tekst.',
     'Ikke finn på lover, tall, datoer eller løfter.',
-    'Hvis kildene er tynne, hold formuleringene forsiktige.',
-    'Legg inn minst to naturlige interne markdown-lenker til relevante sider fra listen under.',
+    'Hvis kildene er tynne, skriv forsiktig og praktisk.',
+    'Bruk minst to naturlige interne markdown-lenker til relevante sider fra listen under.',
     '',
     'Tillatte interne lenker:',
     linkLines,
@@ -89,11 +90,12 @@ export function buildAutonomousDraftPrompt(input: AutonomousDraftRequest): strin
     '}',
     '',
     'Krav:',
-    '- 3 til 5 seksjoner.',
-    '- Minst 320 ord totalt.',
-    '- Første seksjon skal svare direkte på spørsmålet.',
-    '- Siste seksjon skal hjelpe leseren videre med et trygt neste steg.',
-    '- Bruk vanlig norsk og korte setninger.',
+    '- 3 til 5 seksjoner',
+    '- minst 320 ord totalt',
+    '- første seksjon skal svare tydelig på spørsmålet',
+    '- siste seksjon skal hjelpe leseren videre til et trygt neste steg',
+    '- minst to interne markdown-lenker',
+    '- korte setninger og vanlig norsk',
   ].join('\n');
 }
 
@@ -135,7 +137,6 @@ export function parseAutonomousDraftArtifact(
 
   artifact.wordCount = countDraftWords(artifact.sections);
   artifact.qualityNotes = collectQualityNotes(artifact);
-
   return artifact;
 }
 
@@ -191,7 +192,8 @@ export function salvageAutonomousDraftArtifact(
       ? {
           title: toTitle(fallbackTopic),
           description: clampText(
-            cleaned.replace(/\s+/g, ' ').slice(0, 160) || `Forklaring og neste steg for ${fallbackTopic}.`,
+            cleaned.replace(/\s+/g, ' ').slice(0, 160) ||
+              `Forklaring og neste steg for ${fallbackTopic}.`,
             100,
             160,
           ),
@@ -214,8 +216,8 @@ export function salvageAutonomousDraftArtifact(
           internalLinks,
         });
 
-  artifact.qualityNotes = [...new Set([...artifact.qualityNotes, ...collectQualityNotes(artifact)])];
   artifact.wordCount = countDraftWords(artifact.sections);
+  artifact.qualityNotes = [...new Set([...artifact.qualityNotes, ...collectQualityNotes(artifact)])];
   return artifact;
 }
 
@@ -239,8 +241,39 @@ export function buildFallbackDraftArtifact(input: AutonomousDraftRequest): Auton
     qualityNotes: ['fallback-draft-used'],
   };
 
-  artifact.qualityNotes.push(...collectQualityNotes(artifact));
+  artifact.qualityNotes = [...new Set([...artifact.qualityNotes, ...collectQualityNotes(artifact)])];
   return artifact;
+}
+
+export function normalizeAutonomousDraftArtifact(
+  artifact: AutonomousDraftArtifact,
+  input: AutonomousDraftRequest,
+): AutonomousDraftArtifact {
+  let next: AutonomousDraftArtifact = {
+    ...artifact,
+    title: normalizeSentence(artifact.title, toTitle(input.topic)),
+    description: clampText(
+      normalizeSentence(artifact.description, `Forklaring og neste steg for ${input.topic}.`),
+      100,
+      160,
+    ),
+    excerpt: clampText(
+      normalizeSentence(artifact.excerpt, `Praktisk guide om ${input.topic}.`),
+      140,
+      220,
+    ),
+    sections: artifact.sections.length >= 3 ? artifact.sections.map((section) => ({ ...section })) : buildFallbackSections(input.topic, input.internalLinks),
+    suggestedTags: normalizeTags(artifact.suggestedTags, input.topic),
+    wordCount: 0,
+    qualityNotes: [],
+  };
+
+  next = ensureInternalLinks(next, input.internalLinks);
+  next = ensureClosingStep(next, input.internalLinks);
+  next = ensureMinimumDepth(next, input.internalLinks);
+  next.wordCount = countDraftWords(next.sections);
+  next.qualityNotes = collectQualityNotes(next);
+  return next;
 }
 
 export function countDraftWords(
@@ -329,6 +362,113 @@ function buildFallbackSections(
   ];
 }
 
+function ensureInternalLinks(
+  artifact: AutonomousDraftArtifact,
+  internalLinks: AutonomousInternalLink[],
+): AutonomousDraftArtifact {
+  const links = extractInternalLinks(artifact.sections);
+  const missing = internalLinks.filter((link) => !links.has(link.url)).slice(0, 2);
+  if (links.size >= 2 || missing.length === 0) {
+    return artifact;
+  }
+
+  const sections = artifact.sections.map((section) => ({ ...section }));
+  const injectionTargets = [sections.length - 1, Math.max(0, sections.length - 2)];
+
+  for (const [index, link] of missing.entries()) {
+    const targetIndex = injectionTargets[index] ?? sections.length - 1;
+    const existingBody = sections[targetIndex]?.body ?? '';
+    const sentence =
+      index === 0
+        ? `Hvis du vil ha neste steg samlet på ett sted, kan du lese [${link.label}](${link.url}).`
+        : `Det kan også være nyttig å se [${link.label}](${link.url}) før du går videre.`;
+    sections[targetIndex].body = `${existingBody}\n\n${sentence}`.trim();
+  }
+
+  return {
+    ...artifact,
+    sections,
+  };
+}
+
+function ensureClosingStep(
+  artifact: AutonomousDraftArtifact,
+  internalLinks: AutonomousInternalLink[],
+): AutonomousDraftArtifact {
+  if (artifact.sections.length === 0) return artifact;
+  const sections = artifact.sections.map((section) => ({ ...section }));
+  const lastIndex = sections.length - 1;
+  const lastSection = sections[lastIndex];
+  const primaryLink = internalLinks[0];
+  const closingPrompt = primaryLink
+    ? `Neste steg er å velge riktig opplæring og sjekke kravene på [${primaryLink.label}](${primaryLink.url}).`
+    : 'Neste steg er å velge riktig opplæring og kontrollere kravene før du går videre.';
+
+  if (!/neste steg|gå videre|videre/i.test(lastSection.body)) {
+    lastSection.body = `${lastSection.body}\n\n${closingPrompt}`.trim();
+  }
+
+  return {
+    ...artifact,
+    sections,
+  };
+}
+
+function ensureMinimumDepth(
+  artifact: AutonomousDraftArtifact,
+  internalLinks: AutonomousInternalLink[],
+): AutonomousDraftArtifact {
+  const currentWordCount = countDraftWords(artifact.sections);
+  if (currentWordCount >= 320) {
+    return artifact;
+  }
+
+  const sections = artifact.sections.map((section) => ({ ...section }));
+  const deficit = 320 - currentWordCount;
+  const boosterLink = internalLinks[1] ?? internalLinks[0];
+  const boosterParagraph = [
+    'Bruk litt tid på å lese aktivt og oppsummere stoffet med egne ord. Da oppdager du raskere hva du faktisk har forstått og hva du må gå tilbake til.',
+    boosterLink
+      ? `Hvis du trenger et tydeligere utgangspunkt, kan du også åpne [${boosterLink.label}](${boosterLink.url}) og sammenligne det du kan med det som beskrives der.`
+      : 'Hvis du trenger et tydeligere utgangspunkt, bør du sammenligne det du kan med en oversikt over kravene og hva prøven faktisk tester.',
+  ].join(' ');
+
+  const middleIndex = Math.min(1, sections.length - 1);
+  sections[middleIndex].body = `${sections[middleIndex].body}\n\n${boosterParagraph}`.trim();
+
+  const expanded: AutonomousDraftArtifact = {
+    ...artifact,
+    sections,
+  };
+
+  return countDraftWords(expanded.sections) >= 320 ? expanded : buildFallbackDraftArtifact({
+    topic: artifact.title,
+    hostName: '',
+    siteUrl: 'https://example.com',
+    basePath: '/',
+    sourceExcerpts: [],
+    internalLinks,
+  });
+}
+
+function extractInternalLinks(
+  sections: Array<{
+    heading: string;
+    body: string;
+  }>,
+): Set<string> {
+  const urls = new Set<string>();
+  for (const section of sections) {
+    const matches = [...section.body.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)];
+    for (const match of matches) {
+      if (match[1]) {
+        urls.add(match[1]);
+      }
+    }
+  }
+  return urls;
+}
+
 function collectQualityNotes(artifact: AutonomousDraftArtifact): string[] {
   const notes: string[] = [];
   if (artifact.sections.length < 3) {
@@ -336,6 +476,9 @@ function collectQualityNotes(artifact: AutonomousDraftArtifact): string[] {
   }
   if (artifact.wordCount < 320) {
     notes.push('word-count-below-target');
+  }
+  if (extractInternalLinks(artifact.sections).size < 2) {
+    notes.push('internal-links-below-target');
   }
 
   const visibleText = [artifact.title, artifact.description, artifact.excerpt]
@@ -395,7 +538,7 @@ function parseJsonObject(value: string): unknown {
 
   try {
     return JSON.parse(directCandidate);
-  } catch (error) {
+  } catch {
     const repairedCandidate = repairCommonJsonBreakage(directCandidate);
     return JSON.parse(repairedCandidate);
   }

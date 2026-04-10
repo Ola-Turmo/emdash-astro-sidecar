@@ -4,6 +4,7 @@ import {
   buildDefaultProviderRegistry,
   buildFallbackDraftArtifact,
   countDraftWords,
+  normalizeAutonomousDraftArtifact,
   parseAutonomousDraftArtifact,
   resolveRoutingRuleFromEnvironment,
   salvageAutonomousDraftArtifact,
@@ -211,6 +212,7 @@ async function runDraftStep(
     });
 
     artifact = await parseOrRepairArtifact(provider.adapter, generation.text, candidate.topic, draftContext);
+    artifact = normalizeAutonomousDraftArtifact(artifact, draftContext);
     providerTrace.push({
       phase: 'parsed',
       providerId,
@@ -220,6 +222,7 @@ async function runDraftStep(
     });
 
     artifact = await reviseArtifactForQuality(provider.adapter, artifact, draftContext, candidate.topic);
+    artifact = normalizeAutonomousDraftArtifact(artifact, draftContext);
     providerTrace.push({
       phase: 'revised',
       providerId,

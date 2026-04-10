@@ -19,9 +19,9 @@ Avoid terms like:
 - mount path
 - internal linking strategy
 - answer-engine visibility
-- operator language such as “how this blog is connected to the main site”
+- operator language such as "how this blog is connected to the main site"
 
-These may belong in internal docs, operator notes, or technical articles. They do not belong in homepage hero copy unless the audience explicitly wants internal/technical language.
+These may belong in internal docs, operator notes, or technical articles. They do not belong in homepage hero copy unless the audience explicitly wants internal or technical language.
 
 ## Prefer This Instead
 
@@ -36,8 +36,8 @@ Examples:
 - Bad: `SEO / GEO sidecar for kurs.ing`
 - Better: `Forklart enkelt`
 
-- Bad: `Første innholdsbølge for norsk GEO og SEO`
-- Better: `Dette lurer mange på før de går opp til prøve`
+- Bad: `Forste innholdsbolge for norsk GEO og SEO`
+- Better: `Dette lurer mange pa for de gar opp til prove`
 
 - Bad: `Slik er bloggen koblet til hovedsiden`
 - Better: `Velg riktig kurs`
@@ -53,8 +53,10 @@ Examples:
 
 - default to concrete, reader-first Norwegian
 - explain requirements, responsibilities, timing, and consequences clearly
-- prefer “what this means for you” over abstract optimization language
+- prefer "what this means for you" over abstract optimization language
 - if SEO or GEO is relevant, let it shape the structure behind the scenes instead of naming it in visible copy
+- generated drafts should include at least two useful first-party links when the page is meant to guide the reader forward
+- generated drafts should end with a clear and safe next step for the reader
 
 ## Review Question
 

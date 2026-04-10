@@ -61,6 +61,11 @@ Right now the runtime prefers:
 - `theclawbay` as the first fallback
 - `gemini` as an additional configured provider
 
+Current known-good models from live checks on this machine:
+
+- `minimax / MiniMax-M2.5`
+- `theclawbay / gpt-5.4-mini`
+
 That is only the starting point. Later implementation passes should move routing into host-aware config or D1 state.
 
 ### Worker-Level Overrides
@@ -124,6 +129,16 @@ Recommended worker secret or var set for the draft path:
 - secrets: `THECLAWBAY_API_KEY`, `GEMINI_API_KEY`, `MINIMAX_API_KEY`
 - vars: `AUTONOMOUS_PROVIDER_ID`, `AUTONOMOUS_MODEL_ID`, `AUTONOMOUS_FALLBACK_PROVIDER_ID`, `AUTONOMOUS_FALLBACK_MODEL_ID`
 - vars: `DRAFT_MAX_OUTPUT_TOKENS`, `AUTONOMOUS_ALLOW_FALLBACK_DRAFTS`
+
+## Local Secret Sync Note
+
+If `wrangler secret put` fails in a non-interactive local shell even though `wrangler whoami` works, the direct Cloudflare Workers Secrets API is a valid fallback for local operations.
+
+That path updates:
+
+- `PUT /accounts/{account_id}/workers/scripts/{script_name}/secrets`
+
+Use it only from a trusted local environment and keep the secret values out of committed files.
 
 ## Activation Note
 

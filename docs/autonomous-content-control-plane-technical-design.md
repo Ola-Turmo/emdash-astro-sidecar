@@ -139,6 +139,19 @@ Why it matters:
 
 The system needs deterministic structure checks plus LLM-backed judgment checks. That is how we avoid shipping machine-sounding copy or unsupported content.
 
+### Deterministic Draft Normalization
+
+One important implementation lesson is that model output alone is not enough, even when the provider is good.
+
+The autonomous draft path now also needs deterministic post-processing to:
+
+- guarantee at least two first-party internal links
+- guarantee a clear closing next step
+- guarantee minimum useful depth before evaluation
+- salvage partially malformed provider output instead of failing immediately
+
+This logic belongs close to the content helper layer, not inside ad hoc prompts. That keeps the quality bar reusable across providers.
+
 ### [packages/content-policy](./../packages/content-policy)
 
 This package is the publish policy engine.
