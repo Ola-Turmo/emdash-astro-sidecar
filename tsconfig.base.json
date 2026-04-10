@@ -22,6 +22,7 @@
       "@emdash/content-evals/*": ["./packages/content-evals/src/*"],
       "@emdash/content-policy/*": ["./packages/content-policy/src/*"],
       "@emdash/cloudflare-guardrails/*": ["./packages/cloudflare-guardrails/src/*"],
+      "@emdash/host-control/*": ["./packages/host-control/src/*"],
       "@emdash/skills/*": ["./packages/skills/src/*"],
       "@emdash/plugins/*": ["./packages/plugins/src/*"]
     }

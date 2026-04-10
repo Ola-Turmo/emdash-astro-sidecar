@@ -11,7 +11,8 @@
     "baseUrl": "../../..",
     "paths": {
       "@emdash/content-policy": ["packages/content-policy/src/index.ts"],
-      "@emdash/cloudflare-guardrails": ["packages/cloudflare-guardrails/src/index.ts"]
+      "@emdash/cloudflare-guardrails": ["packages/cloudflare-guardrails/src/index.ts"],
+      "@emdash/host-control": ["packages/host-control/src/index.ts"]
     }
   },
   "include": [

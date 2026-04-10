@@ -75,6 +75,12 @@ State should live in:
 - Durable Objects for host-level locks, budgets, and cooldowns
 - Queues and Workflows for fan-out and long-running orchestration
 
+The current implementation now includes the first real host-control layer:
+
+- D1-backed `host_runtime_state`
+- D1-backed `host_run_events`
+- a `HostControlDO` Durable Object exported from the orchestrator worker
+
 ## Package Responsibilities
 
 The first implementation pass introduces four new packages.
@@ -188,7 +194,7 @@ The intended runtime flow is:
 8. live pages are audited after deployment.
 9. prompt-family runs update best-prompt state only if validation improves.
 
-The current worker stubs intentionally stop before the Queue, Workflow, and Durable Object layers. That keeps the first pass safe and reviewable.
+The repo now has the first host lock and cooldown layer, but it still stops short of queue dispatch and workflow fan-out.
 
 ## Publish Safety Flow
 
@@ -297,6 +303,7 @@ This first implementation pass deliberately includes:
 - binary eval definitions
 - publish-policy logic
 - first D1 migration
+- host runtime control migration
 - Cloudflare worker stubs
 - this technical design
 - the milestone backlog
@@ -305,7 +312,6 @@ It deliberately does not yet include:
 
 - real provider calls inside `model-runtime`
 - Queue or Workflow dispatch
-- Durable Object locking
 - Search Console or Bing ingestion
 - Browser Rendering integration
 - automatic content writing or publishing
@@ -329,7 +335,7 @@ After this design lands, the next pass should implement:
 
 1. real provider adapters for TheClawBay and MiniMax
 2. Queue or Workflow dispatch from `orchestrator`
-3. a host-lock Durable Object
-4. a prompt-family registry with seed families
-5. a D1-backed draft-eval writer
-6. Browser Rendering integration in `browser-audit-worker`
+3. a prompt-family registry with seed families
+4. a D1-backed draft-eval writer
+5. Browser Rendering integration in `browser-audit-worker`
+6. host-budget enforcement at the Durable Object layer

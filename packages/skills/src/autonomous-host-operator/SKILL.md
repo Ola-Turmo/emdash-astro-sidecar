@@ -73,6 +73,7 @@ Default rule:
 Only loosen those values deliberately after verifying:
 
 - provider health
+- host lock and cooldown behavior
 - route audits
 - publish blocking
 - D1 and queue behavior

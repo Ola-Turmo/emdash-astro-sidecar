@@ -8,6 +8,8 @@ const repoRoot = resolve(scriptDir, '..');
 const requiredFiles = [
   'docs/cloudflare-resource-guardrails.md',
   'packages/cloudflare-guardrails/src/index.ts',
+  'packages/host-control/src/index.ts',
+  'apps/cloudflare/d1/migrations/0002_host_runtime_control.sql',
   'apps/cloudflare/workers/scheduler/wrangler.toml',
   'apps/cloudflare/workers/orchestrator/wrangler.toml',
   'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',
@@ -23,10 +25,14 @@ const workerExpectations = [
     checks: [
       '[limits]',
       'cpu_ms',
+      'AUTONOMOUS_DB',
+      'HOST_CONTROL',
       'CF_PLAN_TIER',
       'CF_RESOURCE_GUARD_MODE',
       'MAX_HOST_RUNS_PER_TICK',
       'MAX_BROWSER_AUDIT_URLS_PER_RUN',
+      'HOST_LOCK_TTL_SECONDS',
+      'HOST_FAILURE_COOLDOWN_MINUTES',
     ],
   },
   {

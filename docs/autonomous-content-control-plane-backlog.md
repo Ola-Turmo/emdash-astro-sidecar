@@ -19,6 +19,7 @@ The repo has a durable structural base for the autonomous system:
 - content-eval primitives
 - publish-policy primitives
 - D1 schema foundation
+- host runtime control state
 - Cloudflare control-plane worker entrypoints
 
 ### Tasks
@@ -28,8 +29,9 @@ The repo has a durable structural base for the autonomous system:
 - [x] add `packages/content-evals`
 - [x] add `packages/content-policy`
 - [x] add first D1 migration under `apps/cloudflare/d1/migrations`
+- [x] add host runtime control migration
 - [x] add `scheduler` worker stub
-- [x] add `orchestrator` worker stub
+- [x] add `orchestrator` worker with host lock and cooldown control
 - [x] add `browser-audit-worker` stub
 - [x] add technical design doc
 - [x] add this backlog doc
@@ -161,7 +163,8 @@ The system can safely refresh existing pages and later publish bounded net-new c
 
 - [ ] add `packages/publish-engine`
 - [ ] define file-write or content-materialization strategy
-- [ ] add host-mode enforcement with Durable Objects
+- [x] add host-mode enforcement entrypoint in orchestrator
+- [x] add host lock and cooldown Durable Object
 - [ ] add host-budget enforcement with Durable Objects
 - [ ] add publish-worker
 - [ ] add deploy trigger path

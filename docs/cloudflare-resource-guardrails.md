@@ -27,6 +27,7 @@ That means:
 The current guardrail logic lives in:
 
 - [packages/cloudflare-guardrails/src/index.ts](./../packages/cloudflare-guardrails/src/index.ts)
+- [packages/host-control/src/index.ts](./../packages/host-control/src/index.ts)
 - [apps/cloudflare/workers/orchestrator/src/index.ts](./../apps/cloudflare/workers/orchestrator/src/index.ts)
 - [apps/cloudflare/workers/browser-audit-worker/src/index.ts](./../apps/cloudflare/workers/browser-audit-worker/src/index.ts)
 - [scripts/check-cloudflare-guardrails.mjs](./../scripts/check-cloudflare-guardrails.mjs)
@@ -77,8 +78,28 @@ The browser-audit worker must also declare:
 
 The orchestrator must also declare:
 
+- `AUTONOMOUS_DB`
+- `HOST_CONTROL`
 - `MAX_HOST_RUNS_PER_TICK`
 - `MAX_BROWSER_AUDIT_URLS_PER_RUN`
+- `HOST_LOCK_TTL_SECONDS`
+- `HOST_FAILURE_COOLDOWN_MINUTES`
+
+## Host Lock Rule
+
+Continuous execution must be host-gated, not just globally throttled.
+
+The orchestrator now uses:
+
+- D1-backed `host_runtime_state`
+- D1-backed `host_run_events`
+- a `HostControlDO` Durable Object per host name
+
+That gives the system:
+
+- one active run per host
+- explicit cooldowns after failure
+- durable host-state history instead of memory-only locking
 
 ## Operational Rules
 
