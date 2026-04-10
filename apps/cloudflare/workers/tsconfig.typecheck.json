@@ -23,6 +23,7 @@
     "./orchestrator/src/**/*.ts",
     "./browser-audit-worker/src/**/*.ts",
     "./research-worker/src/**/*.ts",
-    "./draft-worker/src/**/*.ts"
+    "./draft-worker/src/**/*.ts",
+    "./eval-worker/src/**/*.ts"
   ]
 }

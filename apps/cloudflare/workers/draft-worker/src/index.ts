@@ -28,6 +28,7 @@ export default {
       leaseOwner,
       now,
       leaseSeconds,
+      supportedSteps: ['draft_candidates'],
     });
 
     if (!job) {

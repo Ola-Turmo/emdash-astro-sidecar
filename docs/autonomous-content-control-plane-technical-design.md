@@ -63,8 +63,8 @@ This runs the continuous loop:
   Now exists as the first bounded job consumer for research-class steps.
 - `draft-worker`
   Now exists as the first bounded job consumer for draft-class steps.
-- future `eval-worker`
-  Runs binary quality and policy gates.
+- `eval-worker`
+  Now exists as the bounded job consumer for `evaluate_candidates` and writes draft pass/fail outcomes.
 - future `publish-worker`
   Applies approved refreshes or publishes safe net-new pages.
 - `browser-audit-worker`

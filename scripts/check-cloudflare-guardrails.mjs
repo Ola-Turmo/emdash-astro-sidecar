@@ -18,6 +18,7 @@ const requiredFiles = [
   'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',
   'apps/cloudflare/workers/research-worker/wrangler.toml',
   'apps/cloudflare/workers/draft-worker/wrangler.toml',
+  'apps/cloudflare/workers/eval-worker/wrangler.toml',
 ];
 
 const workerExpectations = [

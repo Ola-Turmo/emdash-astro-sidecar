@@ -7,6 +7,7 @@ export async function claimNextJob(
     leaseOwner: string;
     now: string;
     leaseSeconds: number;
+    supportedSteps?: string[];
   },
 ): Promise<(HostJobRow & { payload: HostJobPayload }) | null> {
   const result = await db
@@ -38,7 +39,11 @@ export async function claimNextJob(
     .all<HostJobRow>();
 
   const job = result.results[0] ?? null;
-  if (!job || !workerSupportsStep(input.workerKind, job.step)) {
+  if (
+    !job ||
+    !workerSupportsStep(input.workerKind, job.step) ||
+    (input.supportedSteps && !input.supportedSteps.includes(job.step))
+  ) {
     return null;
   }
 

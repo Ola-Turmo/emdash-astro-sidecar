@@ -120,6 +120,7 @@ The system can discover opportunities, capture sources, and produce drafts or re
 - [x] add bounded D1-backed host job queue
 - [x] add research worker entrypoint
 - [x] add draft worker entrypoint
+- [x] add eval worker entrypoint
 - [x] add source snapshot and draft section tables
 - [ ] add topic-candidate generation workflow
 - [ ] add source snapshot capture rules
@@ -138,6 +139,7 @@ The system can discover opportunities, capture sources, and produce drafts or re
 - research and draft workers can each claim and complete their own queued stub jobs
 - research jobs create topic and source records
 - draft jobs create draft, section, and eval placeholder records
+- eval worker resolves placeholder eval rows into pass/fail outcomes and a draft status
 
 ## Milestone 6: Metrics + Audit
 

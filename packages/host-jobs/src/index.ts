@@ -93,7 +93,7 @@ export const hostJobRegistry: Record<AutonomousTaskStep, HostJobKindDefinition> 
   },
   evaluate_candidates: {
     step: 'evaluate_candidates',
-    workerKind: 'draft-worker',
+    workerKind: 'future-worker',
     priority: 60,
     bounded: true,
   },
