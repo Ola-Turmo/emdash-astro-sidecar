@@ -101,6 +101,41 @@ export default {
       });
     }
 
+    if (request.method === 'POST' && url.pathname === '/publication-artifacts/deployed') {
+      const payload = (await request.json().catch(() => ({}))) as {
+        materializationId?: string;
+      };
+
+      if (!payload.materializationId) {
+        return Response.json(
+          {
+            ok: false,
+            error: 'materializationId is required.',
+          },
+          { status: 400 },
+        );
+      }
+
+      await env.AUTONOMOUS_DB
+        .prepare(
+          `
+            UPDATE publication_materializations
+            SET
+              status = 'deployed',
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?1
+          `,
+        )
+        .bind(payload.materializationId)
+        .run();
+
+      return Response.json({
+        ok: true,
+        materializationId: payload.materializationId,
+        status: 'deployed',
+      });
+    }
+
     return new Response('Not Found', { status: 404 });
   },
 };
