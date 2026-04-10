@@ -91,7 +91,16 @@ async function runPublishStep(
   const draft = await db
     .prepare(
       `
-        SELECT d.id, d.slug, tc.topic, h.host_name, h.site_url, h.base_path
+        SELECT
+          d.id,
+          d.slug,
+          d.title,
+          d.description,
+          d.excerpt,
+          tc.topic,
+          h.host_name,
+          h.site_url,
+          h.base_path
         FROM drafts d
         JOIN hosts h ON h.id = d.host_id
         LEFT JOIN topic_candidates tc ON tc.id = d.topic_candidate_id
@@ -105,6 +114,9 @@ async function runPublishStep(
     .first<{
       id: string;
       slug: string;
+      title: string | null;
+      description: string | null;
+      excerpt: string | null;
       topic: string | null;
       host_name: string;
       site_url: string;
@@ -142,6 +154,9 @@ async function runPublishStep(
       draftId: draft.id,
       slug: draft.slug,
       topic: draft.topic ?? draft.slug.replace(/-/g, ' '),
+      title: draft.title,
+      description: draft.description,
+      excerpt: draft.excerpt,
       sections: sectionsResult.results,
     },
   );

@@ -17,6 +17,7 @@ const requiredFiles = [
   'apps/cloudflare/d1/migrations/0005_publication_artifacts.sql',
   'apps/cloudflare/d1/migrations/0006_publication_materializations.sql',
   'apps/cloudflare/d1/migrations/0007_host_jobs_publish_worker.sql',
+  'apps/cloudflare/d1/migrations/0008_draft_metadata.sql',
   'apps/cloudflare/workers/scheduler/wrangler.toml',
   'apps/cloudflare/workers/orchestrator/wrangler.toml',
   'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',
@@ -45,6 +46,18 @@ const workerExpectations = [
       'MAX_BROWSER_AUDIT_URLS_PER_RUN',
       'HOST_LOCK_TTL_SECONDS',
       'HOST_FAILURE_COOLDOWN_MINUTES',
+    ],
+  },
+  {
+    path: 'apps/cloudflare/workers/draft-worker/wrangler.toml',
+    checks: [
+      '[limits]',
+      'cpu_ms',
+      'AUTONOMOUS_DB',
+      'AUTONOMOUS_ALLOW_FALLBACK_DRAFTS',
+      'DRAFT_MAX_OUTPUT_TOKENS',
+      'AUTONOMOUS_PROVIDER_ID',
+      'AUTONOMOUS_FALLBACK_PROVIDER_ID',
     ],
   },
   {

@@ -38,18 +38,20 @@ export async function claimNextJob(
         WHERE worker_kind = ?1
           AND status = 'queued'
         ORDER BY priority ASC, created_at ASC
-        LIMIT 1
+        LIMIT 25
       `,
     )
     .bind(input.workerKind)
     .all<HostJobRow>();
 
-  const job = result.results[0] ?? null;
-  if (
-    !job ||
-    !workerSupportsStep(input.workerKind, job.step) ||
-    (input.supportedSteps && !input.supportedSteps.includes(job.step))
-  ) {
+  const job =
+    result.results.find(
+      (candidate) =>
+        workerSupportsStep(input.workerKind, candidate.step) &&
+        (!input.supportedSteps || input.supportedSteps.includes(candidate.step)),
+    ) ?? null;
+
+  if (!job) {
     return null;
   }
 

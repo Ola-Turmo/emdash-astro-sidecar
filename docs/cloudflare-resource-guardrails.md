@@ -89,6 +89,15 @@ The orchestrator must also declare:
 - `HOST_LOCK_TTL_SECONDS`
 - `HOST_FAILURE_COOLDOWN_MINUTES`
 
+The draft worker must also declare:
+
+- `AUTONOMOUS_ALLOW_FALLBACK_DRAFTS`
+- `DRAFT_MAX_OUTPUT_TOKENS`
+- `AUTONOMOUS_PROVIDER_ID`
+- `AUTONOMOUS_FALLBACK_PROVIDER_ID`
+
+The default is to fail closed on provider errors. That protects both Cloudflare spend and content quality because the system does not silently convert provider outages into low-value filler drafts.
+
 ## Host Lock Rule
 
 Continuous execution must be host-gated, not just globally throttled.
@@ -115,6 +124,7 @@ That gives the system:
 3. Do not enable Browser Rendering for broad public-route sweeps on a free-tier posture.
 4. Do not increase host concurrency and browser-audit breadth in the same change.
 5. If a host reaches `publish_auto`, keep `MAX_HOST_RUNS_PER_TICK` low and keep browser-audit breadth sampled rather than exhaustive.
+6. Keep `AUTONOMOUS_ALLOW_FALLBACK_DRAFTS=false` in production unless you are intentionally testing deterministic fallback behavior.
 
 ## QA Gate
 

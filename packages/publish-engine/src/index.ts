@@ -9,6 +9,9 @@ export interface PublicationDraftContext {
   draftId: string;
   slug: string;
   topic: string;
+  title?: string | null;
+  description?: string | null;
+  excerpt?: string | null;
   sections: Array<{
     heading: string;
     body: string;
@@ -27,10 +30,14 @@ export function buildPublicationArtifact(
   host: PublicationHostContext,
   draft: PublicationDraftContext,
 ): PublicationArtifact {
-  const title = toTitle(draft.topic);
-  const description = summarizeDescription(draft.sections);
-  const excerpt = summarizeExcerpt(draft.sections);
+  const title = draft.title?.trim() || toTitle(draft.topic);
+  const description = draft.description?.trim() || summarizeDescription(draft.sections);
+  const excerpt = draft.excerpt?.trim() || summarizeExcerpt(draft.sections);
   const url = new URL(`${normalizeBasePath(host.basePath)}/blog/${draft.slug}/`, host.siteUrl).toString();
+  const tags = draft.slug
+    .split('-')
+    .slice(0, 4)
+    .map((tag) => `"${escapeYaml(tag)}"`);
 
   const frontmatterLines = [
     '---',
@@ -39,7 +46,7 @@ export function buildPublicationArtifact(
     `pubDate: ${new Date().toISOString().slice(0, 10)}`,
     'author: ola-turmo',
     'category: guide',
-    `tags: [${draft.slug.split('-').slice(0, 4).map((tag) => escapeYaml(tag)).join(', ')}]`,
+    `tags: [${tags.join(', ')}]`,
     `excerpt: "${escapeYaml(excerpt)}"`,
     'schemaType: Article',
     'draft: false',

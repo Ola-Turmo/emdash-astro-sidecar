@@ -1,5 +1,3 @@
-import OpenAI from 'openai';
-
 export type ModelProviderKind =
   | 'openai_compatible'
   | 'minimax_native'
@@ -105,8 +103,7 @@ export class ProviderRegistry {
 export interface OpenAICompatibleConfig {
   providerId: string;
   baseURL: string;
-  apiKey?: string;
-  apiKeyEnvVar?: string;
+  apiKey: string;
   defaultModel: string;
   defaultHeaders?: Record<string, string>;
   defaultTemperature?: number;
@@ -131,9 +128,34 @@ export interface ProviderHealthResult {
   error?: string;
 }
 
+interface OpenAICompatibleResponse {
+  id?: string;
+  choices?: Array<{
+    message?: {
+      content?:
+        | string
+        | Array<{
+            type?: string;
+            text?: string;
+          }>;
+    };
+  }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    input_tokens?: number;
+    output_tokens?: number;
+  };
+  error?: {
+    message?: string;
+    type?: string;
+    code?: string;
+  };
+}
+
 export class OpenAICompatibleAdapter implements ProviderAdapter {
   readonly providerKind: ModelProviderKind = 'openai_compatible';
-  private readonly client: OpenAI;
   private readonly defaultCapabilities: ModelCapabilities = {
     jsonMode: true,
     toolCalling: true,
@@ -144,14 +166,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   constructor(
     public readonly providerId: string,
     private readonly config: OpenAICompatibleConfig,
-  ) {
-    const apiKey = this.resolveApiKey(config);
-    this.client = new OpenAI({
-      apiKey,
-      baseURL: config.baseURL,
-      defaultHeaders: config.defaultHeaders,
-    });
-  }
+  ) {}
 
   async listModels(): Promise<ModelDescriptor[]> {
     const catalog = this.config.modelCatalog;
@@ -169,32 +184,49 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 
   async generateText(request: GenerationRequest): Promise<GenerationResult> {
-    const completion = (await this.client.chat.completions.create({
+    const payload = {
       model: this.config.defaultModel,
       messages: buildMessages(request),
       stream: false,
       temperature: normalizeTemperature(request.temperature ?? this.config.defaultTemperature ?? 0.2),
       max_tokens: request.maxOutputTokens,
       ...(this.config.extraChatCompletionBody ?? {}),
-    } as OpenAI.Chat.ChatCompletionCreateParams)) as OpenAI.Chat.ChatCompletion;
+    };
 
-    const text = completion.choices
-      .map((choice: OpenAI.Chat.Completions.ChatCompletion.Choice) => choice.message?.content ?? '')
-      .join('\n')
-      .trim();
+    const response = await fetch(joinUrl(this.config.baseURL, '/chat/completions'), {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${this.config.apiKey}`,
+        ...(this.config.defaultHeaders ?? {}),
+      },
+      body: JSON.stringify(payload),
+    });
 
+    const rawText = await response.text();
+    const json = parseJsonSafely<OpenAICompatibleResponse>(rawText);
+
+    if (!response.ok) {
+      const providerMessage =
+        json?.error?.message || truncateText(rawText, 400) || `HTTP ${response.status}`;
+      throw new Error(
+        `Provider ${this.providerId} failed with ${response.status}: ${providerMessage}`,
+      );
+    }
+
+    const text = extractCompletionText(json ?? undefined).trim();
     if (!text) {
       throw new Error(`Provider ${this.providerId} returned an empty text completion.`);
     }
 
     return {
       text,
-      usage: normalizeUsage(completion.usage),
+      usage: normalizeUsage(json?.usage ?? undefined),
       raw: {
         providerId: this.providerId,
         baseURL: this.config.baseURL,
         model: this.config.defaultModel,
-        id: completion.id,
+        id: json?.id,
       },
     };
   }
@@ -245,18 +277,6 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
         ...overrides.capabilities,
       },
     };
-  }
-
-  private resolveApiKey(config: OpenAICompatibleConfig): string {
-    if (config.apiKey) return config.apiKey;
-    if (config.apiKeyEnvVar && process.env[config.apiKeyEnvVar]) {
-      return process.env[config.apiKeyEnvVar] as string;
-    }
-
-    const hint = config.apiKeyEnvVar
-      ? `or environment variable ${config.apiKeyEnvVar}`
-      : 'or a configured environment variable';
-    throw new Error(`Missing API key for provider ${config.providerId}. Provide apiKey ${hint}.`);
   }
 }
 
@@ -369,14 +389,28 @@ export function resolveRoutingRule(
   return rule;
 }
 
+export function resolveRoutingRuleFromEnvironment(
+  env: ProviderEnvironment,
+  taskType: AgentStepRequest['taskType'],
+  rules: ProviderRoutingRule[] = defaultProviderRoutingRules,
+): ProviderRoutingRule {
+  const base = resolveRoutingRule(taskType, rules);
+  return {
+    ...base,
+    preferredProviderId: env.AUTONOMOUS_PROVIDER_ID ?? base.preferredProviderId,
+    preferredModelId: env.AUTONOMOUS_MODEL_ID ?? base.preferredModelId,
+    fallbackProviderId: env.AUTONOMOUS_FALLBACK_PROVIDER_ID ?? base.fallbackProviderId,
+    fallbackModelId: env.AUTONOMOUS_FALLBACK_MODEL_ID ?? base.fallbackModelId,
+  };
+}
+
 export async function buildDefaultProviderRegistry(
-  env: ProviderEnvironment = process.env,
+  env: ProviderEnvironment = getDefaultProviderEnvironment(),
 ): Promise<ProviderRegistry> {
   const registry = new ProviderRegistry();
-  const adapters = [
-    createTheClawBayAdapter(env),
-    createMiniMaxAdapter(env),
-  ].filter((adapter): adapter is OpenAICompatibleAdapter => Boolean(adapter));
+  const adapters = [createTheClawBayAdapter(env), createMiniMaxAdapter(env)].filter(
+    (adapter): adapter is OpenAICompatibleAdapter => Boolean(adapter),
+  );
 
   for (const adapter of adapters) {
     for (const descriptor of await adapter.listModels()) {
@@ -423,7 +457,7 @@ export async function checkProviderHealth(
 }
 
 export function createTheClawBayAdapter(
-  env: ProviderEnvironment = process.env,
+  env: ProviderEnvironment = getDefaultProviderEnvironment(),
 ): OpenAICompatibleAdapter | null {
   const apiKey = env.THECLAWBAY_API_KEY;
   if (!apiKey) return null;
@@ -438,7 +472,7 @@ export function createTheClawBayAdapter(
 }
 
 export function createMiniMaxAdapter(
-  env: ProviderEnvironment = process.env,
+  env: ProviderEnvironment = getDefaultProviderEnvironment(),
 ): OpenAICompatibleAdapter | null {
   const apiKey = env.MINIMAX_API_KEY;
   if (!apiKey) return null;
@@ -452,8 +486,32 @@ export function createMiniMaxAdapter(
   });
 }
 
-function buildMessages(request: GenerationRequest): OpenAI.Chat.ChatCompletionMessageParam[] {
-  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
+export function parseJsonResponse<T>(value: string): T {
+  const normalized = stripMarkdownCodeFences(value);
+  const objectMatch = normalized.match(/\{[\s\S]*\}$/);
+  const jsonCandidate = objectMatch ? objectMatch[0] : normalized;
+  return JSON.parse(jsonCandidate) as T;
+}
+
+function getDefaultProviderEnvironment(): ProviderEnvironment {
+  const processEnv = (globalThis as { process?: { env?: ProviderEnvironment } }).process?.env;
+  if (processEnv) {
+    return processEnv;
+  }
+
+  return {};
+}
+
+function buildMessages(
+  request: GenerationRequest,
+): Array<{
+  role: 'system' | 'user';
+  content: string;
+}> {
+  const messages: Array<{
+    role: 'system' | 'user';
+    content: string;
+  }> = [];
 
   if (request.system) {
     messages.push({
@@ -470,6 +528,10 @@ function buildMessages(request: GenerationRequest): OpenAI.Chat.ChatCompletionMe
   return messages;
 }
 
+function joinUrl(baseURL: string, pathname: string): string {
+  return `${baseURL.replace(/\/+$/, '')}${pathname}`;
+}
+
 function normalizeTemperature(value: number): number {
   if (Number.isNaN(value)) return 0.2;
   if (value <= 0) return 0.1;
@@ -477,34 +539,68 @@ function normalizeTemperature(value: number): number {
   return value;
 }
 
+function extractCompletionText(payload: OpenAICompatibleResponse | undefined): string {
+  if (!payload?.choices?.length) return '';
+
+  return payload.choices
+    .map((choice) => {
+      const content = choice.message?.content;
+      if (typeof content === 'string') return content;
+      if (Array.isArray(content)) {
+        return content
+          .map((part) => (part.type === 'text' || !part.type ? part.text ?? '' : ''))
+          .join('');
+      }
+      return '';
+    })
+    .join('\n');
+}
+
 function normalizeUsage(
   usage:
-    | OpenAI.Completions.CompletionUsage
-    | OpenAI.Responses.ResponseUsage
+    | {
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        total_tokens?: number;
+        input_tokens?: number;
+        output_tokens?: number;
+      }
     | undefined,
 ): UsageRecord | undefined {
   if (!usage) return undefined;
 
-  if ('input_tokens' in usage || 'output_tokens' in usage) {
-    const responseUsage = usage as OpenAI.Responses.ResponseUsage;
-    return {
-      inputTokens: responseUsage.input_tokens,
-      outputTokens: responseUsage.output_tokens,
-      totalTokens: responseUsage.total_tokens,
-    };
-  }
-
-  const completionUsage = usage as OpenAI.Completions.CompletionUsage;
   return {
-    inputTokens: completionUsage.prompt_tokens,
-    outputTokens: completionUsage.completion_tokens,
-    totalTokens: completionUsage.total_tokens,
+    inputTokens: usage.input_tokens ?? usage.prompt_tokens,
+    outputTokens: usage.output_tokens ?? usage.completion_tokens,
+    totalTokens: usage.total_tokens,
   };
 }
 
 function normalizeProviderError(error: unknown): string {
   if (error instanceof Error) return error.message;
   return typeof error === 'string' ? error : 'Unknown provider error';
+}
+
+function parseJsonSafely<T>(value: string): T | null {
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+function stripMarkdownCodeFences(value: string): string {
+  return value
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+}
+
+function truncateText(value: string, maxLength: number): string {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 1)}…`;
 }
 
 const taskInstructionsByType: Record<AgentStepRequest['taskType'], string> = {
@@ -519,13 +615,15 @@ const taskInstructionsByType: Record<AgentStepRequest['taskType'], string> = {
   internal_link_suggestions:
     'Suggest relevant internal links that help readers navigate to adjacent useful pages or commercial next steps.',
   faq_block_generation:
-    'Generate concise FAQs that reflect real user questions and preserve factual caution.',
+    'Generate concise FAQ entries that answer common user questions clearly and conservatively.',
   refresh_existing_article:
-    'Refresh an existing article while preserving working structure, improving clarity, and avoiding low-value rewrite churn.',
+    'Refresh an existing article with better structure, clarity, and evidence while preserving reader trust.',
   source_summary_generation:
-    'Summarize source material conservatively. Distinguish sourced facts from inferences.',
+    'Summarize source material conservatively. Separate stable facts from inference.',
   publish_decision_reasoning:
-    'Explain whether a draft should publish based on policy, evidence, duplication risk, and reader value.',
+    'Explain whether a draft should publish under a conservative first-party quality bar. Prefer not publishing over weak publishing.',
   binary_eval:
-    'Judge the content against binary pass/fail criteria and explain each failure in concrete terms.',
+    'Judge the candidate against explicit binary criteria and explain any failure in concrete, reader-first terms.',
 };
+
+export * from './autonomous-content.js';

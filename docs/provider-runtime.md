@@ -53,6 +53,25 @@ Right now the runtime prefers:
 
 That is only the starting point. Later implementation passes should move routing into host-aware config or D1 state.
 
+### Worker-Level Overrides
+
+For autonomous workers you can override the default routing without changing code:
+
+- `AUTONOMOUS_PROVIDER_ID`
+- `AUTONOMOUS_MODEL_ID`
+- `AUTONOMOUS_FALLBACK_PROVIDER_ID`
+- `AUTONOMOUS_FALLBACK_MODEL_ID`
+
+This is the safest way to switch one deployment from TheClawBay to MiniMax or back again.
+
+### Draft Guardrail Mode
+
+The draft worker now defaults to fail closed:
+
+- `AUTONOMOUS_ALLOW_FALLBACK_DRAFTS=false`
+
+That means a provider failure blocks draft generation instead of silently publishing deterministic filler text. Only turn fallback on for controlled testing.
+
 ## Health Check
 
 Run:
@@ -88,6 +107,12 @@ wrangler secret put MINIMAX_API_KEY
 ```
 
 If you want provider-specific base URLs or models in Cloudflare, add them as worker vars or secrets depending on sensitivity.
+
+Recommended worker secret or var set for the draft path:
+
+- secrets: `THECLAWBAY_API_KEY`, `MINIMAX_API_KEY`
+- vars: `AUTONOMOUS_PROVIDER_ID`, `AUTONOMOUS_MODEL_ID`, `AUTONOMOUS_FALLBACK_PROVIDER_ID`, `AUTONOMOUS_FALLBACK_MODEL_ID`
+- vars: `DRAFT_MAX_OUTPUT_TOKENS`, `AUTONOMOUS_ALLOW_FALLBACK_DRAFTS`
 
 ## Activation Note
 

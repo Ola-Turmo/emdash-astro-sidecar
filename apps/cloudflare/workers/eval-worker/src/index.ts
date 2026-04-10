@@ -1,4 +1,8 @@
 import { claimNextJob, clampLeaseSeconds, completeJob, failJob } from '../../shared/job-runtime';
+import {
+  evaluateDraftArtifact,
+  scoreEvalSuite,
+} from '../../../../../packages/content-evals/src/index';
 
 interface Env {
   AUTONOMOUS_DB: D1Database;
@@ -74,16 +78,24 @@ async function runEvalStep(
   const draft = await db
     .prepare(
       `
-        SELECT id, slug
-        FROM drafts
-        WHERE host_id = ?1
-          AND status = 'queued_eval'
-        ORDER BY created_at ASC
+        SELECT d.id, d.slug, d.title, d.description, d.excerpt, h.site_url
+        FROM drafts d
+        JOIN hosts h ON h.id = d.host_id
+        WHERE d.host_id = ?1
+          AND d.status = 'queued_eval'
+        ORDER BY d.created_at ASC
         LIMIT 1
       `,
     )
     .bind(hostId)
-    .first<{ id: string; slug: string }>();
+    .first<{
+      id: string;
+      slug: string;
+      title: string | null;
+      description: string | null;
+      excerpt: string | null;
+      site_url: string;
+    }>();
 
   if (!draft) {
     return {
@@ -93,38 +105,37 @@ async function runEvalStep(
     };
   }
 
-  const sectionCount = await countDraftSections(db, draft.id);
-  const sourceCount = await countHostSources(db, hostId);
-  const internalLinkSignal = await countInternalLinkSignals(db, draft.id);
+  const sectionsResult = await db
+    .prepare(
+      `
+        SELECT heading, body
+        FROM draft_sections
+        WHERE draft_id = ?1
+        ORDER BY section_order ASC
+      `,
+    )
+    .bind(draft.id)
+    .all<{ heading: string; body: string }>();
 
-  const criteria = [
-    {
-      id: 'single-h1',
-      passed: sectionCount >= 1,
-      reason: sectionCount >= 1 ? 'Draft has section structure.' : 'Draft is missing section structure.',
-    },
-    {
-      id: 'reader-first-copy',
-      passed: true,
-      reason: 'Placeholder copy uses reader-facing section headings.',
-    },
-    {
-      id: 'internal-links',
-      passed: internalLinkSignal > 0,
-      reason:
-        internalLinkSignal > 0
-          ? 'Draft contains at least one internal-link signal.'
-          : 'Draft does not yet contain an internal-link signal.',
-    },
-    {
-      id: 'evidence-threshold',
-      passed: sourceCount > 0,
-      reason:
-        sourceCount > 0
-          ? 'At least one source artifact exists for this host.'
-          : 'No source artifact exists for this host yet.',
-    },
-  ];
+  const sourceCount = await countHostSources(db, hostId);
+  const criteria = evaluateDraftArtifact({
+    title: draft.title ?? '',
+    description: draft.description ?? '',
+    excerpt: draft.excerpt ?? '',
+    sections: sectionsResult.results,
+    sourceCount,
+    siteUrl: draft.site_url,
+  });
+
+  await db
+    .prepare(
+      `
+        DELETE FROM draft_evals
+        WHERE draft_id = ?1
+      `,
+    )
+    .bind(draft.id)
+    .run();
 
   for (const criterion of criteria) {
     await db
@@ -132,32 +143,20 @@ async function runEvalStep(
         `
           INSERT INTO draft_evals (id, draft_id, criterion_id, passed, reason, created_at)
           VALUES (?1, ?2, ?3, ?4, ?5, ?6)
-          ON CONFLICT(id) DO NOTHING
         `,
       )
       .bind(
         crypto.randomUUID(),
         draft.id,
-        criterion.id,
+        criterion.criterionId,
         criterion.passed ? 1 : 0,
-        criterion.reason,
+        criterion.reason ?? null,
         now,
       )
       .run();
-
-    await db
-      .prepare(
-        `
-          UPDATE draft_evals
-          SET passed = ?1, reason = ?2, created_at = ?3
-          WHERE draft_id = ?4 AND criterion_id = ?5
-        `,
-      )
-      .bind(criterion.passed ? 1 : 0, criterion.reason, now, draft.id, criterion.id)
-      .run();
   }
 
-  const passedCount = criteria.filter((criterion) => criterion.passed).length;
+  const passedCount = scoreEvalSuite(criteria);
   const finalStatus = passedCount === criteria.length ? 'ready_for_publish' : 'eval_failed';
 
   await db
@@ -183,21 +182,6 @@ async function runEvalStep(
   };
 }
 
-async function countDraftSections(db: D1Database, draftId: string): Promise<number> {
-  const row = await db
-    .prepare(
-      `
-        SELECT COUNT(*) AS count
-        FROM draft_sections
-        WHERE draft_id = ?1
-      `,
-    )
-    .bind(draftId)
-    .first<{ count: number }>();
-
-  return row?.count ?? 0;
-}
-
 async function countHostSources(db: D1Database, hostId: string): Promise<number> {
   const row = await db
     .prepare(
@@ -211,19 +195,4 @@ async function countHostSources(db: D1Database, hostId: string): Promise<number>
     .first<{ count: number }>();
 
   return row?.count ?? 0;
-}
-
-async function countInternalLinkSignals(db: D1Database, draftId: string): Promise<number> {
-  const result = await db
-    .prepare(
-      `
-        SELECT body
-        FROM draft_sections
-        WHERE draft_id = ?1
-      `,
-    )
-    .bind(draftId)
-    .all<{ body: string }>();
-
-  return result.results.filter((row) => /kurs|guide|les mer|neste steg/i.test(row.body)).length;
 }

@@ -150,7 +150,7 @@ async function runResearchStep(
   if (job.step === 'discover_topics') {
     const seededTopics = [
       `Hva må du kunne før du går opp til prøven hos ${host.host_name}?`,
-      `Vanlige feil kandidater gjør før de kjøper kurs eller går opp til prøve`,
+      'Vanlige feil kandidater gjør før de kjøper kurs eller går opp til prøve',
       `Hvordan forberede seg effektivt til kommunens prøve med ${host.host_name}`,
     ];
 
