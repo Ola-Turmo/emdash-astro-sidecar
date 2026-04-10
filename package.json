@@ -14,6 +14,7 @@
     "audit:deployed": "node ./scripts/audit-deployed-urls.mjs",
     "audit:deployed:lighthouse": "node ./scripts/audit-deployed-urls.mjs --lighthouse",
     "audit:deployed:psi": "node ./scripts/audit-deployed-urls.mjs --lighthouse",
+    "materialize:publications": "node ./scripts/materialize-publications.mjs",
     "providers:health": "node ./scripts/provider-healthcheck.mjs",
     "qa:copy": "node ./scripts/check-copy-quality.mjs",
     "qa:cloudflare": "node ./scripts/check-cloudflare-guardrails.mjs",

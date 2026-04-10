@@ -23,6 +23,7 @@
     "./scheduler/src/**/*.ts",
     "./orchestrator/src/**/*.ts",
     "./browser-audit-worker/src/**/*.ts",
+    "./content-api/src/**/*.ts",
     "./research-worker/src/**/*.ts",
     "./draft-worker/src/**/*.ts",
     "./eval-worker/src/**/*.ts",

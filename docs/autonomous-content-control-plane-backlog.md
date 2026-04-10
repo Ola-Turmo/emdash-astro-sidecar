@@ -123,6 +123,7 @@ The system can discover opportunities, capture sources, and produce drafts or re
 - [x] add eval worker entrypoint
 - [x] add publish worker entrypoint
 - [x] add source snapshot and draft section tables
+- [x] add publication materialization handoff
 - [ ] add topic-candidate generation workflow
 - [ ] add source snapshot capture rules
 - [ ] add draft generation workflow
@@ -142,6 +143,7 @@ The system can discover opportunities, capture sources, and produce drafts or re
 - draft jobs create draft, section, and eval placeholder records
 - eval worker resolves placeholder eval rows into pass/fail outcomes and a draft status
 - publish worker materializes an MDX artifact and publication rows for `ready_for_publish` drafts
+- content API and sync script can expose pending artifacts and write them into the Astro content tree
 
 ## Milestone 6: Metrics + Audit
 

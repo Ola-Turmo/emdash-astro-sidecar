@@ -145,6 +145,7 @@ async function runPublishStep(
       sections: sectionsResult.results,
     },
   );
+  const artifactId = crypto.randomUUID();
 
   await db
     .prepare(
@@ -153,7 +154,30 @@ async function runPublishStep(
         VALUES (?1, ?2, ?3, 'mdx', ?4)
       `,
     )
-    .bind(crypto.randomUUID(), hostId, draft.id, artifact.mdx)
+    .bind(artifactId, hostId, draft.id, artifact.mdx)
+    .run();
+
+  await db
+    .prepare(
+      `
+        INSERT INTO publication_materializations (
+          id,
+          artifact_id,
+          host_id,
+          draft_id,
+          status,
+          suggested_path
+        )
+        VALUES (?1, ?2, ?3, ?4, 'pending', ?5)
+      `,
+    )
+    .bind(
+      crypto.randomUUID(),
+      artifactId,
+      hostId,
+      draft.id,
+      `apps/blog/src/content/blog/autonomous/${draft.slug}.mdx`,
+    )
     .run();
 
   await db
@@ -220,6 +244,7 @@ async function runPublishStep(
     status: 'completed',
     step,
     draftId: draft.id,
+    artifactId,
     url: artifact.url,
     title: artifact.title,
   };

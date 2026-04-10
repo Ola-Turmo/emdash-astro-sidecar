@@ -67,6 +67,8 @@ This runs the continuous loop:
   Now exists as the bounded job consumer for `evaluate_candidates` and writes draft pass/fail outcomes.
 - `publish-worker`
   Now exists as the bounded job consumer for publish steps and materializes durable publication artifacts.
+- `content-api`
+  Exposes bounded pending publication artifacts for local or CI materialization into the Astro content tree.
 - future `publish-worker`
   Applies approved refreshes or publishes safe net-new pages.
 - `browser-audit-worker`
@@ -85,6 +87,7 @@ The current implementation now includes the first real host-control layer:
 - D1-backed `host_run_events`
 - D1-backed `host_jobs`
 - D1-backed `source_documents`, `source_snapshots`, and `draft_sections`
+- D1-backed `publication_artifacts`, `publication_events`, and `publication_materializations`
 - a `HostControlDO` Durable Object exported from the orchestrator worker
 
 ## Package Responsibilities

@@ -36,6 +36,7 @@ Read these files in order:
 - `apps/cloudflare/workers/draft-worker/src/index.ts`
 - `apps/cloudflare/workers/eval-worker/src/index.ts`
 - `apps/cloudflare/workers/publish-worker/src/index.ts`
+- `apps/cloudflare/workers/content-api/src/index.ts`
 - `apps/cloudflare/workers/browser-audit-worker/src/index.ts`
 
 ## Provider Rules

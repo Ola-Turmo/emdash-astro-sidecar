@@ -33,6 +33,7 @@ The current guardrail logic lives in:
 - [apps/cloudflare/workers/browser-audit-worker/src/index.ts](./../apps/cloudflare/workers/browser-audit-worker/src/index.ts)
 - [apps/cloudflare/workers/eval-worker/src/index.ts](./../apps/cloudflare/workers/eval-worker/src/index.ts)
 - [apps/cloudflare/workers/publish-worker/src/index.ts](./../apps/cloudflare/workers/publish-worker/src/index.ts)
+- [apps/cloudflare/workers/content-api/src/index.ts](./../apps/cloudflare/workers/content-api/src/index.ts)
 - [scripts/check-cloudflare-guardrails.mjs](./../scripts/check-cloudflare-guardrails.mjs)
 
 ## Default Guardrail Model
@@ -105,6 +106,7 @@ That gives the system:
 - explicit cooldowns after failure
 - durable host-state history instead of memory-only locking
 - bounded queued work instead of unbounded fan-out
+- bounded publication export and materialization batches instead of uncontrolled content sync
 
 ## Operational Rules
 
