@@ -117,6 +117,9 @@ The system can discover opportunities, capture sources, and produce drafts or re
 ### Tasks
 
 - [ ] add `packages/topic-discovery`
+- [x] add bounded D1-backed host job queue
+- [x] add research worker entrypoint
+- [x] add draft worker entrypoint
 - [ ] add topic-candidate generation workflow
 - [ ] add source snapshot capture rules
 - [ ] add draft generation workflow
@@ -130,6 +133,8 @@ The system can discover opportunities, capture sources, and produce drafts or re
 - one host can produce a topic candidate list
 - one candidate can produce a draft package
 - the draft package includes enough metadata for later eval and publish steps
+- a host `start` action seeds bounded jobs into D1
+- research and draft workers can each claim and complete their own queued stub jobs
 
 ## Milestone 6: Metrics + Audit
 

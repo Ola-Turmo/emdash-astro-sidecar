@@ -25,9 +25,15 @@ Read these files in order:
 - `packages/autoresearch-core/src/index.ts`
 - `packages/content-evals/src/index.ts`
 - `packages/content-policy/src/index.ts`
+- `packages/host-control/src/index.ts`
+- `packages/host-jobs/src/index.ts`
 - `apps/cloudflare/d1/migrations/0001_autonomous_content_control_plane.sql`
+- `apps/cloudflare/d1/migrations/0002_host_runtime_control.sql`
+- `apps/cloudflare/d1/migrations/0003_host_jobs.sql`
 - `apps/cloudflare/workers/scheduler/src/index.ts`
 - `apps/cloudflare/workers/orchestrator/src/index.ts`
+- `apps/cloudflare/workers/research-worker/src/index.ts`
+- `apps/cloudflare/workers/draft-worker/src/index.ts`
 - `apps/cloudflare/workers/browser-audit-worker/src/index.ts`
 
 ## Provider Rules

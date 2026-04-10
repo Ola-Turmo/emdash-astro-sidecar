@@ -19,6 +19,11 @@ import {
   type HostLockDecision,
   type HostRuntimeState,
 } from '@emdash/host-control';
+import {
+  seedJobsFromRunPlan,
+  type HostJobRow,
+  type SeededHostJob,
+} from '@emdash/host-jobs';
 
 export interface Env {
   SYSTEM_NAME: string;
@@ -169,6 +174,17 @@ export default {
         );
       }
 
+      const runPlan = buildAutonomousRunPlan(mode);
+      const seededJobs = seedJobsFromRunPlan(runPlan, {
+        hostId,
+        runId,
+        requestedAt: now,
+        requestedAuditUrls: executionEnvelope.allowedAuditUrlsThisRun,
+        maxJobs: executionEnvelope.queueMessagesThisRun,
+      });
+      await insertHostJobs(env.AUTONOMOUS_DB, seededJobs);
+      const queuedJobs = await listHostJobs(env.AUTONOMOUS_DB, hostId, runId);
+
       return Response.json({
         ok: true,
         system: env.SYSTEM_NAME,
@@ -176,11 +192,12 @@ export default {
         budgets,
         runId,
         action,
-        runPlan: buildAutonomousRunPlan(mode),
+        runPlan,
         lockDecision,
+        queuedJobs,
         cloudflareGuardrails: guardrails,
         executionEnvelope,
-        note: 'Host run acquired. Next implementation pass should dispatch Workflow and Queue tasks behind this lock.',
+        note: 'Host run acquired and bounded jobs were queued in D1. Next implementation pass should dispatch these jobs through dedicated workers, Queues, or Workflows.',
       });
     }
 
@@ -475,6 +492,73 @@ async function insertHostRunEvent(
     )
     .bind(crypto.randomUUID(), input.hostId, input.runId, input.eventType, JSON.stringify(input.detail))
     .run();
+}
+
+async function insertHostJobs(db: D1Database, jobs: SeededHostJob[]): Promise<void> {
+  for (const job of jobs) {
+    await db
+      .prepare(
+        `
+          INSERT INTO host_jobs (
+            id,
+            host_id,
+            run_id,
+            step,
+            worker_kind,
+            status,
+            priority,
+            payload_json,
+            attempt_count,
+            lease_owner,
+            lease_expires_at,
+            last_error,
+            updated_at
+          )
+          VALUES (?1, ?2, ?3, ?4, ?5, 'queued', ?6, ?7, 0, NULL, NULL, NULL, ?8)
+        `,
+      )
+      .bind(
+        crypto.randomUUID(),
+        job.hostId,
+        job.runId,
+        job.step,
+        job.workerKind,
+        job.priority,
+        JSON.stringify(job.payload),
+        job.payload.requestedAt,
+      )
+      .run();
+  }
+}
+
+async function listHostJobs(db: D1Database, hostId: string, runId: string): Promise<HostJobRow[]> {
+  const result = await db
+    .prepare(
+      `
+        SELECT
+          id,
+          host_id,
+          run_id,
+          step,
+          worker_kind,
+          status,
+          priority,
+          payload_json,
+          attempt_count,
+          lease_owner,
+          lease_expires_at,
+          last_error,
+          created_at,
+          updated_at
+        FROM host_jobs
+        WHERE host_id = ?1 AND run_id = ?2
+        ORDER BY priority ASC, created_at ASC
+      `,
+    )
+    .bind(hostId, runId)
+    .all<HostJobRow>();
+
+  return result.results;
 }
 
 function clampRequestedCount(requestedValue: number, envLimit: string | undefined): number {

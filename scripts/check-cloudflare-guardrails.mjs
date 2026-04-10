@@ -9,10 +9,14 @@ const requiredFiles = [
   'docs/cloudflare-resource-guardrails.md',
   'packages/cloudflare-guardrails/src/index.ts',
   'packages/host-control/src/index.ts',
+  'packages/host-jobs/src/index.ts',
   'apps/cloudflare/d1/migrations/0002_host_runtime_control.sql',
+  'apps/cloudflare/d1/migrations/0003_host_jobs.sql',
   'apps/cloudflare/workers/scheduler/wrangler.toml',
   'apps/cloudflare/workers/orchestrator/wrangler.toml',
   'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',
+  'apps/cloudflare/workers/research-worker/wrangler.toml',
+  'apps/cloudflare/workers/draft-worker/wrangler.toml',
 ];
 
 const workerExpectations = [

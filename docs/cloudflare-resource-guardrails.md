@@ -28,6 +28,7 @@ The current guardrail logic lives in:
 
 - [packages/cloudflare-guardrails/src/index.ts](./../packages/cloudflare-guardrails/src/index.ts)
 - [packages/host-control/src/index.ts](./../packages/host-control/src/index.ts)
+- [packages/host-jobs/src/index.ts](./../packages/host-jobs/src/index.ts)
 - [apps/cloudflare/workers/orchestrator/src/index.ts](./../apps/cloudflare/workers/orchestrator/src/index.ts)
 - [apps/cloudflare/workers/browser-audit-worker/src/index.ts](./../apps/cloudflare/workers/browser-audit-worker/src/index.ts)
 - [scripts/check-cloudflare-guardrails.mjs](./../scripts/check-cloudflare-guardrails.mjs)
@@ -93,6 +94,7 @@ The orchestrator now uses:
 
 - D1-backed `host_runtime_state`
 - D1-backed `host_run_events`
+- D1-backed `host_jobs`
 - a `HostControlDO` Durable Object per host name
 
 That gives the system:
@@ -100,6 +102,7 @@ That gives the system:
 - one active run per host
 - explicit cooldowns after failure
 - durable host-state history instead of memory-only locking
+- bounded queued work instead of unbounded fan-out
 
 ## Operational Rules
 
