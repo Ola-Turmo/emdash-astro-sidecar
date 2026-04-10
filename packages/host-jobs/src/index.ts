@@ -17,7 +17,7 @@ export interface AutonomousRunPlan {
 }
 
 export type HostJobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'skipped';
-export type HostWorkerKind = 'research-worker' | 'draft-worker' | 'future-worker';
+export type HostWorkerKind = 'research-worker' | 'draft-worker' | 'future-worker' | 'publish-worker';
 
 export interface HostJobPayload {
   hostId: string;
@@ -105,13 +105,13 @@ export const hostJobRegistry: Record<AutonomousTaskStep, HostJobKindDefinition> 
   },
   publish_refreshes: {
     step: 'publish_refreshes',
-    workerKind: 'future-worker',
+    workerKind: 'publish-worker',
     priority: 80,
     bounded: true,
   },
   publish_net_new: {
     step: 'publish_net_new',
-    workerKind: 'future-worker',
+    workerKind: 'publish-worker',
     priority: 90,
     bounded: true,
   },

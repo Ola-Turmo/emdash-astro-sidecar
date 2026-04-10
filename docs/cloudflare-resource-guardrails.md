@@ -32,6 +32,7 @@ The current guardrail logic lives in:
 - [apps/cloudflare/workers/orchestrator/src/index.ts](./../apps/cloudflare/workers/orchestrator/src/index.ts)
 - [apps/cloudflare/workers/browser-audit-worker/src/index.ts](./../apps/cloudflare/workers/browser-audit-worker/src/index.ts)
 - [apps/cloudflare/workers/eval-worker/src/index.ts](./../apps/cloudflare/workers/eval-worker/src/index.ts)
+- [apps/cloudflare/workers/publish-worker/src/index.ts](./../apps/cloudflare/workers/publish-worker/src/index.ts)
 - [scripts/check-cloudflare-guardrails.mjs](./../scripts/check-cloudflare-guardrails.mjs)
 
 ## Default Guardrail Model

@@ -24,6 +24,7 @@
       "@emdash/cloudflare-guardrails/*": ["./packages/cloudflare-guardrails/src/*"],
       "@emdash/host-control/*": ["./packages/host-control/src/*"],
       "@emdash/host-jobs/*": ["./packages/host-jobs/src/*"],
+      "@emdash/publish-engine/*": ["./packages/publish-engine/src/*"],
       "@emdash/skills/*": ["./packages/skills/src/*"],
       "@emdash/plugins/*": ["./packages/plugins/src/*"]
     }

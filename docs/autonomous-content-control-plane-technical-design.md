@@ -65,6 +65,8 @@ This runs the continuous loop:
   Now exists as the first bounded job consumer for draft-class steps.
 - `eval-worker`
   Now exists as the bounded job consumer for `evaluate_candidates` and writes draft pass/fail outcomes.
+- `publish-worker`
+  Now exists as the bounded job consumer for publish steps and materializes durable publication artifacts.
 - future `publish-worker`
   Applies approved refreshes or publishes safe net-new pages.
 - `browser-audit-worker`
