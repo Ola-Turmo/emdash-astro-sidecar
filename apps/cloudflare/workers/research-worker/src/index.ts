@@ -1,4 +1,4 @@
-import { nextLeaseExpiry, workerSupportsStep, type HostJobRow } from '@emdash/host-jobs';
+import { claimNextJob, clampLeaseSeconds, completeJob, failJob } from '../../shared/job-runtime';
 
 interface Env {
   AUTONOMOUS_DB: D1Database;
@@ -6,10 +6,6 @@ interface Env {
 }
 
 const WORKER_KIND = 'research-worker';
-const RESEARCH_RESULT = {
-  status: 'stubbed',
-  note: 'Research worker scaffold completed the job. Next pass should attach actual signal ingestion and topic discovery work.',
-};
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -37,106 +33,177 @@ export default {
       });
     }
 
-    await completeJob(env.AUTONOMOUS_DB, job.id, leaseOwner, now, RESEARCH_RESULT);
+    try {
+      const result = await runResearchStep(env.AUTONOMOUS_DB, job, now);
+      await completeJob(env.AUTONOMOUS_DB, job.id, leaseOwner, now, result);
 
-    return Response.json({
-      ok: true,
-      workerKind: WORKER_KIND,
-      claimed: true,
-      jobId: job.id,
-      step: job.step,
-      result: RESEARCH_RESULT,
-    });
+      return Response.json({
+        ok: true,
+        workerKind: WORKER_KIND,
+        claimed: true,
+        jobId: job.id,
+        step: job.step,
+        result,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown research-worker error';
+      await failJob(env.AUTONOMOUS_DB, job.id, leaseOwner, now, message);
+
+      return Response.json(
+        {
+          ok: false,
+          workerKind: WORKER_KIND,
+          claimed: true,
+          jobId: job.id,
+          step: job.step,
+          error: message,
+        },
+        { status: 500 },
+      );
+    }
   },
 };
 
-async function claimNextJob(
+async function runResearchStep(
   db: D1Database,
-  input: {
-    workerKind: 'research-worker';
-    leaseOwner: string;
-    now: string;
-    leaseSeconds: number;
-  },
-): Promise<HostJobRow | null> {
-  const result = await db
+  job: Awaited<ReturnType<typeof claimNextJob>> extends infer T ? Exclude<T, null> : never,
+  now: string,
+): Promise<Record<string, unknown>> {
+  const host = await db
     .prepare(
       `
-        SELECT
-          id,
-          host_id,
-          run_id,
-          step,
-          worker_kind,
-          status,
-          priority,
-          payload_json,
-          attempt_count,
-          lease_owner,
-          lease_expires_at,
-          last_error,
-          created_at,
-          updated_at
-        FROM host_jobs
-        WHERE worker_kind = ?1
-          AND status = 'queued'
-        ORDER BY priority ASC, created_at ASC
-        LIMIT 1
+        SELECT host_name, site_url, base_path
+        FROM hosts
+        WHERE id = ?1
       `,
     )
-    .bind(input.workerKind)
-    .all<HostJobRow>();
+    .bind(job.payload.hostId)
+    .first<{ host_name: string; site_url: string; base_path: string }>();
 
-  const job = result.results[0] ?? null;
-  if (!job || !workerSupportsStep(input.workerKind, job.step)) {
-    return null;
+  if (!host) {
+    throw new Error(`Missing host record for ${job.payload.hostId}.`);
+  }
+
+  if (job.step === 'ingest_signals') {
+    const sourceDocumentId = crypto.randomUUID();
+    await db
+      .prepare(
+        `
+          INSERT INTO source_documents (
+            id,
+            host_id,
+            run_id,
+            source_type,
+            source_url,
+            title,
+            body_excerpt
+          )
+          VALUES (?1, ?2, ?3, 'host-homepage', ?4, ?5, ?6)
+        `,
+      )
+      .bind(
+        sourceDocumentId,
+        job.payload.hostId,
+        job.payload.runId,
+        host.site_url,
+        `${host.host_name} source capture`,
+        `Initial source capture for ${host.host_name} mounted at ${host.base_path}.`,
+      )
+      .run();
+
+    await db
+      .prepare(
+        `
+          INSERT INTO source_snapshots (
+            id,
+            host_id,
+            run_id,
+            source_document_id,
+            snapshot_type,
+            content_json
+          )
+          VALUES (?1, ?2, ?3, ?4, 'host-config', ?5)
+        `,
+      )
+      .bind(
+        crypto.randomUUID(),
+        job.payload.hostId,
+        job.payload.runId,
+        sourceDocumentId,
+        JSON.stringify({
+          hostName: host.host_name,
+          siteUrl: host.site_url,
+          basePath: host.base_path,
+          requestedAt: job.payload.requestedAt,
+        }),
+      )
+      .run();
+
+    return {
+      status: 'completed',
+      step: job.step,
+      sourceDocumentsCreated: 1,
+      sourceSnapshotsCreated: 1,
+    };
+  }
+
+  if (job.step === 'discover_topics') {
+    const seededTopics = [
+      `Hva må du kunne før du går opp til prøven hos ${host.host_name}?`,
+      `Vanlige feil kandidater gjør før de kjøper kurs eller går opp til prøve`,
+      `Hvordan forberede seg effektivt til kommunens prøve med ${host.host_name}`,
+    ];
+
+    for (const topic of seededTopics) {
+      await db
+        .prepare(
+          `
+            INSERT INTO topic_candidates (id, host_id, topic, status, source)
+            VALUES (?1, ?2, ?3, 'new', ?4)
+          `,
+        )
+        .bind(crypto.randomUUID(), job.payload.hostId, topic, `run:${job.payload.runId}`)
+        .run();
+    }
+
+    return {
+      status: 'completed',
+      step: job.step,
+      topicCandidatesCreated: seededTopics.length,
+    };
   }
 
   await db
     .prepare(
       `
-        UPDATE host_jobs
-        SET
-          status = 'running',
-          attempt_count = attempt_count + 1,
-          lease_owner = ?1,
-          lease_expires_at = ?2,
-          updated_at = ?3
-        WHERE id = ?4
+        INSERT INTO source_snapshots (
+          id,
+          host_id,
+          run_id,
+          source_document_id,
+          snapshot_type,
+          content_json
+        )
+        VALUES (?1, ?2, ?3, NULL, ?4, ?5)
       `,
     )
-    .bind(input.leaseOwner, nextLeaseExpiry(input.now, input.leaseSeconds), input.now, job.id)
-    .run();
-
-  return job;
-}
-
-async function completeJob(
-  db: D1Database,
-  jobId: string,
-  leaseOwner: string,
-  now: string,
-  result: Record<string, unknown>,
-): Promise<void> {
-  await db
-    .prepare(
-      `
-        UPDATE host_jobs
-        SET
-          status = 'completed',
-          lease_owner = NULL,
-          lease_expires_at = NULL,
-          last_error = ?1,
-          updated_at = ?2
-        WHERE id = ?3 AND lease_owner = ?4
-      `,
+    .bind(
+      crypto.randomUUID(),
+      job.payload.hostId,
+      job.payload.runId,
+      job.step,
+      JSON.stringify({
+        step: job.step,
+        mode: job.payload.mode,
+        requestedAt: job.payload.requestedAt,
+        note: 'Bounded research-step placeholder snapshot',
+      }),
     )
-    .bind(JSON.stringify(result), now, jobId, leaseOwner)
     .run();
-}
 
-function clampLeaseSeconds(rawValue: string | undefined): number {
-  const parsed = rawValue ? Number(rawValue) : 120;
-  if (!Number.isFinite(parsed) || parsed <= 0) return 120;
-  return Math.min(parsed, 900);
+  return {
+    status: 'completed',
+    step: job.step,
+    sourceSnapshotsCreated: 1,
+  };
 }

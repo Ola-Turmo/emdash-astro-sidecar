@@ -12,6 +12,7 @@ const requiredFiles = [
   'packages/host-jobs/src/index.ts',
   'apps/cloudflare/d1/migrations/0002_host_runtime_control.sql',
   'apps/cloudflare/d1/migrations/0003_host_jobs.sql',
+  'apps/cloudflare/d1/migrations/0004_content_artifacts.sql',
   'apps/cloudflare/workers/scheduler/wrangler.toml',
   'apps/cloudflare/workers/orchestrator/wrangler.toml',
   'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',

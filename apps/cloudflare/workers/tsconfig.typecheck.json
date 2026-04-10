@@ -18,6 +18,7 @@
   },
   "include": [
     "./types.d.ts",
+    "./shared/**/*.ts",
     "./scheduler/src/**/*.ts",
     "./orchestrator/src/**/*.ts",
     "./browser-audit-worker/src/**/*.ts",

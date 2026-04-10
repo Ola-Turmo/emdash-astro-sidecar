@@ -82,6 +82,7 @@ The current implementation now includes the first real host-control layer:
 - D1-backed `host_runtime_state`
 - D1-backed `host_run_events`
 - D1-backed `host_jobs`
+- D1-backed `source_documents`, `source_snapshots`, and `draft_sections`
 - a `HostControlDO` Durable Object exported from the orchestrator worker
 
 ## Package Responsibilities
@@ -197,7 +198,7 @@ The intended runtime flow is:
 8. live pages are audited after deployment.
 9. prompt-family runs update best-prompt state only if validation improves.
 
-The repo now has the first host lock and cooldown layer, plus a bounded D1-backed job queue. It still stops short of Cloudflare Queue or Workflow fan-out.
+The repo now has the first host lock and cooldown layer, plus a bounded D1-backed job queue and first data-producing worker passes. It still stops short of Cloudflare Queue or Workflow fan-out.
 
 ## Publish Safety Flow
 
