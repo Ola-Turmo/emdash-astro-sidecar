@@ -7,6 +7,7 @@ import {
 interface Env {
   AUTONOMOUS_DB: D1Database;
   JOB_LEASE_SECONDS?: string;
+  EVAL_MAX_JOBS_PER_RUN?: string;
 }
 
 const WORKER_KIND = 'future-worker';
@@ -19,54 +20,98 @@ export default {
     }
 
     const now = new Date().toISOString();
+    const requestBody = (await request.json().catch(() => ({}))) as {
+      hostId?: string;
+    };
     const leaseSeconds = clampLeaseSeconds(env.JOB_LEASE_SECONDS);
-    const leaseOwner = crypto.randomUUID();
+    const maxJobs = clampMaxJobs(env.EVAL_MAX_JOBS_PER_RUN);
+    const processed: Array<Record<string, unknown>> = [];
 
-    const job = await claimNextJob(env.AUTONOMOUS_DB, {
-      workerKind: WORKER_KIND,
-      leaseOwner,
-      now,
-      leaseSeconds,
-      supportedSteps: [EVAL_STEP],
-    });
-
-    if (!job) {
+    if (requestBody.hostId) {
+      const result = await runEvalStep(env.AUTONOMOUS_DB, requestBody.hostId, now);
       return Response.json({
         ok: true,
         workerKind: 'eval-worker',
         claimed: false,
-        message: 'No queued evaluation jobs are available.',
+        processedCount: 1,
+        processed: [
+          {
+            ok: true,
+            source: 'direct_host_eval',
+            hostId: requestBody.hostId,
+            result,
+          },
+        ],
       });
     }
 
-    try {
-      const result = await runEvalStep(env.AUTONOMOUS_DB, job.payload.hostId, now);
-      await completeJob(env.AUTONOMOUS_DB, job.id, leaseOwner, now, result);
-
-      return Response.json({
-        ok: true,
-        workerKind: 'eval-worker',
-        claimed: true,
-        jobId: job.id,
-        step: job.step,
-        result,
+    for (let index = 0; index < maxJobs; index += 1) {
+      const leaseOwner = crypto.randomUUID();
+      const job = await claimNextJob(env.AUTONOMOUS_DB, {
+        workerKind: WORKER_KIND,
+        leaseOwner,
+        now,
+        leaseSeconds,
+        supportedSteps: [EVAL_STEP],
       });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown eval-worker error';
-      await failJob(env.AUTONOMOUS_DB, job.id, leaseOwner, now, message);
 
-      return Response.json(
-        {
-          ok: false,
-          workerKind: 'eval-worker',
-          claimed: true,
+      if (!job) {
+        break;
+      }
+
+      try {
+        const result = await runEvalStep(env.AUTONOMOUS_DB, job.payload.hostId, now);
+        await completeJob(env.AUTONOMOUS_DB, job.id, leaseOwner, now, result);
+        processed.push({
+          ok: true,
           jobId: job.id,
+          hostId: job.payload.hostId,
+          step: job.step,
+          result,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown eval-worker error';
+        await failJob(env.AUTONOMOUS_DB, job.id, leaseOwner, now, message);
+        processed.push({
+          ok: false,
+          jobId: job.id,
+          hostId: job.payload.hostId,
           step: job.step,
           error: message,
-        },
-        { status: 500 },
-      );
+        });
+      }
     }
+
+    if (processed.length === 0) {
+      const recovered = await runOrphanEvalRecovery(env.AUTONOMOUS_DB, now);
+      if (recovered) {
+        return Response.json({
+          ok: true,
+          workerKind: 'eval-worker',
+          claimed: false,
+          processedCount: 1,
+          processed: [
+            {
+              ok: true,
+              source: 'orphan_recovery',
+              ...recovered,
+            },
+          ],
+        });
+      }
+    }
+
+    return Response.json({
+      ok: processed.every((entry) => entry.ok !== false),
+      workerKind: 'eval-worker',
+      claimed: processed.length > 0,
+      processedCount: processed.length,
+      processed,
+      message:
+        processed.length > 0
+          ? undefined
+          : 'No queued evaluation jobs are available.',
+    });
   },
 };
 
@@ -102,6 +147,7 @@ async function runEvalStep(
       status: 'skipped',
       step: EVAL_STEP,
       reason: 'No draft is waiting for evaluation.',
+      hostId,
     };
   }
 
@@ -173,6 +219,7 @@ async function runEvalStep(
   return {
     status: 'completed',
     step: EVAL_STEP,
+    hostId,
     draftId: draft.id,
     draftSlug: draft.slug,
     passedCount,
@@ -195,4 +242,37 @@ async function countHostSources(db: D1Database, hostId: string): Promise<number>
     .first<{ count: number }>();
 
   return row?.count ?? 0;
+}
+
+function clampMaxJobs(rawValue: string | undefined): number {
+  const parsed = rawValue ? Number(rawValue) : 5;
+  if (!Number.isFinite(parsed) || parsed <= 0) return 5;
+  return Math.min(parsed, 20);
+}
+
+async function runOrphanEvalRecovery(
+  db: D1Database,
+  now: string,
+): Promise<Record<string, unknown> | null> {
+  const draft = await db
+    .prepare(
+      `
+        SELECT host_id
+        FROM drafts
+        WHERE status = 'queued_eval'
+        ORDER BY created_at ASC
+        LIMIT 1
+      `,
+    )
+    .first<{ host_id: string }>();
+
+  if (!draft?.host_id) {
+    return null;
+  }
+
+  const result = await runEvalStep(db, draft.host_id, now);
+  return {
+    hostId: draft.host_id,
+    ...result,
+  };
 }

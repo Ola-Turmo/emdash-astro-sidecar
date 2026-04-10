@@ -98,6 +98,12 @@ The draft worker must also declare:
 
 The default is to fail closed on provider errors. That protects both Cloudflare spend and content quality because the system does not silently convert provider outages into low-value filler drafts.
 
+The eval worker must also declare:
+
+- `EVAL_MAX_JOBS_PER_RUN`
+
+That keeps stale queued evaluation jobs from consuming unbounded invocations. The worker should drain only a small bounded batch per run.
+
 ## Host Lock Rule
 
 Continuous execution must be host-gated, not just globally throttled.

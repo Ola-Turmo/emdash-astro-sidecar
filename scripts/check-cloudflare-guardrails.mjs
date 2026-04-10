@@ -61,6 +61,10 @@ const workerExpectations = [
     ],
   },
   {
+    path: 'apps/cloudflare/workers/eval-worker/wrangler.toml',
+    checks: ['[limits]', 'cpu_ms', 'AUTONOMOUS_DB', 'JOB_LEASE_SECONDS', 'EVAL_MAX_JOBS_PER_RUN'],
+  },
+  {
     path: 'apps/cloudflare/workers/content-api/wrangler.toml',
     checks: ['[limits]', 'cpu_ms', 'AUTONOMOUS_DB', 'MATERIALIZE_BATCH_LIMIT'],
   },

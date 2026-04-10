@@ -218,6 +218,10 @@ The intended runtime flow is:
 
 The repo now has the first host lock and cooldown layer, plus a bounded D1-backed job queue and first data-producing worker passes. It still stops short of Cloudflare Queue or Workflow fan-out.
 
+One practical design lesson from live runs: workers should tolerate partial queue drift. If drafts remain in `queued_eval` without matching `evaluate_candidates` jobs, the eval worker should be able to recover them in a bounded fallback path instead of waiting forever for perfect queue state.
+
+For operational recovery, the eval worker should also support a direct host-targeted invocation path. That keeps the system recoverable when a host needs to be advanced without rebuilding the whole queue.
+
 ## Publish Safety Flow
 
 Every publish attempt should pass through these checks, in this order:
