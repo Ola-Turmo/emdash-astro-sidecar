@@ -13,6 +13,13 @@ const DEFAULTS = {
     baseUrl: 'https://api.minimax.io/v1',
     model: 'MiniMax-M1',
   },
+  gemini: {
+    apiKeyEnv: 'GEMINI_API_KEY',
+    baseUrlEnv: 'GEMINI_BASE_URL',
+    modelEnv: 'GEMINI_MODEL',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    model: 'gemini-2.5-flash',
+  },
 };
 
 function parseArgs(argv) {

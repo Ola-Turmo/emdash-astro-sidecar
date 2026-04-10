@@ -22,6 +22,7 @@ The runtime is designed for:
 Current seed providers:
 
 - `theclawbay`
+- `gemini`
 - `minimax`
 
 ## Environment Variables
@@ -42,6 +43,14 @@ Current seed providers:
 - `MINIMAX_MODEL`
   Optional. Defaults to `MiniMax-M1`
 
+### Gemini
+
+- `GEMINI_API_KEY`
+- `GEMINI_BASE_URL`
+  Optional. Defaults to `https://generativelanguage.googleapis.com/v1beta/openai`
+- `GEMINI_MODEL`
+  Optional. Defaults to `gemini-2.5-flash`
+
 ## Task Routing
 
 Task families are routed through seed defaults in [packages/model-runtime/src/index.ts](./../packages/model-runtime/src/index.ts).
@@ -49,7 +58,8 @@ Task families are routed through seed defaults in [packages/model-runtime/src/in
 Right now the runtime prefers:
 
 - `theclawbay` for all seeded task families
-- `minimax` as the first fallback
+- `gemini` as the first fallback
+- `minimax` as an additional configured provider
 
 That is only the starting point. Later implementation passes should move routing into host-aware config or D1 state.
 
@@ -62,7 +72,7 @@ For autonomous workers you can override the default routing without changing cod
 - `AUTONOMOUS_FALLBACK_PROVIDER_ID`
 - `AUTONOMOUS_FALLBACK_MODEL_ID`
 
-This is the safest way to switch one deployment from TheClawBay to MiniMax or back again.
+This is the safest way to switch one deployment between TheClawBay, Gemini, and MiniMax without code edits.
 
 ### Draft Guardrail Mode
 
@@ -103,6 +113,7 @@ Examples:
 
 ```bash
 wrangler secret put THECLAWBAY_API_KEY
+wrangler secret put GEMINI_API_KEY
 wrangler secret put MINIMAX_API_KEY
 ```
 
@@ -110,7 +121,7 @@ If you want provider-specific base URLs or models in Cloudflare, add them as wor
 
 Recommended worker secret or var set for the draft path:
 
-- secrets: `THECLAWBAY_API_KEY`, `MINIMAX_API_KEY`
+- secrets: `THECLAWBAY_API_KEY`, `GEMINI_API_KEY`, `MINIMAX_API_KEY`
 - vars: `AUTONOMOUS_PROVIDER_ID`, `AUTONOMOUS_MODEL_ID`, `AUTONOMOUS_FALLBACK_PROVIDER_ID`, `AUTONOMOUS_FALLBACK_MODEL_ID`
 - vars: `DRAFT_MAX_OUTPUT_TOKENS`, `AUTONOMOUS_ALLOW_FALLBACK_DRAFTS`
 

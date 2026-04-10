@@ -7,9 +7,11 @@ import {
   parseAutonomousDraftArtifact,
   resolveRoutingRuleFromEnvironment,
   selectProvider,
+  type AutonomousDraftArtifact,
   type AutonomousDraftRequest,
   type AutonomousInternalLink,
   type AutonomousSourceExcerpt,
+  type ProviderAdapter,
   type ProviderEnvironment,
 } from '../../../../../packages/model-runtime/src/index';
 
@@ -25,12 +27,42 @@ interface Env {
   THECLAWBAY_API_KEY?: string;
   THECLAWBAY_BASE_URL?: string;
   THECLAWBAY_MODEL?: string;
+  GEMINI_API_KEY?: string;
+  GEMINI_BASE_URL?: string;
+  GEMINI_MODEL?: string;
   MINIMAX_API_KEY?: string;
   MINIMAX_BASE_URL?: string;
   MINIMAX_MODEL?: string;
 }
 
 const WORKER_KIND = 'draft-worker';
+const DRAFT_ARTIFACT_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    title: { type: 'string' },
+    description: { type: 'string' },
+    excerpt: { type: 'string' },
+    sections: {
+      type: 'array',
+      minItems: 3,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          heading: { type: 'string' },
+          body: { type: 'string' },
+        },
+        required: ['heading', 'body'],
+      },
+    },
+    suggestedTags: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+  },
+  required: ['title', 'description', 'excerpt', 'sections', 'suggestedTags'],
+} as const;
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -155,8 +187,11 @@ async function runDraftStep(
     providerId = provider.descriptor.providerId;
     modelId = provider.descriptor.modelId;
 
-    const generation = await provider.adapter.runAgentStep({
-      taskType: 'article_draft_generation',
+    const generation = await provider.adapter.generateStructured({
+      schemaName: 'autonomous_draft_artifact',
+      schema: DRAFT_ARTIFACT_SCHEMA,
+      system:
+        'You produce valid JSON only. Escape newlines and quotation marks correctly. Do not add commentary before or after the JSON.',
       prompt: buildAutonomousDraftPrompt(draftContext),
       temperature: 0.35,
       maxOutputTokens,
@@ -167,7 +202,8 @@ async function runDraftStep(
       },
     });
 
-    artifact = parseAutonomousDraftArtifact(generation.text, candidate.topic);
+    artifact = await parseOrRepairArtifact(provider.adapter, generation.text, candidate.topic);
+    artifact = await reviseArtifactForQuality(provider.adapter, artifact, draftContext, candidate.topic);
   } catch (error) {
     if (!allowFallbackDrafts) {
       const message = error instanceof Error ? error.message : String(error);
@@ -284,6 +320,71 @@ async function runDraftStep(
   };
 }
 
+async function parseOrRepairArtifact(adapter: ProviderAdapter, responseText: string, topic: string) {
+  try {
+    return parseAutonomousDraftArtifact(responseText, topic);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const repair = await adapter.generateStructured({
+      schemaName: 'autonomous_draft_artifact_repair',
+      schema: DRAFT_ARTIFACT_SCHEMA,
+      system:
+        'Repair malformed model output into valid JSON that matches the schema exactly. Preserve meaning, remove stray commentary, and return JSON only.',
+      prompt: [
+        `Tema: ${topic}`,
+        `Opprinnelig respons som må repareres:`,
+        responseText,
+        '',
+        `Parser-feil: ${message}`,
+      ].join('\n'),
+      temperature: 0.1,
+      maxOutputTokens: 1800,
+    });
+
+    return parseAutonomousDraftArtifact(repair.text, topic);
+  }
+}
+
+async function reviseArtifactForQuality(
+  adapter: ProviderAdapter,
+  artifact: AutonomousDraftArtifact,
+  draftContext: AutonomousDraftRequest,
+  topic: string,
+) {
+  const deficits = collectArtifactDeficits(artifact);
+  if (deficits.length === 0) {
+    return artifact;
+  }
+
+  const revised = await adapter.generateStructured({
+    schemaName: 'autonomous_draft_artifact_revision',
+    schema: DRAFT_ARTIFACT_SCHEMA,
+    system:
+      'Revise the article so it becomes more complete and reader-friendly. Return valid JSON only. Keep the language Norwegian, concrete, and free of internal jargon.',
+    prompt: [
+      `Tema: ${topic}`,
+      `Denne artikkelen må forbedres før den kan godkjennes.`,
+      `Manglene som må løses: ${deficits.join('; ')}.`,
+      '',
+      'Tillatte interne lenker som må brukes naturlig i teksten:',
+      ...draftContext.internalLinks.map((link) => `- ${link.label}: ${link.url}`),
+      '',
+      'Nåværende artikkelutkast:',
+      JSON.stringify(artifact),
+      '',
+      'Krav:',
+      '- minst 4 korte, konkrete seksjoner hvis nødvendig for å nå dybdekravet',
+      '- minst to interne markdown-lenker til vertssidens sider',
+      '- minst 320 ord totalt',
+      '- tydelig første svar og tydelig siste neste steg',
+    ].join('\n'),
+    temperature: 0.2,
+    maxOutputTokens: 2200,
+  });
+
+  return parseAutonomousDraftArtifact(revised.text, topic);
+}
+
 async function buildDraftRequest(
   db: D1Database,
   hostId: string,
@@ -374,6 +475,29 @@ function buildInternalLinks(
   return links.slice(0, 5);
 }
 
+function collectArtifactDeficits(
+  artifact: AutonomousDraftArtifact,
+): string[] {
+  const visibleText = artifact.sections.map((section) => section.body).join('\n\n');
+  const internalLinkCount = [...visibleText.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)].length;
+  const deficits: string[] = [];
+
+  if (artifact.sections.length < 3) {
+    deficits.push('for få seksjoner');
+  }
+  if ((artifact.wordCount || countDraftWords(artifact.sections)) < 320) {
+    deficits.push('for lite innhold');
+  }
+  if (internalLinkCount < 2) {
+    deficits.push('mangler nok interne lenker');
+  }
+  if (artifact.qualityNotes.some((note) => note.startsWith('contains-banned-term:'))) {
+    deficits.push('synlig tekst inneholder intern terminologi');
+  }
+
+  return deficits;
+}
+
 function clampMaxTokens(rawValue: string | undefined): number {
   const parsed = rawValue ? Number(rawValue) : 1600;
   if (!Number.isFinite(parsed) || parsed <= 0) return 1600;
@@ -389,6 +513,9 @@ function getProviderEnvironment(env: Env): ProviderEnvironment {
     THECLAWBAY_API_KEY: env.THECLAWBAY_API_KEY,
     THECLAWBAY_BASE_URL: env.THECLAWBAY_BASE_URL,
     THECLAWBAY_MODEL: env.THECLAWBAY_MODEL,
+    GEMINI_API_KEY: env.GEMINI_API_KEY,
+    GEMINI_BASE_URL: env.GEMINI_BASE_URL,
+    GEMINI_MODEL: env.GEMINI_MODEL,
     MINIMAX_API_KEY: env.MINIMAX_API_KEY,
     MINIMAX_BASE_URL: env.MINIMAX_BASE_URL,
     MINIMAX_MODEL: env.MINIMAX_MODEL,

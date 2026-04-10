@@ -166,7 +166,9 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   constructor(
     public readonly providerId: string,
     private readonly config: OpenAICompatibleConfig,
-  ) {}
+  ) {
+    this.config.apiKey = this.config.apiKey.trim();
+  }
 
   async listModels(): Promise<ModelDescriptor[]> {
     const catalog = this.config.modelCatalog;
@@ -184,6 +186,47 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 
   async generateText(request: GenerationRequest): Promise<GenerationResult> {
+    return this.requestChatCompletion(request);
+  }
+
+  async generateStructured<TSchema>(
+    request: StructuredGenerationRequest<TSchema>,
+  ): Promise<GenerationResult> {
+    const schemaInstructions = [
+      'Return only valid JSON.',
+      `Schema name: ${request.schemaName}.`,
+      `JSON schema: ${JSON.stringify(request.schema)}.`,
+    ].join('\n');
+
+    return this.requestChatCompletion(
+      {
+        ...request,
+        system: [request.system, schemaInstructions].filter(Boolean).join('\n\n'),
+      },
+      {
+        response_format: {
+          type: 'json_object',
+        },
+      },
+    );
+  }
+
+  async runAgentStep(request: AgentStepRequest): Promise<GenerationResult> {
+    const taskInstructions = taskInstructionsByType[request.taskType];
+    return this.generateText({
+      ...request,
+      system: [request.system, taskInstructions].filter(Boolean).join('\n\n'),
+    });
+  }
+
+  estimateCost(_request: GenerationRequest): number | undefined {
+    return undefined;
+  }
+
+  private async requestChatCompletion(
+    request: GenerationRequest,
+    extraBody?: Record<string, unknown>,
+  ): Promise<GenerationResult> {
     const payload = {
       model: this.config.defaultModel,
       messages: buildMessages(request),
@@ -191,6 +234,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       temperature: normalizeTemperature(request.temperature ?? this.config.defaultTemperature ?? 0.2),
       max_tokens: request.maxOutputTokens,
       ...(this.config.extraChatCompletionBody ?? {}),
+      ...(extraBody ?? {}),
     };
 
     const response = await fetch(joinUrl(this.config.baseURL, '/chat/completions'), {
@@ -229,33 +273,6 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
         id: json?.id,
       },
     };
-  }
-
-  async generateStructured<TSchema>(
-    request: StructuredGenerationRequest<TSchema>,
-  ): Promise<GenerationResult> {
-    const schemaInstructions = [
-      'Return only valid JSON.',
-      `Schema name: ${request.schemaName}.`,
-      `JSON schema: ${JSON.stringify(request.schema)}.`,
-    ].join('\n');
-
-    return this.generateText({
-      ...request,
-      system: [request.system, schemaInstructions].filter(Boolean).join('\n\n'),
-    });
-  }
-
-  async runAgentStep(request: AgentStepRequest): Promise<GenerationResult> {
-    const taskInstructions = taskInstructionsByType[request.taskType];
-    return this.generateText({
-      ...request,
-      system: [request.system, taskInstructions].filter(Boolean).join('\n\n'),
-    });
-  }
-
-  estimateCost(_request: GenerationRequest): number | undefined {
-    return undefined;
   }
 
   private createModelDescriptor(
@@ -310,71 +327,71 @@ export const defaultProviderRoutingRules: ProviderRoutingRule[] = [
     taskType: 'topic_brief_generation',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'source_summary_generation',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'article_outline_generation',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'article_draft_generation',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'title_meta_excerpt_generation',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'internal_link_suggestions',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'faq_block_generation',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'refresh_existing_article',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'publish_decision_reasoning',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
   {
     taskType: 'binary_eval',
     preferredProviderId: 'theclawbay',
     preferredModelId: 'gpt-5.4-mini',
-    fallbackProviderId: 'minimax',
-    fallbackModelId: 'MiniMax-M1',
+    fallbackProviderId: 'gemini',
+    fallbackModelId: 'gemini-2.5-flash',
   },
 ];
 
@@ -408,7 +425,7 @@ export async function buildDefaultProviderRegistry(
   env: ProviderEnvironment = getDefaultProviderEnvironment(),
 ): Promise<ProviderRegistry> {
   const registry = new ProviderRegistry();
-  const adapters = [createTheClawBayAdapter(env), createMiniMaxAdapter(env)].filter(
+  const adapters = [createTheClawBayAdapter(env), createGeminiAdapter(env), createMiniMaxAdapter(env)].filter(
     (adapter): adapter is OpenAICompatibleAdapter => Boolean(adapter),
   );
 
@@ -482,6 +499,21 @@ export function createMiniMaxAdapter(
     apiKey,
     baseURL: env.MINIMAX_BASE_URL ?? 'https://api.minimax.io/v1',
     defaultModel: env.MINIMAX_MODEL ?? 'MiniMax-M1',
+    defaultTemperature: 0.2,
+  });
+}
+
+export function createGeminiAdapter(
+  env: ProviderEnvironment = getDefaultProviderEnvironment(),
+): OpenAICompatibleAdapter | null {
+  const apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  return new OpenAICompatibleAdapter('gemini', {
+    providerId: 'gemini',
+    apiKey,
+    baseURL: env.GEMINI_BASE_URL ?? 'https://generativelanguage.googleapis.com/v1beta/openai',
+    defaultModel: env.GEMINI_MODEL ?? 'gemini-2.5-flash',
     defaultTemperature: 0.2,
   });
 }
