@@ -93,6 +93,52 @@ It now assumes:
 - Astro output lives in `dist`
 - the Pages project is `emdash-astro-sidecar`
 
+## Autonomous Stack Deployment
+
+The autonomous layer now has its own reusable deployment path.
+
+Registry:
+
+- `docs/autonomous-worker-registry.json`
+
+Environment contract check:
+
+```bash
+pnpm autonomous:check-env
+```
+
+Deploy only route workers:
+
+```bash
+pnpm autonomous:deploy-workers -- --kind=route
+```
+
+Deploy autonomous control-plane workers:
+
+```bash
+pnpm autonomous:deploy-workers -- --kind=control-plane
+```
+
+The GitHub workflow at `.github/workflows/cloudflare-deploy.yml` now uses the same registry-driven path instead of hardcoding only the old workers.
+
+## Autonomous Materialization And Release
+
+The publication handoff is now:
+
+1. `publish-worker` creates publication artifacts in D1
+2. `content-api` exposes bounded pending materializations
+3. `materialize-publications.mjs` writes approved MDX into the Astro content tree
+4. the same script can optionally run `pnpm verify`, deploy, audit, and mark artifacts as deployed
+
+Examples:
+
+```bash
+pnpm materialize:publications -- --limit 3
+pnpm materialize:publications -- --apply --verify
+pnpm materialize:publications -- --apply --verify --audit --deploy=preview
+pnpm materialize:publications -- --apply --verify --audit --deploy=production
+```
+
 ## Live Verification Checklist
 
 After deployment, verify all of these:

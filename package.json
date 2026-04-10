@@ -14,6 +14,8 @@
     "audit:deployed": "node ./scripts/audit-deployed-urls.mjs",
     "audit:deployed:lighthouse": "node ./scripts/audit-deployed-urls.mjs --lighthouse",
     "audit:deployed:psi": "node ./scripts/audit-deployed-urls.mjs --lighthouse",
+    "autonomous:check-env": "node ./scripts/check-autonomous-env.mjs",
+    "autonomous:deploy-workers": "node ./scripts/deploy-autonomous-workers.mjs",
     "materialize:publications": "node ./scripts/materialize-publications.mjs",
     "providers:health": "node ./scripts/provider-healthcheck.mjs",
     "qa:copy": "node ./scripts/check-copy-quality.mjs",

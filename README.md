@@ -107,6 +107,7 @@ pnpm verify
 pnpm qa
 pnpm audit:deployed
 pnpm audit:deployed:lighthouse
+pnpm autonomous:check-env
 ```
 
 That workflow gives you:
@@ -127,6 +128,7 @@ That workflow gives you:
 - [`docs/troubleshooting.md`](docs/troubleshooting.md)
 - [`docs/cloudflare-resource-guardrails.md`](docs/cloudflare-resource-guardrails.md)
 - [`docs/provider-runtime.md`](docs/provider-runtime.md)
+- [`docs/deployment.md`](docs/deployment.md)
 - [`docs/prd-autonomous-content-control-plane.md`](docs/prd-autonomous-content-control-plane.md)
 
 ## Repo Skills

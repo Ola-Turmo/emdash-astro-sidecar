@@ -117,23 +117,31 @@ jobs:
       - name: Sync guide SEO artifacts
         run: pnpm sync:guide-seo
 
-      - name: Deploy guide route worker
+      - name: Check autonomous environment contract
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
-        run: |
-          pnpm exec wrangler deploy --config apps/cloudflare/workers/guide-proxy/wrangler.toml
+        run: pnpm autonomous:check-env
+        timeout-minutes: 5
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CONTENT_API_TOKEN: ${{ secrets.CONTENT_API_TOKEN }}
+
+      - name: Deploy route workers
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+        run: pnpm autonomous:deploy-workers -- --kind=route
         timeout-minutes: 5
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Deploy root SEO files worker
+      - name: Deploy autonomous control-plane workers
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
-        run: |
-          pnpm exec wrangler deploy --config apps/cloudflare/workers/seo-files/wrangler.toml
-        timeout-minutes: 5
+        run: pnpm autonomous:deploy-workers -- --kind=control-plane
+        timeout-minutes: 10
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CONTENT_API_TOKEN: ${{ secrets.CONTENT_API_TOKEN }}
 
       - name: Worker Deployment Status
         if: always()

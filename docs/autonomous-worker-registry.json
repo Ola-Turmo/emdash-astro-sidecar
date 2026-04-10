@@ -1,0 +1,74 @@
+{
+  "workers": [
+    {
+      "name": "guide-proxy",
+      "wranglerConfig": "apps/cloudflare/workers/guide-proxy/wrangler.toml",
+      "kind": "route",
+      "requiredSecrets": []
+    },
+    {
+      "name": "seo-files",
+      "wranglerConfig": "apps/cloudflare/workers/seo-files/wrangler.toml",
+      "kind": "route",
+      "requiredSecrets": []
+    },
+    {
+      "name": "scheduler",
+      "wranglerConfig": "apps/cloudflare/workers/scheduler/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": []
+    },
+    {
+      "name": "orchestrator",
+      "wranglerConfig": "apps/cloudflare/workers/orchestrator/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": []
+    },
+    {
+      "name": "browser-audit-worker",
+      "wranglerConfig": "apps/cloudflare/workers/browser-audit-worker/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": []
+    },
+    {
+      "name": "research-worker",
+      "wranglerConfig": "apps/cloudflare/workers/research-worker/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": []
+    },
+    {
+      "name": "draft-worker",
+      "wranglerConfig": "apps/cloudflare/workers/draft-worker/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": []
+    },
+    {
+      "name": "eval-worker",
+      "wranglerConfig": "apps/cloudflare/workers/eval-worker/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": []
+    },
+    {
+      "name": "publish-worker",
+      "wranglerConfig": "apps/cloudflare/workers/publish-worker/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": []
+    },
+    {
+      "name": "content-api",
+      "wranglerConfig": "apps/cloudflare/workers/content-api/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": ["CONTENT_API_TOKEN"]
+    }
+  ],
+  "sharedSecrets": [
+    "CLOUDFLARE_API_TOKEN",
+    "CLOUDFLARE_ACCOUNT_ID"
+  ],
+  "optionalSecrets": [
+    "THECLAWBAY_API_KEY",
+    "MINIMAX_API_KEY",
+    "CONTENT_API_URL",
+    "ENABLE_AUTONOMOUS_PUBLICATION_SYNC"
+  ]
+}

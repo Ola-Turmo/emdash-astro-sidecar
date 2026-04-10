@@ -88,3 +88,14 @@ wrangler secret put MINIMAX_API_KEY
 ```
 
 If you want provider-specific base URLs or models in Cloudflare, add them as worker vars or secrets depending on sensitivity.
+
+## Activation Note
+
+The autonomous stack can be deployed without provider secrets, but generation quality will remain limited or blocked until the provider layer is healthy.
+
+Before enabling recurring autonomous publication sync, check:
+
+```bash
+pnpm providers:health
+pnpm autonomous:check-env
+```
