@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      playwright:
+        specifier: ^1.59.1
+        version: 1.59.1
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
@@ -54,9 +57,36 @@ importers:
 
   packages/ai:
     dependencies:
-      openai:
-        specifier: ^4.57.0
-        version: 4.104.0(zod@3.25.76)
+      '@emdash/model-runtime':
+        specifier: workspace:*
+        version: link:../model-runtime
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.39
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/autoresearch-core:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.39
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/content-evals:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.39
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/content-policy:
     devDependencies:
       '@types/node':
         specifier: ^20.14.0
@@ -82,6 +112,19 @@ importers:
       sass:
         specifier: ^1.77.0
         version: 1.99.0
+
+  packages/model-runtime:
+    dependencies:
+      openai:
+        specifier: ^4.57.0
+        version: 4.104.0(zod@3.25.76)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.39
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
 
   packages/plugins:
     devDependencies:
@@ -3582,7 +3625,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 20.19.39
+      '@types/node': 22.19.17
       form-data: 4.0.5
 
   '@types/node@18.19.130':

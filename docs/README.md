@@ -20,5 +20,13 @@ Use these docs as the operational runbook for the sidecar.
   Content model, drafting rules, and publishing expectations.
 - [copy-guidelines.md](./copy-guidelines.md)
   Reader-first writing rules that ban internal jargon in user-facing UI and content.
+- [provider-runtime.md](./provider-runtime.md)
+  Provider runtime, secret contract, routing defaults, and health-check workflow for TheClawBay and MiniMax.
+- [prd-autonomous-content-control-plane.md](./prd-autonomous-content-control-plane.md)
+  One-go implementation PRD for the autonomous Cloudflare-native research, drafting, scoring, publishing, and audit system.
+- [autonomous-content-control-plane-technical-design.md](./autonomous-content-control-plane-technical-design.md)
+  Technical design for package boundaries, worker topology, D1 schema intent, provider abstraction, and orchestration flow.
+- [autonomous-content-control-plane-backlog.md](./autonomous-content-control-plane-backlog.md)
+  Implementation backlog broken into milestones and verification targets for the autonomous control plane.
 
 Legacy docs in this folder are still available, but the files above are the maintained onboarding path.

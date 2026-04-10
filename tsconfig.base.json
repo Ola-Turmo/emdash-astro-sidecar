@@ -17,6 +17,10 @@
       "@emdash/theme-core/*": ["./packages/theme-core/src/*"],
       "@emdash/design-clone/*": ["./packages/design-clone/src/*"],
       "@emdash/ai/*": ["./packages/ai/src/*"],
+      "@emdash/model-runtime/*": ["./packages/model-runtime/src/*"],
+      "@emdash/autoresearch-core/*": ["./packages/autoresearch-core/src/*"],
+      "@emdash/content-evals/*": ["./packages/content-evals/src/*"],
+      "@emdash/content-policy/*": ["./packages/content-policy/src/*"],
       "@emdash/skills/*": ["./packages/skills/src/*"],
       "@emdash/plugins/*": ["./packages/plugins/src/*"]
     }

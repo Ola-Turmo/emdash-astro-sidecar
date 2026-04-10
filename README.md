@@ -125,12 +125,15 @@ That workflow gives you:
 - [`docs/host-rollout.md`](docs/host-rollout.md)
 - [`docs/deployment.md`](docs/deployment.md)
 - [`docs/troubleshooting.md`](docs/troubleshooting.md)
+- [`docs/provider-runtime.md`](docs/provider-runtime.md)
+- [`docs/prd-autonomous-content-control-plane.md`](docs/prd-autonomous-content-control-plane.md)
 
 ## Repo Skills
 
 For repeatable future rollouts, start from:
 
 - [`packages/skills/src/host-sidecar-rollout/SKILL.md`](packages/skills/src/host-sidecar-rollout/SKILL.md)
+- [`packages/skills/src/autonomous-host-operator/SKILL.md`](packages/skills/src/autonomous-host-operator/SKILL.md)
 - [`packages/skills/src/quality-gates/SKILL.md`](packages/skills/src/quality-gates/SKILL.md)
 - [`packages/skills/src/deployed-url-audit/SKILL.md`](packages/skills/src/deployed-url-audit/SKILL.md)
 

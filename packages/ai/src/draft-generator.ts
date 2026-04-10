@@ -1,12 +1,12 @@
 /**
  * AI Draft Generator
- * 
- * Generates structured MDX blog post drafts from topics using OpenAI-compatible APIs.
+ *
+ * Generates structured MDX blog post drafts from topics using the shared model runtime.
  * @module @emdash/ai
  */
 
-import OpenAI from 'openai';
 import { readFileSync } from 'fs';
+import { OpenAICompatibleAdapter } from '@emdash/model-runtime';
 
 // Types
 
@@ -242,7 +242,7 @@ CTA URL: {ctaUrl}`;
  * Generates structured MDX blog post drafts from topics.
  */
 export class DraftGenerator {
-  private client: OpenAI;
+  private adapter: OpenAICompatibleAdapter;
   private model: string;
   private systemPrompt: string;
   private userPromptTemplate: string;
@@ -273,10 +273,11 @@ export class DraftGenerator {
       }
     }
 
-    // Initialize OpenAI client
-    this.client = new OpenAI({
+    this.adapter = new OpenAICompatibleAdapter('draft-generator', {
+      providerId: 'draft-generator',
       apiKey: options.apiKey || process.env.OPENAI_API_KEY || 'dummy-key-for-types',
-      baseURL: options.baseURL,
+      baseURL: options.baseURL || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+      defaultModel: this.model,
     });
   }
 
@@ -316,17 +317,14 @@ export class DraftGenerator {
     // Call LLM API
     let response: string;
     try {
-      const completion = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          { role: 'system', content: this.systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
+      const completion = await this.adapter.generateText({
+        system: this.systemPrompt,
+        prompt: userPrompt,
         temperature: 0.7,
-        max_tokens: 4000,
+        maxOutputTokens: 4000,
       });
 
-      response = completion.choices[0]?.message?.content || '';
+      response = completion.text;
       
       if (!response) {
         throw new Error('Empty response from API');
