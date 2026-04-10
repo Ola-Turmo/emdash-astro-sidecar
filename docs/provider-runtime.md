@@ -21,9 +21,9 @@ The runtime is designed for:
 
 Current seed providers:
 
+- `minimax`
 - `theclawbay`
 - `gemini`
-- `minimax`
 
 ## Environment Variables
 
@@ -41,7 +41,7 @@ Current seed providers:
 - `MINIMAX_BASE_URL`
   Optional. Defaults to `https://api.minimax.io/v1`
 - `MINIMAX_MODEL`
-  Optional. Defaults to `MiniMax-M1`
+  Optional. Defaults to `MiniMax-M2.5`
 
 ### Gemini
 
@@ -57,9 +57,9 @@ Task families are routed through seed defaults in [packages/model-runtime/src/in
 
 Right now the runtime prefers:
 
-- `theclawbay` for all seeded task families
-- `gemini` as the first fallback
-- `minimax` as an additional configured provider
+- `minimax` for all seeded task families
+- `theclawbay` as the first fallback
+- `gemini` as an additional configured provider
 
 That is only the starting point. Later implementation passes should move routing into host-aware config or D1 state.
 
@@ -72,7 +72,7 @@ For autonomous workers you can override the default routing without changing cod
 - `AUTONOMOUS_FALLBACK_PROVIDER_ID`
 - `AUTONOMOUS_FALLBACK_MODEL_ID`
 
-This is the safest way to switch one deployment between TheClawBay, Gemini, and MiniMax without code edits.
+This is the safest way to switch one deployment between MiniMax, TheClawBay, and Gemini without code edits.
 
 ### Draft Guardrail Mode
 

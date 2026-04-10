@@ -134,6 +134,27 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      - name: Sync draft worker provider secrets
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+        shell: bash
+        run: |
+          if [ -n "${MINIMAX_API_KEY}" ]; then
+            printf '%s' "${MINIMAX_API_KEY}" | pnpm exec wrangler secret put MINIMAX_API_KEY --config apps/cloudflare/workers/draft-worker/wrangler.toml
+          fi
+          if [ -n "${THECLAWBAY_API_KEY}" ]; then
+            printf '%s' "${THECLAWBAY_API_KEY}" | pnpm exec wrangler secret put THECLAWBAY_API_KEY --config apps/cloudflare/workers/draft-worker/wrangler.toml
+          fi
+          if [ -n "${GEMINI_API_KEY}" ]; then
+            printf '%s' "${GEMINI_API_KEY}" | pnpm exec wrangler secret put GEMINI_API_KEY --config apps/cloudflare/workers/draft-worker/wrangler.toml
+          fi
+        timeout-minutes: 10
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+          THECLAWBAY_API_KEY: ${{ secrets.THECLAWBAY_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
       - name: Deploy autonomous control-plane workers
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
         run: pnpm autonomous:deploy-workers -- --kind=control-plane

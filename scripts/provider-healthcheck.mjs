@@ -11,7 +11,7 @@ const DEFAULTS = {
     baseUrlEnv: 'MINIMAX_BASE_URL',
     modelEnv: 'MINIMAX_MODEL',
     baseUrl: 'https://api.minimax.io/v1',
-    model: 'MiniMax-M1',
+    model: 'MiniMax-M2.5',
   },
   gemini: {
     apiKeyEnv: 'GEMINI_API_KEY',
