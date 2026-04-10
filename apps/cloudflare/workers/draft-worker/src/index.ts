@@ -6,6 +6,7 @@ import {
   countDraftWords,
   parseAutonomousDraftArtifact,
   resolveRoutingRuleFromEnvironment,
+  salvageAutonomousDraftArtifact,
   selectProvider,
   type AutonomousDraftArtifact,
   type AutonomousDraftRequest,
@@ -178,6 +179,7 @@ async function runDraftStep(
   let modelId = 'deterministic-fallback';
   let usedFallback = false;
   let artifact = buildFallbackDraftArtifact(draftContext);
+  const providerTrace: Array<Record<string, unknown>> = [];
 
   try {
     const providerEnv = getProviderEnvironment(env);
@@ -193,7 +195,7 @@ async function runDraftStep(
       system:
         'You produce valid JSON only. Escape newlines and quotation marks correctly. Do not add commentary before or after the JSON.',
       prompt: buildAutonomousDraftPrompt(draftContext),
-      temperature: 0.35,
+      temperature: 0.15,
       maxOutputTokens,
       metadata: {
         hostId: job.payload.hostId,
@@ -201,10 +203,45 @@ async function runDraftStep(
         topicCandidateId: candidate.id,
       },
     });
+    providerTrace.push({
+      phase: 'generate',
+      providerId,
+      modelId,
+      text: truncateTrace(generation.text),
+    });
 
-    artifact = await parseOrRepairArtifact(provider.adapter, generation.text, candidate.topic);
+    artifact = await parseOrRepairArtifact(provider.adapter, generation.text, candidate.topic, draftContext);
+    providerTrace.push({
+      phase: 'parsed',
+      providerId,
+      modelId,
+      wordCount: artifact.wordCount,
+      qualityNotes: artifact.qualityNotes,
+    });
+
     artifact = await reviseArtifactForQuality(provider.adapter, artifact, draftContext, candidate.topic);
+    providerTrace.push({
+      phase: 'revised',
+      providerId,
+      modelId,
+      wordCount: artifact.wordCount,
+      qualityNotes: artifact.qualityNotes,
+    });
   } catch (error) {
+    await persistDraftTrace(db, {
+      hostId: job.payload.hostId,
+      runId: job.payload.runId,
+      snapshotType: 'draft-generation-error',
+      content: {
+        topicCandidateId: candidate.id,
+        providerId,
+        modelId,
+        trace: providerTrace,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      now,
+    });
+
     if (!allowFallbackDrafts) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`Draft generation failed without fallback enabled: ${message}`);
@@ -263,37 +300,23 @@ async function runDraftStep(
       .run();
   }
 
-  await db
-    .prepare(
-      `
-        INSERT INTO source_snapshots (
-          id,
-          host_id,
-          run_id,
-          source_document_id,
-          snapshot_type,
-          content_json
-        )
-        VALUES (?1, ?2, ?3, NULL, 'draft-generation', ?4)
-      `,
-    )
-    .bind(
-      crypto.randomUUID(),
-      job.payload.hostId,
-      job.payload.runId,
-      JSON.stringify({
-        draftId,
-        topicCandidateId: candidate.id,
-        providerId,
-        modelId,
-        usedFallback,
-        sourceCount: draftContext.sourceExcerpts.length,
-        internalLinkCount: draftContext.internalLinks.length,
-        qualityNotes,
-        createdAt: now,
-      }),
-    )
-    .run();
+  await persistDraftTrace(db, {
+    hostId: job.payload.hostId,
+    runId: job.payload.runId,
+    snapshotType: 'draft-generation',
+    content: {
+      draftId,
+      topicCandidateId: candidate.id,
+      providerId,
+      modelId,
+      usedFallback,
+      sourceCount: draftContext.sourceExcerpts.length,
+      internalLinkCount: draftContext.internalLinks.length,
+      qualityNotes,
+      trace: providerTrace,
+    },
+    now,
+  });
 
   await db
     .prepare(
@@ -320,28 +343,37 @@ async function runDraftStep(
   };
 }
 
-async function parseOrRepairArtifact(adapter: ProviderAdapter, responseText: string, topic: string) {
+async function parseOrRepairArtifact(
+  adapter: ProviderAdapter,
+  responseText: string,
+  topic: string,
+  draftContext: AutonomousDraftRequest,
+): Promise<AutonomousDraftArtifact> {
   try {
     return parseAutonomousDraftArtifact(responseText, topic);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const repair = await adapter.generateStructured({
-      schemaName: 'autonomous_draft_artifact_repair',
-      schema: DRAFT_ARTIFACT_SCHEMA,
-      system:
-        'Repair malformed model output into valid JSON that matches the schema exactly. Preserve meaning, remove stray commentary, and return JSON only.',
-      prompt: [
-        `Tema: ${topic}`,
-        `Opprinnelig respons som må repareres:`,
-        responseText,
-        '',
-        `Parser-feil: ${message}`,
-      ].join('\n'),
-      temperature: 0.1,
-      maxOutputTokens: 1800,
-    });
+    try {
+      const repair = await adapter.generateStructured({
+        schemaName: 'autonomous_draft_artifact_repair',
+        schema: DRAFT_ARTIFACT_SCHEMA,
+        system:
+          'Repair malformed model output into valid JSON that matches the schema exactly. Preserve meaning, remove stray commentary, and return JSON only.',
+        prompt: [
+          `Tema: ${topic}`,
+          'Opprinnelig respons som må repareres:',
+          responseText,
+          '',
+          `Parser-feil: ${message}`,
+        ].join('\n'),
+        temperature: 0.1,
+        maxOutputTokens: 1800,
+      });
 
-    return parseAutonomousDraftArtifact(repair.text, topic);
+      return parseAutonomousDraftArtifact(repair.text, topic);
+    } catch {
+      return salvageAutonomousDraftArtifact(responseText, topic, draftContext.internalLinks);
+    }
   }
 }
 
@@ -350,39 +382,80 @@ async function reviseArtifactForQuality(
   artifact: AutonomousDraftArtifact,
   draftContext: AutonomousDraftRequest,
   topic: string,
-) {
+): Promise<AutonomousDraftArtifact> {
   const deficits = collectArtifactDeficits(artifact);
   if (deficits.length === 0) {
     return artifact;
   }
 
-  const revised = await adapter.generateStructured({
-    schemaName: 'autonomous_draft_artifact_revision',
-    schema: DRAFT_ARTIFACT_SCHEMA,
-    system:
-      'Revise the article so it becomes more complete and reader-friendly. Return valid JSON only. Keep the language Norwegian, concrete, and free of internal jargon.',
-    prompt: [
-      `Tema: ${topic}`,
-      `Denne artikkelen må forbedres før den kan godkjennes.`,
-      `Manglene som må løses: ${deficits.join('; ')}.`,
-      '',
-      'Tillatte interne lenker som må brukes naturlig i teksten:',
-      ...draftContext.internalLinks.map((link) => `- ${link.label}: ${link.url}`),
-      '',
-      'Nåværende artikkelutkast:',
-      JSON.stringify(artifact),
-      '',
-      'Krav:',
-      '- minst 4 korte, konkrete seksjoner hvis nødvendig for å nå dybdekravet',
-      '- minst to interne markdown-lenker til vertssidens sider',
-      '- minst 320 ord totalt',
-      '- tydelig første svar og tydelig siste neste steg',
-    ].join('\n'),
-    temperature: 0.2,
-    maxOutputTokens: 2200,
-  });
+  try {
+    const revised = await adapter.generateStructured({
+      schemaName: 'autonomous_draft_artifact_revision',
+      schema: DRAFT_ARTIFACT_SCHEMA,
+      system:
+        'Revise the article so it becomes more complete and reader-friendly. Return valid JSON only. Keep the language Norwegian, concrete, and free of internal jargon.',
+      prompt: [
+        `Tema: ${topic}`,
+        'Denne artikkelen må forbedres før den kan godkjennes.',
+        `Manglene som må løses: ${deficits.join('; ')}.`,
+        '',
+        'Tillatte interne lenker som må brukes naturlig i teksten:',
+        ...draftContext.internalLinks.map((link) => `- ${link.label}: ${link.url}`),
+        '',
+        'Nåværende artikkelutkast:',
+        JSON.stringify(artifact),
+        '',
+        'Krav:',
+        '- minst 4 korte, konkrete seksjoner hvis nødvendig for å nå dybdekravet',
+        '- minst to interne markdown-lenker til vertssidens sider',
+        '- minst 320 ord totalt',
+        '- tydelig første svar og tydelig siste neste steg',
+      ].join('\n'),
+      temperature: 0.15,
+      maxOutputTokens: 2200,
+    });
 
-  return parseAutonomousDraftArtifact(revised.text, topic);
+    return parseOrRepairArtifact(adapter, revised.text, topic, draftContext);
+  } catch {
+    return artifact;
+  }
+}
+
+async function persistDraftTrace(
+  db: D1Database,
+  input: {
+    hostId: string;
+    runId: string;
+    snapshotType: string;
+    content: Record<string, unknown>;
+    now: string;
+  },
+): Promise<void> {
+  await db
+    .prepare(
+      `
+        INSERT INTO source_snapshots (
+          id,
+          host_id,
+          run_id,
+          source_document_id,
+          snapshot_type,
+          content_json
+        )
+        VALUES (?1, ?2, ?3, NULL, ?4, ?5)
+      `,
+    )
+    .bind(
+      crypto.randomUUID(),
+      input.hostId,
+      input.runId,
+      input.snapshotType,
+      JSON.stringify({
+        ...input.content,
+        createdAt: input.now,
+      }),
+    )
+    .run();
 }
 
 async function buildDraftRequest(
@@ -475,9 +548,7 @@ function buildInternalLinks(
   return links.slice(0, 5);
 }
 
-function collectArtifactDeficits(
-  artifact: AutonomousDraftArtifact,
-): string[] {
+function collectArtifactDeficits(artifact: AutonomousDraftArtifact): string[] {
   const visibleText = artifact.sections.map((section) => section.body).join('\n\n');
   const internalLinkCount = [...visibleText.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)].length;
   const deficits: string[] = [];
@@ -502,6 +573,11 @@ function clampMaxTokens(rawValue: string | undefined): number {
   const parsed = rawValue ? Number(rawValue) : 1600;
   if (!Number.isFinite(parsed) || parsed <= 0) return 1600;
   return Math.min(Math.max(parsed, 600), 3200);
+}
+
+function truncateTrace(value: string): string {
+  if (value.length <= 6000) return value;
+  return `${value.slice(0, 6000)}\n...[truncated]`;
 }
 
 function getProviderEnvironment(env: Env): ProviderEnvironment {

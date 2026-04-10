@@ -139,6 +139,86 @@ export function parseAutonomousDraftArtifact(
   return artifact;
 }
 
+export function salvageAutonomousDraftArtifact(
+  value: string,
+  fallbackTopic: string,
+  internalLinks: AutonomousInternalLink[] = [],
+): AutonomousDraftArtifact {
+  const cleaned = value
+    .replace(/```(?:json|markdown)?/gi, '')
+    .replace(/\r\n/g, '\n')
+    .trim();
+  const headingMatches = [...cleaned.matchAll(/^(?:##|#{1,3})\s+(.+)$/gm)];
+  const sections: Array<{ heading: string; body: string }> = [];
+
+  if (headingMatches.length >= 2) {
+    for (let index = 0; index < headingMatches.length; index += 1) {
+      const current = headingMatches[index];
+      const next = headingMatches[index + 1];
+      const start = (current.index ?? 0) + current[0].length;
+      const end = next?.index ?? cleaned.length;
+      const heading = current[1]?.trim() ?? '';
+      const body = cleaned.slice(start, end).trim();
+      if (heading && body) {
+        sections.push({ heading, body });
+      }
+    }
+  }
+
+  if (sections.length < 3) {
+    const paragraphs = cleaned
+      .split(/\n{2,}/)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+
+    for (let index = 0; index < paragraphs.length && sections.length < 4; index += 1) {
+      const paragraph = paragraphs[index];
+      if (paragraph.length < 40) continue;
+      sections.push({
+        heading:
+          index === 0
+            ? 'Kort svar'
+            : index === paragraphs.length - 1
+              ? 'Slik kommer du videre'
+              : `Viktig punkt ${sections.length + 1}`,
+        body: paragraph,
+      });
+    }
+  }
+
+  const artifact =
+    sections.length >= 3
+      ? {
+          title: toTitle(fallbackTopic),
+          description: clampText(
+            cleaned.replace(/\s+/g, ' ').slice(0, 160) || `Forklaring og neste steg for ${fallbackTopic}.`,
+            100,
+            160,
+          ),
+          excerpt: clampText(
+            cleaned.replace(/\s+/g, ' ').slice(0, 220) || `Praktisk guide om ${fallbackTopic}.`,
+            140,
+            220,
+          ),
+          sections,
+          suggestedTags: normalizeTags([], fallbackTopic),
+          wordCount: countDraftWords(sections),
+          qualityNotes: ['salvaged-from-raw-provider-text'],
+        }
+      : buildFallbackDraftArtifact({
+          topic: fallbackTopic,
+          hostName: '',
+          siteUrl: 'https://example.com',
+          basePath: '/',
+          sourceExcerpts: [],
+          internalLinks,
+        });
+
+  artifact.qualityNotes = [...new Set([...artifact.qualityNotes, ...collectQualityNotes(artifact)])];
+  artifact.wordCount = countDraftWords(artifact.sections);
+  return artifact;
+}
+
 export function buildFallbackDraftArtifact(input: AutonomousDraftRequest): AutonomousDraftArtifact {
   const sections = buildFallbackSections(input.topic, input.internalLinks);
   const artifact: AutonomousDraftArtifact = {
@@ -311,6 +391,61 @@ function parseJsonObject(value: string): unknown {
     .replace(/^```(?:json)?\s*/i, '')
     .replace(/\s*```$/, '')
     .trim();
-  const match = normalized.match(/\{[\s\S]*\}$/);
-  return JSON.parse(match ? match[0] : normalized);
+  const directCandidate = extractBalancedJsonObject(normalized) ?? normalized;
+
+  try {
+    return JSON.parse(directCandidate);
+  } catch (error) {
+    const repairedCandidate = repairCommonJsonBreakage(directCandidate);
+    return JSON.parse(repairedCandidate);
+  }
+}
+
+function extractBalancedJsonObject(value: string): string | null {
+  const start = value.indexOf('{');
+  if (start === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start; index < value.length; index += 1) {
+    const char = value[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === '\\') {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === '{') {
+      depth += 1;
+    } else if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return value.slice(start, index + 1);
+      }
+    }
+  }
+
+  return value.slice(start);
+}
+
+function repairCommonJsonBreakage(value: string): string {
+  return value
+    .replace(/[\u0000-\u0019]+/g, ' ')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '')
+    .replace(/\t/g, ' ')
+    .trim();
 }
