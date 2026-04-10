@@ -17,6 +17,7 @@ import { join } from 'path';
 const BLOG_DIR = join(process.cwd(), 'apps/blog');
 const OUTPUT_DIR = join(BLOG_DIR, 'dist');
 const DEFAULT_PROJECT_NAME = process.env.PAGES_PROJECT_NAME || 'emdash-astro-sidecar';
+const quotedOutputDir = `"${OUTPUT_DIR}"`;
 
 const green = (msg) => `\x1b[32m${msg}\x1b[0m`;
 const blue = (msg) => `\x1b[34m${msg}\x1b[0m`;
@@ -97,14 +98,14 @@ async function main() {
   if (isProduction) {
     const productionBranch = explicitBranch || 'main';
     exec(
-      `pnpm exec wrangler pages deploy ${OUTPUT_DIR} --project-name=${projectName} --branch=${productionBranch} --commit-dirty=true`,
+      `pnpm exec wrangler pages deploy ${quotedOutputDir} --project-name=${projectName} --branch=${productionBranch} --commit-dirty=true`,
       { cwd: BLOG_DIR },
     );
   } else if (isPreview) {
     const branchName =
       explicitBranch || exec('git branch --show-current', { cwd: process.cwd() }).toString().trim();
     exec(
-      `pnpm exec wrangler pages deploy ${OUTPUT_DIR} --project-name=${projectName} --branch=${branchName} --commit-dirty=true`,
+      `pnpm exec wrangler pages deploy ${quotedOutputDir} --project-name=${projectName} --branch=${branchName} --commit-dirty=true`,
       { cwd: BLOG_DIR },
     );
   } else {

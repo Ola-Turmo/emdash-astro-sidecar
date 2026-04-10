@@ -24,6 +24,8 @@ export interface PublicationArtifact {
   description: string;
   mdx: string;
   excerpt: string;
+  category: string;
+  tags: string[];
 }
 
 export function buildPublicationArtifact(
@@ -34,10 +36,8 @@ export function buildPublicationArtifact(
   const description = draft.description?.trim() || summarizeDescription(draft.sections);
   const excerpt = draft.excerpt?.trim() || summarizeExcerpt(draft.sections);
   const url = new URL(`${normalizeBasePath(host.basePath)}/blog/${draft.slug}/`, host.siteUrl).toString();
-  const tags = draft.slug
-    .split('-')
-    .slice(0, 4)
-    .map((tag) => `"${escapeYaml(tag)}"`);
+  const category = inferCategory(draft);
+  const tags = inferTags(draft);
 
   const frontmatterLines = [
     '---',
@@ -45,8 +45,8 @@ export function buildPublicationArtifact(
     `description: "${escapeYaml(description)}"`,
     `pubDate: ${new Date().toISOString().slice(0, 10)}`,
     'author: ola-turmo',
-    'category: guide',
-    `tags: [${tags.join(', ')}]`,
+    `category: ${category}`,
+    `tags: [${tags.map((tag) => `"${escapeYaml(tag)}"`).join(', ')}]`,
     `excerpt: "${escapeYaml(excerpt)}"`,
     'schemaType: Article',
     'draft: false',
@@ -62,8 +62,31 @@ export function buildPublicationArtifact(
     title,
     description,
     excerpt,
+    category,
+    tags,
     mdx: `${frontmatterLines.join('\n')}\n\n${body}\n`,
   };
+}
+
+function inferCategory(draft: PublicationDraftContext): string {
+  const haystack = `${draft.slug} ${draft.topic} ${draft.title ?? ''}`.toLowerCase();
+  if (haystack.includes('skjenk')) return 'skjenkebevilling';
+  if (haystack.includes('etablerer')) return 'etablererproven';
+  return 'salgsbevilling';
+}
+
+function inferTags(draft: PublicationDraftContext): string[] {
+  const base = draft.slug
+    .split('-')
+    .filter((entry) => entry && entry.length >= 3)
+    .slice(0, 5);
+  const tags = new Set<string>(base);
+  tags.add(inferCategory(draft));
+  if (tags.size < 3) {
+    tags.add('kurs');
+    tags.add('prove');
+  }
+  return [...tags].slice(0, 6);
 }
 
 function normalizeBasePath(basePath: string): string {

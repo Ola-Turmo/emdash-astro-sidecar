@@ -33,7 +33,7 @@ Current seed providers:
 - `THECLAWBAY_BASE_URL`
   Optional. Defaults to `https://api.theclawbay.com/v1`
 - `THECLAWBAY_MODEL`
-  Optional. Defaults to `gpt-5.4-mini`
+Optional. Defaults to `gpt-5.4`
 
 ### MiniMax
 
@@ -41,7 +41,7 @@ Current seed providers:
 - `MINIMAX_BASE_URL`
   Optional. Defaults to `https://api.minimax.io/v1`
 - `MINIMAX_MODEL`
-  Optional. Defaults to `MiniMax-M2.5`
+Optional. Defaults to `MiniMax-M2.7`
 
 ### Gemini
 
@@ -63,8 +63,8 @@ Right now the runtime prefers:
 
 Current known-good models from live checks on this machine:
 
-- `minimax / MiniMax-M2.5`
-- `theclawbay / gpt-5.4-mini`
+- `minimax / MiniMax-M2.7`
+- `theclawbay / gpt-5.4` with `reasoning_effort: high`
 
 That is only the starting point. Later implementation passes should move routing into host-aware config or D1 state.
 

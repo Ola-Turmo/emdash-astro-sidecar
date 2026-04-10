@@ -105,6 +105,7 @@ export interface OpenAICompatibleConfig {
   baseURL: string;
   apiKey: string;
   defaultModel: string;
+  reasoningEffort?: 'low' | 'medium' | 'high';
   defaultHeaders?: Record<string, string>;
   defaultTemperature?: number;
   modelCatalog?: Array<{
@@ -227,15 +228,22 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     request: GenerationRequest,
     extraBody?: Record<string, unknown>,
   ): Promise<GenerationResult> {
-    const payload = {
+    const reasoningEffort = this.config.reasoningEffort;
+    const payload: Record<string, unknown> = {
       model: this.config.defaultModel,
       messages: buildMessages(request),
       stream: false,
-      temperature: normalizeTemperature(request.temperature ?? this.config.defaultTemperature ?? 0.2),
       max_tokens: request.maxOutputTokens,
       ...(this.config.extraChatCompletionBody ?? {}),
       ...(extraBody ?? {}),
     };
+    if (reasoningEffort) {
+      payload.reasoning_effort = reasoningEffort;
+    } else {
+      payload.temperature = normalizeTemperature(
+        request.temperature ?? this.config.defaultTemperature ?? 0.2,
+      );
+    }
 
     const response = await fetch(joinUrl(this.config.baseURL, '/chat/completions'), {
       method: 'POST',
@@ -326,72 +334,72 @@ export const defaultProviderRoutingRules: ProviderRoutingRule[] = [
   {
     taskType: 'topic_brief_generation',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'source_summary_generation',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'article_outline_generation',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'article_draft_generation',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'title_meta_excerpt_generation',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'internal_link_suggestions',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'faq_block_generation',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'refresh_existing_article',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'publish_decision_reasoning',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
   {
     taskType: 'binary_eval',
     preferredProviderId: 'minimax',
-    preferredModelId: 'MiniMax-M2.5',
+    preferredModelId: 'MiniMax-M2.7',
     fallbackProviderId: 'theclawbay',
-    fallbackModelId: 'gpt-5.4-mini',
+    fallbackModelId: 'gpt-5.4',
   },
 ];
 
@@ -483,7 +491,13 @@ export function createTheClawBayAdapter(
     providerId: 'theclawbay',
     apiKey,
     baseURL: env.THECLAWBAY_BASE_URL ?? 'https://api.theclawbay.com/v1',
-    defaultModel: env.THECLAWBAY_MODEL ?? 'gpt-5.4-mini',
+    defaultModel: env.THECLAWBAY_MODEL ?? 'gpt-5.4',
+    reasoningEffort:
+      env.THECLAWBAY_REASONING_EFFORT === 'low' ||
+      env.THECLAWBAY_REASONING_EFFORT === 'medium' ||
+      env.THECLAWBAY_REASONING_EFFORT === 'high'
+        ? env.THECLAWBAY_REASONING_EFFORT
+        : 'high',
     defaultTemperature: 0.2,
   });
 }
@@ -498,7 +512,7 @@ export function createMiniMaxAdapter(
     providerId: 'minimax',
     apiKey,
     baseURL: env.MINIMAX_BASE_URL ?? 'https://api.minimax.io/v1',
-    defaultModel: env.MINIMAX_MODEL ?? 'MiniMax-M2.5',
+    defaultModel: env.MINIMAX_MODEL ?? 'MiniMax-M2.7',
     defaultTemperature: 0.2,
   });
 }
@@ -585,7 +599,9 @@ function extractCompletionText(payload: OpenAICompatibleResponse | undefined): s
       }
       return '';
     })
-    .join('\n');
+    .join('\n')
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .trim();
 }
 
 function normalizeUsage(

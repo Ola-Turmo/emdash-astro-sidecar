@@ -249,31 +249,84 @@ export function normalizeAutonomousDraftArtifact(
   artifact: AutonomousDraftArtifact,
   input: AutonomousDraftRequest,
 ): AutonomousDraftArtifact {
+  const normalizedSections =
+    artifact.sections.length >= 3
+      ? artifact.sections.map((section) => ({ ...section }))
+      : buildFallbackSections(input.topic, input.internalLinks);
+
   let next: AutonomousDraftArtifact = {
     ...artifact,
     title: normalizeSentence(artifact.title, toTitle(input.topic)),
-    description: clampText(
-      normalizeSentence(artifact.description, `Forklaring og neste steg for ${input.topic}.`),
-      100,
-      160,
-    ),
-    excerpt: clampText(
-      normalizeSentence(artifact.excerpt, `Praktisk guide om ${input.topic}.`),
-      140,
-      220,
-    ),
-    sections: artifact.sections.length >= 3 ? artifact.sections.map((section) => ({ ...section })) : buildFallbackSections(input.topic, input.internalLinks),
+    description: normalizeSentence(artifact.description, `Forklaring og neste steg for ${input.topic}.`),
+    excerpt: normalizeSentence(artifact.excerpt, `Praktisk guide om ${input.topic}.`),
+    sections: normalizedSections,
     suggestedTags: normalizeTags(artifact.suggestedTags, input.topic),
     wordCount: 0,
     qualityNotes: [],
   };
 
+  next.description = strengthenMetadataText(
+    next.description,
+    buildDescriptionCandidate(input.topic, normalizedSections),
+    100,
+    160,
+  );
+  next.excerpt = strengthenMetadataText(
+    next.excerpt,
+    buildExcerptCandidate(input.topic, normalizedSections),
+    140,
+    220,
+  );
   next = ensureInternalLinks(next, input.internalLinks);
   next = ensureClosingStep(next, input.internalLinks);
   next = ensureMinimumDepth(next, input.internalLinks);
   next.wordCount = countDraftWords(next.sections);
   next.qualityNotes = collectQualityNotes(next);
   return next;
+}
+
+function strengthenMetadataText(
+  value: string,
+  fallback: string,
+  minLength: number,
+  maxLength: number,
+): string {
+  const preferred = clampText(value, minLength, maxLength);
+  if (preferred.length >= minLength && preferred.length <= maxLength) {
+    return preferred;
+  }
+
+  return clampText(fallback, minLength, maxLength);
+}
+
+function buildDescriptionCandidate(
+  topic: string,
+  sections: Array<{
+    heading: string;
+    body: string;
+  }>,
+): string {
+  const summary = summarizeSections(sections, 132);
+  return clampText(
+    summary || `Praktisk forklaring av ${topic.toLowerCase()}, vanlige feil og hva du bor sjekke for du gar opp til proven.`,
+    100,
+    160,
+  );
+}
+
+function buildExcerptCandidate(
+  topic: string,
+  sections: Array<{
+    heading: string;
+    body: string;
+  }>,
+): string {
+  const summary = summarizeSections(sections, 190);
+  return clampText(
+    summary || `Praktisk guide om ${topic.toLowerCase()}, hvordan du forbereder deg bedre og hvilke neste steg som er mest nyttige for en vanlig leser.`,
+    140,
+    220,
+  );
 }
 
 export function countDraftWords(
@@ -507,6 +560,23 @@ function clampText(value: string, minLength: number, maxLength: number): string 
   return normalized;
 }
 
+function summarizeSections(
+  sections: Array<{
+    heading: string;
+    body: string;
+  }>,
+  maxLength: number,
+): string {
+  return sections
+    .map((section) => section.body.trim())
+    .join(' ')
+    .replace(/\[[^\]]+\]\(([^)]+)\)/g, '$1')
+    .replace(/\s+/g, ' ')
+    .slice(0, maxLength)
+    .replace(/[,\s]+$/, '')
+    .trim();
+}
+
 function toTitle(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) return 'Ny guide';
@@ -521,6 +591,9 @@ function buildGuideRootUrl(siteUrl: string, basePath: string): string {
 
 function toSlug(value: string): string {
   return value
+    .replace(/[æÆ]/g, 'ae')
+    .replace(/[øØ]/g, 'o')
+    .replace(/[åÅ]/g, 'a')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')

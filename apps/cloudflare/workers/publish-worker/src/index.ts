@@ -16,6 +16,26 @@ export default {
     }
 
     const now = new Date().toISOString();
+    const body = (await request.json().catch(() => ({}))) as {
+      hostId?: string;
+    };
+
+    if (body.hostId) {
+      const result = await runPublishStep(env.AUTONOMOUS_DB, body.hostId, 'publish_refreshes', now);
+      return Response.json({
+        ok: true,
+        workerKind: WORKER_KIND,
+        claimed: false,
+        processed: [
+          {
+            source: 'direct_host_publish',
+            hostId: body.hostId,
+            result,
+          },
+        ],
+      });
+    }
+
     const leaseSeconds = clampLeaseSeconds(env.JOB_LEASE_SECONDS);
     const leaseOwner = crypto.randomUUID();
 
@@ -128,6 +148,7 @@ async function runPublishStep(
       status: 'skipped',
       step,
       reason: 'No draft is ready for publish.',
+      hostId,
     };
   }
 
@@ -191,7 +212,7 @@ async function runPublishStep(
       artifactId,
       hostId,
       draft.id,
-      `apps/blog/src/content/blog/autonomous/${draft.slug}.mdx`,
+      `apps/blog/src/content/blog/${draft.slug}.mdx`,
     )
     .run();
 
@@ -221,6 +242,8 @@ async function runPublishStep(
         url: artifact.url,
         title: artifact.title,
         description: artifact.description,
+        category: artifact.category,
+        tags: artifact.tags,
       }),
     )
     .run();
@@ -258,10 +281,13 @@ async function runPublishStep(
   return {
     status: 'completed',
     step,
+    hostId,
     draftId: draft.id,
     artifactId,
     url: artifact.url,
     title: artifact.title,
+    category: artifact.category,
+    tags: artifact.tags,
   };
 }
 

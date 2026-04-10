@@ -29,6 +29,7 @@ interface Env {
   THECLAWBAY_API_KEY?: string;
   THECLAWBAY_BASE_URL?: string;
   THECLAWBAY_MODEL?: string;
+  THECLAWBAY_REASONING_EFFORT?: string;
   GEMINI_API_KEY?: string;
   GEMINI_BASE_URL?: string;
   GEMINI_MODEL?: string;
@@ -73,6 +74,26 @@ export default {
     }
 
     const now = new Date().toISOString();
+    const body = (await request.json().catch(() => ({}))) as {
+      hostId?: string;
+    };
+
+    if (body.hostId) {
+      const result = await runDraftStepForHost(env.AUTONOMOUS_DB, env, body.hostId, now);
+      return Response.json({
+        ok: true,
+        workerKind: WORKER_KIND,
+        claimed: false,
+        processed: [
+          {
+            source: 'direct_host_draft',
+            hostId: body.hostId,
+            result,
+          },
+        ],
+      });
+    }
+
     const leaseSeconds = clampLeaseSeconds(env.JOB_LEASE_SECONDS);
     const leaseOwner = crypto.randomUUID();
 
@@ -130,6 +151,16 @@ async function runDraftStep(
   job: Awaited<ReturnType<typeof claimNextJob>> extends infer T ? Exclude<T, null> : never,
   now: string,
 ): Promise<Record<string, unknown>> {
+  return runDraftStepForHost(db, env, job.payload.hostId, now, job.payload.runId);
+}
+
+async function runDraftStepForHost(
+  db: D1Database,
+  env: Env,
+  hostId: string,
+  now: string,
+  runId: string = crypto.randomUUID(),
+): Promise<Record<string, unknown>> {
   const host = await db
     .prepare(
       `
@@ -138,11 +169,11 @@ async function runDraftStep(
         WHERE id = ?1
       `,
     )
-    .bind(job.payload.hostId)
+    .bind(hostId)
     .first<{ host_name: string; site_url: string; base_path: string }>();
 
   if (!host) {
-    throw new Error(`Missing host record for ${job.payload.hostId}.`);
+    throw new Error(`Missing host record for ${hostId}.`);
   }
 
   const candidate = await db
@@ -156,18 +187,18 @@ async function runDraftStep(
         LIMIT 1
       `,
     )
-    .bind(job.payload.hostId)
+    .bind(hostId)
     .first<{ id: string; topic: string }>();
 
   if (!candidate) {
     return {
       status: 'skipped',
-      step: job.step,
+      step: 'draft_candidates',
       reason: 'No new topic candidate available.',
     };
   }
 
-  const draftContext = await buildDraftRequest(db, job.payload.hostId, {
+  const draftContext = await buildDraftRequest(db, hostId, {
     topic: candidate.topic,
     hostName: host.host_name,
     siteUrl: host.site_url,
@@ -199,8 +230,8 @@ async function runDraftStep(
       temperature: 0.15,
       maxOutputTokens,
       metadata: {
-        hostId: job.payload.hostId,
-        runId: job.payload.runId,
+        hostId,
+        runId,
         topicCandidateId: candidate.id,
       },
     });
@@ -232,8 +263,8 @@ async function runDraftStep(
     });
   } catch (error) {
     await persistDraftTrace(db, {
-      hostId: job.payload.hostId,
-      runId: job.payload.runId,
+      hostId,
+      runId,
       snapshotType: 'draft-generation-error',
       content: {
         topicCandidateId: candidate.id,
@@ -253,7 +284,7 @@ async function runDraftStep(
   }
 
   const draftId = crypto.randomUUID();
-  const slug = toSlug(candidate.topic);
+  const slug = toSafeSlug(candidate.topic);
   const qualityNotes = [...new Set(artifact.qualityNotes)].sort();
 
   await db
@@ -278,7 +309,7 @@ async function runDraftStep(
     )
     .bind(
       draftId,
-      job.payload.hostId,
+      hostId,
       candidate.id,
       slug,
       artifact.title,
@@ -304,8 +335,8 @@ async function runDraftStep(
   }
 
   await persistDraftTrace(db, {
-    hostId: job.payload.hostId,
-    runId: job.payload.runId,
+    hostId,
+    runId,
     snapshotType: 'draft-generation',
     content: {
       draftId,
@@ -334,7 +365,7 @@ async function runDraftStep(
 
   return {
     status: 'completed',
-    step: job.step,
+    step: 'draft_candidates',
     draftId,
     draftStatus: 'queued_eval',
     draftSectionsCreated: artifact.sections.length,
@@ -592,6 +623,7 @@ function getProviderEnvironment(env: Env): ProviderEnvironment {
     THECLAWBAY_API_KEY: env.THECLAWBAY_API_KEY,
     THECLAWBAY_BASE_URL: env.THECLAWBAY_BASE_URL,
     THECLAWBAY_MODEL: env.THECLAWBAY_MODEL,
+    THECLAWBAY_REASONING_EFFORT: env.THECLAWBAY_REASONING_EFFORT,
     GEMINI_API_KEY: env.GEMINI_API_KEY,
     GEMINI_BASE_URL: env.GEMINI_BASE_URL,
     GEMINI_MODEL: env.GEMINI_MODEL,
@@ -606,8 +638,23 @@ function normalizeBasePath(basePath: string): string {
   return basePath.endsWith('/') ? basePath : `${basePath}/`;
 }
 
+function toSafeSlug(value: string): string {
+  return value
+    .replace(/[\u00E6\u00C6]/g, 'ae')
+    .replace(/[\u00F8\u00D8]/g, 'o')
+    .replace(/[\u00E5\u00C5]/g, 'a')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function toSlug(value: string): string {
   return value
+    .replace(/[æÆ]/g, 'ae')
+    .replace(/[øØ]/g, 'o')
+    .replace(/[åÅ]/g, 'a')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')

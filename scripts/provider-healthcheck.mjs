@@ -4,14 +4,14 @@ const DEFAULTS = {
     baseUrlEnv: 'THECLAWBAY_BASE_URL',
     modelEnv: 'THECLAWBAY_MODEL',
     baseUrl: 'https://api.theclawbay.com/v1',
-    model: 'gpt-5.4-mini',
+    model: 'gpt-5.4',
   },
   minimax: {
     apiKeyEnv: 'MINIMAX_API_KEY',
     baseUrlEnv: 'MINIMAX_BASE_URL',
     modelEnv: 'MINIMAX_MODEL',
     baseUrl: 'https://api.minimax.io/v1',
-    model: 'MiniMax-M2.5',
+    model: 'MiniMax-M2.7',
   },
   gemini: {
     apiKeyEnv: 'GEMINI_API_KEY',
@@ -67,27 +67,34 @@ async function runHealthcheck(providerName) {
   const startedAt = Date.now();
 
   try {
+    const payload = {
+      model,
+      max_tokens: 16,
+      messages: [
+        {
+          role: 'system',
+          content: 'Reply with the single token OK.',
+        },
+        {
+          role: 'user',
+          content: 'Health check',
+        },
+      ],
+    };
+
+    if (providerName === 'theclawbay') {
+      payload.reasoning_effort = 'high';
+    } else {
+      payload.temperature = 0.1;
+    }
+
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${apiKey}`,
         'content-type': 'application/json',
       },
-      body: JSON.stringify({
-        model,
-        temperature: 0.1,
-        max_tokens: 16,
-        messages: [
-          {
-            role: 'system',
-            content: 'Reply with the single token OK.',
-          },
-          {
-            role: 'user',
-            content: 'Health check',
-          },
-        ],
-      }),
+      body: JSON.stringify(payload),
     });
 
     const text = await response.text();
