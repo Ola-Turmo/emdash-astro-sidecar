@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "WebWorker"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": [],
+    "baseUrl": "../../..",
+    "paths": {
+      "@emdash/content-policy": ["packages/content-policy/src/index.ts"],
+      "@emdash/cloudflare-guardrails": ["packages/cloudflare-guardrails/src/index.ts"]
+    }
+  },
+  "include": [
+    "./types.d.ts",
+    "./scheduler/src/**/*.ts",
+    "./orchestrator/src/**/*.ts",
+    "./browser-audit-worker/src/**/*.ts"
+  ]
+}

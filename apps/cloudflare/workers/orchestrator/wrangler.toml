@@ -2,5 +2,12 @@ name = "emdash-autonomous-orchestrator"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
+[limits]
+cpu_ms = 5000
+
 [vars]
 SYSTEM_NAME = "emdash-autonomous-control-plane"
+CF_PLAN_TIER = "free"
+CF_RESOURCE_GUARD_MODE = "conservative"
+MAX_HOST_RUNS_PER_TICK = "1"
+MAX_BROWSER_AUDIT_URLS_PER_RUN = "1"

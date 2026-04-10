@@ -125,6 +125,7 @@ That workflow gives you:
 - [`docs/host-rollout.md`](docs/host-rollout.md)
 - [`docs/deployment.md`](docs/deployment.md)
 - [`docs/troubleshooting.md`](docs/troubleshooting.md)
+- [`docs/cloudflare-resource-guardrails.md`](docs/cloudflare-resource-guardrails.md)
 - [`docs/provider-runtime.md`](docs/provider-runtime.md)
 - [`docs/prd-autonomous-content-control-plane.md`](docs/prd-autonomous-content-control-plane.md)
 

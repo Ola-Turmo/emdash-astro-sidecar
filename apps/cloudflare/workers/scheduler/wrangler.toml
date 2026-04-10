@@ -2,5 +2,13 @@ name = "emdash-autonomous-scheduler"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
+[limits]
+cpu_ms = 1000
+
+[vars]
+CF_PLAN_TIER = "free"
+CF_RESOURCE_GUARD_MODE = "conservative"
+MAX_HOST_RUNS_PER_TICK = "1"
+
 [triggers]
 crons = ["0 * * * *"]

@@ -20,6 +20,8 @@ Use these docs as the operational runbook for the sidecar.
   Content model, drafting rules, and publishing expectations.
 - [copy-guidelines.md](./copy-guidelines.md)
   Reader-first writing rules that ban internal jargon in user-facing UI and content.
+- [cloudflare-resource-guardrails.md](./cloudflare-resource-guardrails.md)
+  Conservative runtime budgets and worker-level limits to avoid overusing Cloudflare services during continuous operation.
 - [provider-runtime.md](./provider-runtime.md)
   Provider runtime, secret contract, routing defaults, and health-check workflow for TheClawBay and MiniMax.
 - [prd-autonomous-content-control-plane.md](./prd-autonomous-content-control-plane.md)

@@ -12,11 +12,12 @@ Use this skill when the repo is being prepared or operated as a continuous Cloud
 Read these files in order:
 
 1. `docs/provider-runtime.md`
-2. `docs/prd-autonomous-content-control-plane.md`
-3. `docs/autonomous-content-control-plane-technical-design.md`
-4. `docs/autonomous-content-control-plane-backlog.md`
-5. `docs/copy-guidelines.md`
-6. `docs/quality-gates.md`
+2. `docs/cloudflare-resource-guardrails.md`
+3. `docs/prd-autonomous-content-control-plane.md`
+4. `docs/autonomous-content-control-plane-technical-design.md`
+5. `docs/autonomous-content-control-plane-backlog.md`
+6. `docs/copy-guidelines.md`
+7. `docs/quality-gates.md`
 
 ## Main Working Surfaces
 
@@ -54,6 +55,28 @@ Run the provider reachability check before trying to automate anything:
 3. `pnpm providers:health -- --provider minimax`
 
 If a provider returns a billing, auth, or quota error, do not pretend the runtime is healthy.
+
+## Cloudflare Resource Rule
+
+Before enabling any continuous host loop, run:
+
+1. `pnpm qa:cloudflare`
+2. `pnpm verify`
+
+Treat these as blocking checks.
+
+Default rule:
+
+- `CF_PLAN_TIER=free`
+- `CF_RESOURCE_GUARD_MODE=conservative`
+
+Only loosen those values deliberately after verifying:
+
+- provider health
+- route audits
+- publish blocking
+- D1 and queue behavior
+- browser-audit sampling costs
 
 ## Host-Mode Rule
 
@@ -107,8 +130,9 @@ Before shipping or enabling stronger automation modes:
 
 1. `pnpm verify`
 2. `pnpm qa`
-3. `pnpm audit:deployed`
-4. `pnpm audit:deployed:lighthouse`
+3. `pnpm qa:cloudflare`
+4. `pnpm audit:deployed`
+5. `pnpm audit:deployed:lighthouse`
 
 ## Cloudflare Rule
 

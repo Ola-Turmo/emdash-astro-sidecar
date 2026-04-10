@@ -3,10 +3,20 @@ import {
   defaultHostBudgets,
   isHostMode,
   type HostMode,
-} from '../../../../../packages/content-policy/src/index';
+} from '@emdash/content-policy';
+import {
+  buildExecutionEnvelope,
+  defaultCloudflareGuardrails,
+  parseCloudflareGuardMode,
+  parseCloudflarePlanTier,
+} from '@emdash/cloudflare-guardrails';
 
 export interface Env {
   SYSTEM_NAME: string;
+  CF_PLAN_TIER?: string;
+  CF_RESOURCE_GUARD_MODE?: string;
+  MAX_HOST_RUNS_PER_TICK?: string;
+  MAX_BROWSER_AUDIT_URLS_PER_RUN?: string;
 }
 
 interface OrchestratorPayload {
@@ -15,6 +25,8 @@ interface OrchestratorPayload {
   mode?: string;
   at?: string;
   reason?: string;
+  requestedAuditUrls?: number;
+  requestedHostRuns?: number;
 }
 
 export default {
@@ -27,6 +39,23 @@ export default {
     const mode: HostMode = isHostMode(payload.mode) ? payload.mode : 'draft_only';
     const runPlan = buildAutonomousRunPlan(mode);
     const hostId = payload.hostId ?? 'default-host';
+    const guardrails = defaultCloudflareGuardrails(
+      parseCloudflarePlanTier(env.CF_PLAN_TIER),
+      parseCloudflareGuardMode(env.CF_RESOURCE_GUARD_MODE),
+    );
+    const requestedHostRuns = clampRequestedCount(
+      payload.requestedHostRuns ?? 1,
+      env.MAX_HOST_RUNS_PER_TICK,
+    );
+    const requestedAuditUrls = clampRequestedCount(
+      payload.requestedAuditUrls ?? 1,
+      env.MAX_BROWSER_AUDIT_URLS_PER_RUN,
+    );
+    const executionEnvelope = buildExecutionEnvelope(guardrails, {
+      hostMode: mode,
+      requestedAuditUrls,
+      requestedHostRuns,
+    });
 
     return Response.json({
       ok: true,
@@ -39,7 +68,20 @@ export default {
         budgets: defaultHostBudgets(),
       },
       runPlan,
-      note: 'Reusable orchestrator pass: host mode resolves into a deterministic run plan. Next implementation pass should persist host state in D1 and dispatch Queues, Workflows, and Durable Object locks.',
+      cloudflareGuardrails: guardrails,
+      executionEnvelope,
+      note: 'Reusable orchestrator pass: host mode resolves into a deterministic run plan and a Cloudflare-safe execution envelope. Next implementation pass should persist host state in D1 and dispatch Queues, Workflows, and Durable Object locks.',
     });
   },
 };
+
+function clampRequestedCount(requestedValue: number, envLimit: string | undefined): number {
+  const normalized = Number.isFinite(requestedValue) ? requestedValue : 1;
+  const envCap = envLimit ? Number(envLimit) : undefined;
+
+  if (envCap && Number.isFinite(envCap) && envCap > 0) {
+    return Math.min(Math.max(1, normalized), envCap);
+  }
+
+  return Math.max(1, normalized);
+}
