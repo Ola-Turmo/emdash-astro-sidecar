@@ -13,7 +13,7 @@
     "@emdash/model-runtime": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20.14.0",
+    "@types/node": "^25.6.0",
     "typescript": "^5.4.5"
   }
 }
