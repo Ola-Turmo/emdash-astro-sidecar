@@ -2,7 +2,7 @@
 
 import { exec, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -41,6 +41,7 @@ function parseArgs(argv) {
   const urls = [];
   const sitemaps = [];
   const includeLighthouse = argv.includes('--lighthouse') || argv.includes('--psi');
+  const includeConfigured = argv.includes('--include-configured');
 
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--url' && argv[i + 1]) {
@@ -54,7 +55,7 @@ function parseArgs(argv) {
     }
   }
 
-  return { urls, sitemaps, includeLighthouse };
+  return { urls, sitemaps, includeLighthouse, includeConfigured };
 }
 
 function ensureTrailingSlash(url) {
@@ -188,11 +189,8 @@ function summarizeLighthouseWarning(error) {
   return firstLine || 'Lighthouse returned valid JSON with a non-zero exit code.';
 }
 
-async function buildLighthouseResult(report, strategy, pageSlug, warning) {
+async function buildLighthouseResult(report, strategy, reportPath, warning) {
   const categories = report?.categories || {};
-  const reportPath = path.join(lighthouseDir, `${pageSlug}-${strategy}.json`);
-  await writeFile(reportPath, JSON.stringify(report, null, 2), 'utf8');
-
   return {
     ok: true,
     strategy,
@@ -207,12 +205,13 @@ async function buildLighthouseResult(report, strategy, pageSlug, warning) {
 
 async function runLighthouseAudit(url, strategy, pageSlug) {
   const cliPath = await ensureLocalLighthouseCli();
+  const reportPath = path.join(lighthouseDir, `${pageSlug}-${strategy}.json`);
   const args = [
     cliPath,
     url,
     '--quiet',
     '--output=json',
-    '--output-path=stdout',
+    `--output-path=${reportPath}`,
     '--only-categories=performance,accessibility,best-practices,seo',
     `--chrome-path=${chromium.executablePath()}`,
     '--chrome-flags=--headless=new --no-sandbox --disable-dev-shm-usage',
@@ -223,7 +222,7 @@ async function runLighthouseAudit(url, strategy, pageSlug) {
   }
 
   try {
-    const { stdout } = await execFileAsync(process.execPath, args, {
+    await execFileAsync(process.execPath, args, {
       cwd: LIGHTHOUSE_TOOL_DIR,
       windowsHide: true,
       maxBuffer: 40 * 1024 * 1024,
@@ -233,18 +232,16 @@ async function runLighthouseAudit(url, strategy, pageSlug) {
         TEMP: LIGHTHOUSE_TMP_DIR,
       },
     });
-
-    const report = parseJsonFromStdout(stdout);
-    return buildLighthouseResult(report, strategy, pageSlug);
+    const report = JSON.parse(await readFileSafe(reportPath));
+    return buildLighthouseResult(report, strategy, reportPath);
   } catch (error) {
-    const stdout = error && typeof error === 'object' && 'stdout' in error ? error.stdout : '';
-    if (typeof stdout === 'string' && stdout.trim()) {
+    if (existsSync(reportPath)) {
       try {
-        const report = parseJsonFromStdout(stdout);
+        const report = JSON.parse(await readFileSafe(reportPath));
         return buildLighthouseResult(
           report,
           strategy,
-          pageSlug,
+          reportPath,
           summarizeLighthouseWarning(error),
         );
       } catch {
@@ -258,6 +255,10 @@ async function runLighthouseAudit(url, strategy, pageSlug) {
       error: error instanceof Error ? error.message : String(error),
     };
   }
+}
+
+async function readFileSafe(filePath) {
+  return readFile(filePath, 'utf8');
 }
 
 function getRedirectChain(response) {
@@ -539,12 +540,60 @@ function renderMarkdown(report) {
   return lines.join('\n');
 }
 
+function renderSingleUrlSummary(report) {
+  const entry = report.results[0];
+  const lines = [
+    '# Post-Publish Summary',
+    '',
+    `Generated: ${report.generatedAt}`,
+    `URL: ${entry.url}`,
+    `Final URL: ${entry.finalUrl ?? 'n/a'}`,
+    `Status: ${entry.status ?? 'audit failed'}`,
+    `Title: ${entry.analytics.title || 'n/a'}`,
+    `Canonical: ${entry.analytics.canonicalUrl || entry.analytics.canonical || 'n/a'}`,
+    `Meta description: ${entry.analytics.metaDescription || 'n/a'}`,
+    `H1: ${entry.analytics.h1s?.[0] || 'n/a'}`,
+    `Desktop screenshot: \`${entry.screenshots.desktop ?? 'not captured'}\``,
+    `Mobile screenshot: \`${entry.screenshots.mobile ?? 'not captured'}\``,
+  ];
+
+  if (entry.lighthouse?.mobile?.ok) {
+    lines.push(
+      `Mobile Lighthouse: perf ${entry.lighthouse.mobile.performance}, acc ${entry.lighthouse.mobile.accessibility}, best ${entry.lighthouse.mobile.bestPractices}, seo ${entry.lighthouse.mobile.seo}`,
+    );
+  }
+  if (entry.lighthouse?.desktop?.ok) {
+    lines.push(
+      `Desktop Lighthouse: perf ${entry.lighthouse.desktop.performance}, acc ${entry.lighthouse.desktop.accessibility}, best ${entry.lighthouse.desktop.bestPractices}, seo ${entry.lighthouse.desktop.seo}`,
+    );
+  }
+
+  lines.push('');
+  lines.push('## Findings');
+  lines.push('');
+  if (entry.findings.length) {
+    for (const finding of entry.findings) {
+      lines.push(`- ${finding}`);
+    }
+  } else {
+    lines.push('- None');
+  }
+
+  return lines.join('\n');
+}
+
 async function main() {
-  const { urls: cliUrls, sitemaps: cliSitemaps, includeLighthouse } = parseArgs(process.argv.slice(2));
+  const {
+    urls: cliUrls,
+    sitemaps: cliSitemaps,
+    includeLighthouse,
+    includeConfigured,
+  } = parseArgs(process.argv.slice(2));
   const configured = await loadSiteAuditTargets();
-  const distUrls = configured.siteUrl ? await discoverDistUrls(configured.siteUrl) : [];
-  const sitemaps = [...new Set([...configured.sitemaps, ...cliSitemaps])];
-  const directUrls = [...new Set([...configured.urls, ...cliUrls])];
+  const useConfiguredTargets = includeConfigured || (cliUrls.length === 0 && cliSitemaps.length === 0);
+  const distUrls = useConfiguredTargets && configured.siteUrl ? await discoverDistUrls(configured.siteUrl) : [];
+  const sitemaps = [...new Set([...(useConfiguredTargets ? configured.sitemaps : []), ...cliSitemaps])];
+  const directUrls = [...new Set([...(useConfiguredTargets ? configured.urls : []), ...cliUrls])];
 
   const discoveredUrls = new Set([...directUrls, ...distUrls]);
   for (const sitemap of sitemaps) {
@@ -585,6 +634,13 @@ async function main() {
 
   await writeFile(path.join(outputRoot, 'audit.json'), JSON.stringify(report, null, 2), 'utf8');
   await writeFile(path.join(outputRoot, 'SUMMARY.md'), renderMarkdown(report), 'utf8');
+  if (report.results.length === 1) {
+    await writeFile(
+      path.join(outputRoot, 'POST_PUBLISH_SUMMARY.md'),
+      renderSingleUrlSummary(report),
+      'utf8',
+    );
+  }
 
   console.log(`Audit written to ${outputRoot}`);
 }

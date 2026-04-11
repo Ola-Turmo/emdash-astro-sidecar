@@ -125,7 +125,7 @@ async function runPublishStep(
         JOIN hosts h ON h.id = d.host_id
         LEFT JOIN topic_candidates tc ON tc.id = d.topic_candidate_id
         WHERE d.host_id = ?1
-          AND d.status = 'ready_for_publish'
+          AND d.status IN ('ready_for_publish', 'approved_for_publish')
         ORDER BY d.created_at ASC
         LIMIT 1
       `,

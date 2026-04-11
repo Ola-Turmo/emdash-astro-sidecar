@@ -119,6 +119,15 @@ Deploy autonomous control-plane workers:
 pnpm autonomous:deploy-workers -- --kind=control-plane
 ```
 
+Sync worker secrets directly to Cloudflare without GitHub:
+
+```bash
+pnpm cloudflare:sync-secrets -- --worker=draft-worker
+pnpm cloudflare:sync-secrets -- --worker=content-api --rotate-content-api-token
+```
+
+That script prefers a local Wrangler OAuth session and pushes secrets through the Cloudflare Workers API, so the operational source of truth lives in Cloudflare rather than in GitHub Actions.
+
 The GitHub workflow at `.github/workflows/cloudflare-deploy.yml` now uses the same registry-driven path instead of hardcoding only the old workers.
 
 ## Autonomous Materialization And Release
@@ -126,7 +135,7 @@ The GitHub workflow at `.github/workflows/cloudflare-deploy.yml` now uses the sa
 The publication handoff is now:
 
 1. `publish-worker` creates publication artifacts in D1
-2. `content-api` exposes bounded pending materializations
+2. `content-api` exposes bounded pending materializations and a review queue
 3. `materialize-publications.mjs` writes approved MDX into the Astro content tree
 4. the same script can optionally run `pnpm verify`, deploy, audit, and mark artifacts as deployed
 
@@ -138,6 +147,12 @@ pnpm materialize:publications -- --apply --verify
 pnpm materialize:publications -- --apply --verify --audit --deploy=preview
 pnpm materialize:publications -- --apply --verify --audit --deploy=production
 ```
+
+If you want a review gate before publish, use the Cloudflare-side review endpoints exposed by `content-api`:
+
+- `GET /review/drafts`
+- `POST /review/approve`
+- `POST /review/reject`
 
 ## Live Verification Checklist
 

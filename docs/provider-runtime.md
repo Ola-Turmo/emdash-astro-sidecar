@@ -114,12 +114,11 @@ It is intentionally not part of `pnpm verify` because provider secrets may not e
 
 For deployed workers, set provider secrets with Wrangler rather than checking them into the repo.
 
-Examples:
+Cloudflare-native sync:
 
 ```bash
-wrangler secret put THECLAWBAY_API_KEY
-wrangler secret put GEMINI_API_KEY
-wrangler secret put MINIMAX_API_KEY
+pnpm cloudflare:sync-secrets -- --worker=draft-worker
+pnpm cloudflare:sync-secrets -- --worker=content-api --rotate-content-api-token
 ```
 
 If you want provider-specific base URLs or models in Cloudflare, add them as worker vars or secrets depending on sensitivity.
@@ -130,15 +129,7 @@ Recommended worker secret or var set for the draft path:
 - vars: `AUTONOMOUS_PROVIDER_ID`, `AUTONOMOUS_MODEL_ID`, `AUTONOMOUS_FALLBACK_PROVIDER_ID`, `AUTONOMOUS_FALLBACK_MODEL_ID`
 - vars: `DRAFT_MAX_OUTPUT_TOKENS`, `AUTONOMOUS_ALLOW_FALLBACK_DRAFTS`
 
-## Local Secret Sync Note
-
-If `wrangler secret put` fails in a non-interactive local shell even though `wrangler whoami` works, the direct Cloudflare Workers Secrets API is a valid fallback for local operations.
-
-That path updates:
-
-- `PUT /accounts/{account_id}/workers/scripts/{script_name}/secrets`
-
-Use it only from a trusted local environment and keep the secret values out of committed files.
+The secret sync script already uses that direct Workers Secrets API path as a fallback behind a trusted local Wrangler OAuth session, so you do not have to depend on GitHub secrets for normal worker operation.
 
 ## Activation Note
 

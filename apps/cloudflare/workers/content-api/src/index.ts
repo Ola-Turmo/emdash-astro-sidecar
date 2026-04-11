@@ -2,6 +2,7 @@ interface Env {
   AUTONOMOUS_DB: D1Database;
   MATERIALIZE_BATCH_LIMIT?: string;
   CONTENT_API_TOKEN?: string;
+  REVIEW_BATCH_LIMIT?: string;
 }
 
 interface MaterializationRow {
@@ -13,6 +14,20 @@ interface MaterializationRow {
   artifact_content: string;
   slug: string;
   url: string;
+}
+
+interface ReviewDraftRow {
+  draft_id: string;
+  host_id: string;
+  slug: string;
+  title: string | null;
+  description: string | null;
+  excerpt: string | null;
+  word_count: number | null;
+  quality_notes_json: string | null;
+  provider_id: string | null;
+  model_id: string | null;
+  topic: string | null;
 }
 
 export default {
@@ -61,6 +76,110 @@ export default {
           url: row.url,
           mdx: row.artifact_content,
         })),
+      });
+    }
+
+    if (request.method === 'GET' && url.pathname === '/review/drafts') {
+      const limit = clampLimit(url.searchParams.get('limit'), env.REVIEW_BATCH_LIMIT ?? '10');
+      const drafts = await env.AUTONOMOUS_DB
+        .prepare(
+          `
+            SELECT
+              d.id AS draft_id,
+              d.host_id,
+              d.slug,
+              d.title,
+              d.description,
+              d.excerpt,
+              d.word_count,
+              d.quality_notes_json,
+              d.provider_id,
+              d.model_id,
+              tc.topic
+            FROM drafts d
+            LEFT JOIN topic_candidates tc ON tc.id = d.topic_candidate_id
+            WHERE d.status = 'ready_for_review'
+            ORDER BY d.created_at ASC
+            LIMIT ?1
+          `,
+        )
+        .bind(limit)
+        .all<ReviewDraftRow>();
+
+      return Response.json({
+        ok: true,
+        limit,
+        drafts: drafts.results.map((row) => ({
+          draftId: row.draft_id,
+          hostId: row.host_id,
+          slug: row.slug,
+          title: row.title,
+          description: row.description,
+          excerpt: row.excerpt,
+          wordCount: row.word_count,
+          qualityNotes: parseJsonArray(row.quality_notes_json),
+          providerId: row.provider_id,
+          modelId: row.model_id,
+          topic: row.topic,
+        })),
+      });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/review/approve') {
+      const payload = (await request.json().catch(() => ({}))) as {
+        draftId?: string;
+      };
+
+      if (!payload.draftId) {
+        return Response.json({ ok: false, error: 'draftId is required.' }, { status: 400 });
+      }
+
+      await env.AUTONOMOUS_DB
+        .prepare(
+          `
+            UPDATE drafts
+            SET status = 'approved_for_publish'
+            WHERE id = ?1
+              AND status = 'ready_for_review'
+          `,
+        )
+        .bind(payload.draftId)
+        .run();
+
+      return Response.json({
+        ok: true,
+        draftId: payload.draftId,
+        status: 'approved_for_publish',
+      });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/review/reject') {
+      const payload = (await request.json().catch(() => ({}))) as {
+        draftId?: string;
+        reason?: string;
+      };
+
+      if (!payload.draftId) {
+        return Response.json({ ok: false, error: 'draftId is required.' }, { status: 400 });
+      }
+
+      await env.AUTONOMOUS_DB
+        .prepare(
+          `
+            UPDATE drafts
+            SET status = 'review_rejected'
+            WHERE id = ?1
+              AND status = 'ready_for_review'
+          `,
+        )
+        .bind(payload.draftId)
+        .run();
+
+      return Response.json({
+        ok: true,
+        draftId: payload.draftId,
+        status: 'review_rejected',
+        reason: payload.reason ?? null,
       });
     }
 
@@ -157,4 +276,14 @@ function isAuthorized(request: Request, env: Env): boolean {
   if (!expectedToken) return true;
   const authHeader = request.headers.get('authorization')?.trim();
   return authHeader === `Bearer ${expectedToken}`;
+}
+
+function parseJsonArray(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((entry): entry is string => typeof entry === 'string') : [];
+  } catch {
+    return [];
+  }
 }

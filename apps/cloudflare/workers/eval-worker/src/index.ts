@@ -8,6 +8,7 @@ interface Env {
   AUTONOMOUS_DB: D1Database;
   JOB_LEASE_SECONDS?: string;
   EVAL_MAX_JOBS_PER_RUN?: string;
+  AUTONOMOUS_REQUIRE_REVIEW?: string;
 }
 
 const WORKER_KIND = 'future-worker';
@@ -28,7 +29,7 @@ export default {
     const processed: Array<Record<string, unknown>> = [];
 
     if (requestBody.hostId) {
-      const result = await runEvalStep(env.AUTONOMOUS_DB, requestBody.hostId, now);
+      const result = await runEvalStep(env.AUTONOMOUS_DB, env, requestBody.hostId, now);
       return Response.json({
         ok: true,
         workerKind: 'eval-worker',
@@ -60,7 +61,7 @@ export default {
       }
 
       try {
-        const result = await runEvalStep(env.AUTONOMOUS_DB, job.payload.hostId, now);
+        const result = await runEvalStep(env.AUTONOMOUS_DB, env, job.payload.hostId, now);
         await completeJob(env.AUTONOMOUS_DB, job.id, leaseOwner, now, result);
         processed.push({
           ok: true,
@@ -83,7 +84,7 @@ export default {
     }
 
     if (processed.length === 0) {
-      const recovered = await runOrphanEvalRecovery(env.AUTONOMOUS_DB, now);
+      const recovered = await runOrphanEvalRecovery(env.AUTONOMOUS_DB, env, now);
       if (recovered) {
         return Response.json({
           ok: true,
@@ -117,15 +118,17 @@ export default {
 
 async function runEvalStep(
   db: D1Database,
+  env: Env,
   hostId: string,
   now: string,
 ): Promise<Record<string, unknown>> {
   const draft = await db
     .prepare(
       `
-        SELECT d.id, d.slug, d.title, d.description, d.excerpt, h.site_url
+        SELECT d.id, d.slug, d.title, d.description, d.excerpt, h.site_url, hm.mode AS host_mode
         FROM drafts d
         JOIN hosts h ON h.id = d.host_id
+        LEFT JOIN host_modes hm ON hm.host_id = d.host_id
         WHERE d.host_id = ?1
           AND d.status = 'queued_eval'
         ORDER BY d.created_at ASC
@@ -140,6 +143,7 @@ async function runEvalStep(
       description: string | null;
       excerpt: string | null;
       site_url: string;
+      host_mode: string | null;
     }>();
 
   if (!draft) {
@@ -203,7 +207,12 @@ async function runEvalStep(
   }
 
   const passedCount = scoreEvalSuite(criteria);
-  const finalStatus = passedCount === criteria.length ? 'ready_for_publish' : 'eval_failed';
+  const finalStatus =
+    passedCount === criteria.length
+      ? shouldRequireReview(draft.host_mode, env)
+        ? 'ready_for_review'
+        : 'ready_for_publish'
+      : 'eval_failed';
 
   await db
     .prepare(
@@ -229,6 +238,12 @@ async function runEvalStep(
   };
 }
 
+function shouldRequireReview(hostMode: string | null, env: Env): boolean {
+  if (env.AUTONOMOUS_REQUIRE_REVIEW === 'true') return true;
+  if (env.AUTONOMOUS_REQUIRE_REVIEW === 'false') return false;
+  return hostMode !== 'publish_auto';
+}
+
 async function countHostSources(db: D1Database, hostId: string): Promise<number> {
   const row = await db
     .prepare(
@@ -252,6 +267,7 @@ function clampMaxJobs(rawValue: string | undefined): number {
 
 async function runOrphanEvalRecovery(
   db: D1Database,
+  env: Env,
   now: string,
 ): Promise<Record<string, unknown> | null> {
   const draft = await db
@@ -270,7 +286,7 @@ async function runOrphanEvalRecovery(
     return null;
   }
 
-  const result = await runEvalStep(db, draft.host_id, now);
+  const result = await runEvalStep(db, env, draft.host_id, now);
   return {
     hostId: draft.host_id,
     ...result,

@@ -40,7 +40,8 @@
       "name": "draft-worker",
       "wranglerConfig": "apps/cloudflare/workers/draft-worker/wrangler.toml",
       "kind": "control-plane",
-      "requiredSecrets": []
+      "requiredSecrets": ["MINIMAX_API_KEY", "THECLAWBAY_API_KEY"],
+      "optionalSecrets": ["GEMINI_API_KEY"]
     },
     {
       "name": "eval-worker",

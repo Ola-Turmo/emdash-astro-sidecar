@@ -76,18 +76,44 @@ function inferCategory(draft: PublicationDraftContext): string {
 }
 
 function inferTags(draft: PublicationDraftContext): string[] {
-  const base = draft.slug
-    .split('-')
-    .filter((entry) => entry && entry.length >= 3)
-    .slice(0, 5);
-  const tags = new Set<string>(base);
-  tags.add(inferCategory(draft));
+  const tags = new Set<string>();
+  const haystack = `${draft.slug} ${draft.topic} ${draft.title ?? ''}`.toLowerCase();
+  const category = inferCategory(draft);
+
+  tags.add(category);
+  for (const [needle, tag] of semanticTagMap) {
+    if (haystack.includes(needle)) {
+      tags.add(tag);
+    }
+  }
+
+  for (const token of draft.slug.split('-').filter((entry) => entry && entry.length >= 4)) {
+    if (tags.size >= 5) break;
+    tags.add(token);
+  }
+
   if (tags.size < 3) {
     tags.add('kurs');
     tags.add('prove');
   }
   return [...tags].slice(0, 6);
 }
+
+const semanticTagMap: Array<[needle: string, tag: string]> = [
+  ['alkoholloven', 'alkoholloven'],
+  ['serveringsloven', 'serveringsloven'],
+  ['styrer', 'styrer'],
+  ['stedfortreder', 'stedfortreder'],
+  ['pensum', 'pensum'],
+  ['vanlige feil', 'vanlige-feil'],
+  ['forberede', 'forberedelse'],
+  ['forbered', 'forberedelse'],
+  ['ansvar', 'ansvar'],
+  ['internkontroll', 'internkontroll'],
+  ['kommune', 'kommunens-prove'],
+  ['prøve', 'prove'],
+  ['prove', 'prove'],
+];
 
 function normalizeBasePath(basePath: string): string {
   if (!basePath.startsWith('/')) return `/${basePath}`;
