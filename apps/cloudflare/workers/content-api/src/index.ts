@@ -1,9 +1,10 @@
+import { buildPublicationArtifact } from '../../../../../packages/publish-engine/src/index';
+
 interface Env {
   AUTONOMOUS_DB: D1Database;
   MATERIALIZE_BATCH_LIMIT?: string;
   CONTENT_API_TOKEN?: string;
   REVIEW_BATCH_LIMIT?: string;
-  PUBLISH_WORKER_URL?: string;
 }
 
 interface MaterializationRow {
@@ -179,32 +180,14 @@ export default {
         .bind(payload.draftId)
         .run();
 
-      const publishWorkerUrl = env.PUBLISH_WORKER_URL?.trim();
-      if (!publishWorkerUrl) {
-        return Response.json(
-          {
-            ok: false,
-            error: 'PUBLISH_WORKER_URL is not configured.',
-          },
-          { status: 500 },
-        );
-      }
-
-      const publishResponse = await fetch(publishWorkerUrl, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          hostId: payload.hostId,
-        }),
-      });
-      const publishPayload = await publishResponse.json().catch(() => ({}));
+      const publishPayload = await publishApprovedDraft(env.AUTONOMOUS_DB, payload.hostId, payload.draftId);
 
       return Response.json({
-        ok: publishResponse.ok,
+        ok: true,
         draftId: payload.draftId,
         hostId: payload.hostId,
+        publishStatus: 200,
+        publishMode: 'direct_d1_publish',
         publish: publishPayload,
       });
     }
@@ -342,4 +325,215 @@ function parseJsonArray(value: string | null): string[] {
   } catch {
     return [];
   }
+}
+
+async function publishApprovedDraft(
+  db: D1Database,
+  hostId: string,
+  draftId: string,
+): Promise<Record<string, unknown>> {
+  const draft = await db
+    .prepare(
+      `
+        SELECT
+          d.id,
+          d.slug,
+          d.title,
+          d.description,
+          d.excerpt,
+          tc.topic,
+          h.host_name,
+          h.site_url,
+          h.base_path
+        FROM drafts d
+        JOIN hosts h ON h.id = d.host_id
+        LEFT JOIN topic_candidates tc ON tc.id = d.topic_candidate_id
+        WHERE d.host_id = ?1
+          AND d.id = ?2
+          AND d.status = 'approved_for_publish'
+        LIMIT 1
+      `,
+    )
+    .bind(hostId, draftId)
+    .first<{
+      id: string;
+      slug: string;
+      title: string | null;
+      description: string | null;
+      excerpt: string | null;
+      topic: string | null;
+      host_name: string;
+      site_url: string;
+      base_path: string;
+    }>();
+
+  if (!draft) {
+    throw new Error(`No approved draft found for host ${hostId} and draft ${draftId}.`);
+  }
+
+  const sectionsResult = await db
+    .prepare(
+      `
+        SELECT heading, body
+        FROM draft_sections
+        WHERE draft_id = ?1
+        ORDER BY section_order ASC
+      `,
+    )
+    .bind(draft.id)
+    .all<{ heading: string; body: string }>();
+
+  const artifact = buildPublicationArtifact(
+    {
+      hostId,
+      hostName: draft.host_name,
+      siteUrl: draft.site_url,
+      basePath: draft.base_path,
+    },
+    {
+      draftId: draft.id,
+      slug: draft.slug,
+      topic: draft.topic ?? draft.slug.replace(/-/g, ' '),
+      title: draft.title,
+      description: draft.description,
+      excerpt: draft.excerpt,
+      sections: sectionsResult.results,
+    },
+  );
+
+  const artifactId = crypto.randomUUID();
+  const now = new Date().toISOString();
+
+  await db
+    .prepare(
+      `
+        INSERT INTO publication_artifacts (id, host_id, draft_id, artifact_format, artifact_content)
+        VALUES (?1, ?2, ?3, 'mdx', ?4)
+      `,
+    )
+    .bind(artifactId, hostId, draft.id, artifact.mdx)
+    .run();
+
+  await db
+    .prepare(
+      `
+        INSERT INTO publication_edge_artifacts (
+          id,
+          host_id,
+          draft_id,
+          slug,
+          url,
+          title,
+          description,
+          html_content
+        )
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+      `,
+    )
+    .bind(
+      crypto.randomUUID(),
+      hostId,
+      draft.id,
+      draft.slug,
+      artifact.url,
+      artifact.title,
+      artifact.description,
+      artifact.html,
+    )
+    .run();
+
+  await db
+    .prepare(
+      `
+        INSERT INTO publication_materializations (
+          id,
+          artifact_id,
+          host_id,
+          draft_id,
+          status,
+          suggested_path
+        )
+        VALUES (?1, ?2, ?3, ?4, 'pending', ?5)
+      `,
+    )
+    .bind(
+      crypto.randomUUID(),
+      artifactId,
+      hostId,
+      draft.id,
+      `apps/blog/src/content/blog/${draft.slug}.mdx`,
+    )
+    .run();
+
+  await db
+    .prepare(
+      `
+        INSERT INTO publications (id, host_id, draft_id, url, published_at)
+        VALUES (?1, ?2, ?3, ?4, ?5)
+      `,
+    )
+    .bind(crypto.randomUUID(), hostId, draft.id, artifact.url, now)
+    .run();
+
+  await db
+    .prepare(
+      `
+        INSERT INTO publication_events (id, host_id, draft_id, event_type, detail_json)
+        VALUES (?1, ?2, ?3, 'artifact_built', ?4)
+      `,
+    )
+    .bind(
+      crypto.randomUUID(),
+      hostId,
+      draft.id,
+      JSON.stringify({
+        step: 'approve_and_publish',
+        url: artifact.url,
+        title: artifact.title,
+        description: artifact.description,
+        category: artifact.category,
+        tags: artifact.tags,
+      }),
+    )
+    .run();
+
+  await db
+    .prepare(
+      `
+        INSERT INTO publication_events (id, host_id, draft_id, event_type, detail_json)
+        VALUES (?1, ?2, ?3, 'published', ?4)
+      `,
+    )
+    .bind(
+      crypto.randomUUID(),
+      hostId,
+      draft.id,
+      JSON.stringify({
+        step: 'approve_and_publish',
+        url: artifact.url,
+        excerpt: artifact.excerpt,
+      }),
+    )
+    .run();
+
+  await db
+    .prepare(
+      `
+        UPDATE drafts
+        SET status = 'published'
+        WHERE id = ?1
+      `,
+    )
+    .bind(draft.id)
+    .run();
+
+  return {
+    status: 'completed',
+    draftId: draft.id,
+    artifactId,
+    url: artifact.url,
+    title: artifact.title,
+    category: artifact.category,
+    tags: artifact.tags,
+  };
 }
