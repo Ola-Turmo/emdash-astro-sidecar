@@ -434,7 +434,7 @@ async function publishApprovedDraft(
       crypto.randomUUID(),
       hostId,
       draft.id,
-      draft.slug,
+      artifact.slug,
       artifact.url,
       artifact.title,
       artifact.description,
@@ -461,7 +461,7 @@ async function publishApprovedDraft(
       artifactId,
       hostId,
       draft.id,
-      `apps/blog/src/content/blog/${draft.slug}.mdx`,
+      `apps/blog/src/content/blog/${artifact.slug}.mdx`,
     )
     .run();
 
