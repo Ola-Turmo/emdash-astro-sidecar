@@ -196,6 +196,34 @@ async function runPublishStep(
   await db
     .prepare(
       `
+        INSERT INTO publication_edge_artifacts (
+          id,
+          host_id,
+          draft_id,
+          slug,
+          url,
+          title,
+          description,
+          html_content
+        )
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+      `,
+    )
+    .bind(
+      crypto.randomUUID(),
+      hostId,
+      draft.id,
+      draft.slug,
+      artifact.url,
+      artifact.title,
+      artifact.description,
+      artifact.html,
+    )
+    .run();
+
+  await db
+    .prepare(
+      `
         INSERT INTO publication_materializations (
           id,
           artifact_id,

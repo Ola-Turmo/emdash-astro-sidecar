@@ -2,6 +2,7 @@ import { guideRobotsTxt, guideRssXml, guideSitemapXml } from './generated/seo-ar
 
 interface Env {
   GUIDE_ORIGIN: string;
+  AUTONOMOUS_DB: D1Database;
 }
 
 const GUIDE_PREFIX = '/guide';
@@ -118,8 +119,38 @@ export default {
       redirect: 'manual',
     });
 
+    const shouldCheckEdgeFallback =
+      request.method === 'GET' &&
+      (incomingUrl.pathname.startsWith(`${GUIDE_PREFIX}/blog/`) || incomingUrl.pathname.startsWith('/blog/'));
+    if (shouldCheckEdgeFallback) {
+      const edgeArtifact = await findEdgeArticle(env.AUTONOMOUS_DB, incomingUrl, request.url);
+      if (edgeArtifact) {
+        if (upstreamResponse.status === 404) {
+          return responseWithEdgeArtifact(edgeArtifact.html_content, 'hit-404');
+        }
+
+        const contentType = upstreamResponse.headers.get('content-type') ?? '';
+        if (contentType.includes('text/html')) {
+          const html = await upstreamResponse.text();
+          if (isSoftFallbackHtml(html, incomingUrl)) {
+            return responseWithEdgeArtifact(edgeArtifact.html_content, 'hit-soft-fallback');
+          }
+
+          const headers = withSecurityHeaders(upstreamResponse.headers);
+          headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=300');
+          headers.set('x-emdash-edge-fallback', 'origin-html');
+          return new Response(html, {
+            status: upstreamResponse.status,
+            statusText: upstreamResponse.statusText,
+            headers,
+          });
+        }
+      }
+    }
+
     const headers = withSecurityHeaders(upstreamResponse.headers);
     headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=300');
+    headers.set('x-emdash-edge-fallback', 'origin');
 
     return new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
@@ -128,3 +159,60 @@ export default {
     });
   },
 };
+
+function responseWithEdgeArtifact(html: string, mode: string): Response {
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'public, max-age=300',
+      'x-content-type-options': 'nosniff',
+      'x-robots-tag': 'index, follow',
+      'x-emdash-edge-fallback': mode,
+    },
+  });
+}
+
+async function findEdgeArticle(
+  db: D1Database,
+  incomingUrl: URL,
+  requestUrl: string,
+): Promise<{ html_content: string } | null> {
+  const slug = extractSlugFromPath(incomingUrl.pathname);
+  if (!slug) return null;
+
+  return db
+    .prepare(
+      `
+        SELECT html_content
+        FROM publication_edge_artifacts
+        WHERE slug = ?1
+           OR url = ?2
+        ORDER BY created_at DESC
+        LIMIT 1
+      `,
+    )
+    .bind(slug, requestUrl)
+    .first<{ html_content: string }>();
+}
+
+function extractSlugFromPath(pathname: string): string | null {
+  const normalized = pathname
+    .replace(/^\/guide\/blog\//, '')
+    .replace(/^\/blog\//, '')
+    .replace(/\/$/, '');
+  if (!normalized || normalized.includes('/')) return null;
+  return normalized;
+}
+
+function isSoftFallbackHtml(html: string, incomingUrl: URL): boolean {
+  const canonical =
+    html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1]?.trim() ?? '';
+  const requested = incomingUrl.toString();
+  if (canonical && canonical !== requested) {
+    return true;
+  }
+
+  const title = html.match(/<title[^>]*>(.*?)<\/title>/is)?.[1]?.replace(/\s+/g, ' ').trim() ?? '';
+  return title === 'Kurs.ing Blogg';
+}

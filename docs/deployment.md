@@ -154,6 +154,25 @@ If you want a review gate before publish, use the Cloudflare-side review endpoin
 - `POST /review/approve`
 - `POST /review/reject`
 
+## Cloudflare-Only Publish Fallback
+
+The guide worker now has a D1-backed fallback for published articles.
+
+That means a draft can move through:
+
+1. review
+2. approval
+3. publish-worker
+
+and become live on the mounted `/guide/blog/...` URL even before the article has been materialized into the Astro repo and pushed through Pages.
+
+The current shape is:
+
+- Pages remains the primary source for static routes and normal article delivery
+- `guide-proxy` falls back to `publication_edge_artifacts` in D1 for published slugs that are not yet in the static build
+
+This reduces the local operational dependency for new article availability.
+
 ## Live Verification Checklist
 
 After deployment, verify all of these:

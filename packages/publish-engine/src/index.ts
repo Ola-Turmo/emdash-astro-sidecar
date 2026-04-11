@@ -23,6 +23,7 @@ export interface PublicationArtifact {
   title: string;
   description: string;
   mdx: string;
+  html: string;
   excerpt: string;
   category: string;
   tags: string[];
@@ -61,6 +62,15 @@ export function buildPublicationArtifact(
     url,
     title,
     description,
+    html: buildEdgeHtml({
+      title,
+      description,
+      excerpt,
+      category,
+      tags,
+      sections: draft.sections,
+      canonicalUrl: url,
+    }),
     excerpt,
     category,
     tags,
@@ -160,4 +170,103 @@ function summarizeExcerpt(
 
 function escapeYaml(value: string): string {
   return value.replace(/"/g, '\\"');
+}
+
+function buildEdgeHtml(input: {
+  title: string;
+  description: string;
+  excerpt: string;
+  category: string;
+  tags: string[];
+  sections: Array<{
+    heading: string;
+    body: string;
+  }>;
+  canonicalUrl: string;
+}): string {
+  const articleHtml = input.sections
+    .map(
+      (section) =>
+        `<section><h2>${escapeHtml(section.heading)}</h2>${renderParagraphs(section.body)}</section>`,
+    )
+    .join('');
+
+  const tags = input.tags
+    .map((tag) => `<li>${escapeHtml(tag)}</li>`)
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${escapeHtml(input.title)} | Kurs.ing Blogg</title>
+    <meta name="description" content="${escapeHtml(input.description)}" />
+    <link rel="canonical" href="${escapeHtml(input.canonicalUrl)}" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; font-family: Manrope, system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
+      main { max-width: 880px; margin: 0 auto; padding: 48px 20px 72px; }
+      article { background: white; border: 1px solid #e2e8f0; border-radius: 28px; padding: 32px; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08); }
+      .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: #0f766e; margin: 0 0 16px; }
+      h1 { font-family: "Playfair Display", Georgia, serif; font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1.05; margin: 0 0 20px; }
+      h2 { font-size: 1.4rem; margin: 32px 0 12px; }
+      p, li { font-size: 1.05rem; line-height: 1.8; color: #334155; }
+      ul.tags { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 28px 0 0; }
+      ul.tags li { background: #f1f5f9; border: 1px solid #dbe4ee; border-radius: 999px; padding: 8px 12px; font-size: 0.92rem; line-height: 1; }
+      a { color: #0f766e; }
+      .lead { font-size: 1.15rem; color: #475569; margin-bottom: 20px; }
+      .footer-note { margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; font-size: 0.95rem; color: #64748b; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <article>
+        <p class="eyebrow">${escapeHtml(input.category)}</p>
+        <h1>${escapeHtml(input.title)}</h1>
+        <p class="lead">${escapeHtml(input.excerpt)}</p>
+        ${articleHtml}
+        <ul class="tags">${tags}</ul>
+        <p class="footer-note">Denne artikkelen er publisert fra den autonome innholdsløypen og kan senere bli materialisert inn i den statiske Astro-siden.</p>
+      </article>
+    </main>
+  </body>
+</html>`;
+}
+
+function renderParagraphs(value: string): string {
+  return value
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => {
+      if (paragraph.startsWith('- ')) {
+        const items = paragraph
+          .split('\n')
+          .map((line) => line.replace(/^- /, '').trim())
+          .filter(Boolean)
+          .map((line) => `<li>${linkifyAndEscape(line)}</li>`)
+          .join('');
+        return `<ul>${items}</ul>`;
+      }
+      return `<p>${linkifyAndEscape(paragraph)}</p>`;
+    })
+    .join('');
+}
+
+function linkifyAndEscape(value: string): string {
+  return escapeHtml(value).replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    (_match, label, href) => `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`,
+  );
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
