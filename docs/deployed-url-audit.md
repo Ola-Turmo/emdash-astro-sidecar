@@ -75,6 +75,14 @@ output/playwright/deployed-audit/<timestamp>/
 
 Run the audit after every production deployment and attach the artifact folder to your review or release notes.
 
+For pre-deploy layout protection, pair it with:
+
+```bash
+pnpm qa:mobile
+```
+
+That gate audits the built local site at multiple narrow viewports and fails on mobile-specific layout regressions before anything goes live.
+
 ## Lighthouse Runtime
 
 The Lighthouse pass runs locally against the live URLs. It does not call Google PageSpeed Insights.

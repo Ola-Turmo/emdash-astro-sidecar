@@ -10,6 +10,7 @@ These gates are designed to catch:
 - stale brand/config values
 - broken RSS, sitemap, and robots output
 - unsynced guide SEO artifacts
+- mobile layout regressions before they ship
 
 ## Commands
 
@@ -48,6 +49,20 @@ Checks:
 Script:
 
 - `scripts/check-host-config.mjs`
+
+### `pnpm qa:mobile`
+
+Checks:
+
+- no horizontal overflow at small mobile widths
+- no non-scrollable elements extending outside the viewport
+- mobile header height stays bounded
+- article reading column does not collapse too narrowly
+- mobile screenshots are captured on every run
+
+Script:
+
+- `scripts/check-mobile-layout.mjs`
 
 ### `pnpm qa:seo`
 
