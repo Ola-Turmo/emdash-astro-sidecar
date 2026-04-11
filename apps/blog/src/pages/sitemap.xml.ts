@@ -1,6 +1,6 @@
 import type { CollectionEntry } from 'astro:content';
 import type { APIContext } from 'astro';
-import { SITE_URL } from '../consts';
+import { SITE_URL, articlePath, authorPath, categoryPath } from '../consts';
 import { getActiveAuthors, getActiveCategories, getPublishedPosts } from '../lib/published-content';
 
 interface SitemapPage {
@@ -17,18 +17,18 @@ export async function GET(_context: APIContext) {
   ]);
 
   const postPages: SitemapPage[] = posts.map((post: CollectionEntry<'blog'>) => ({
-    url: `${SITE_URL}/blog/${post.slug}/`,
+    url: new URL(articlePath(post.slug), SITE_URL).href,
     lastMod: post.data.updatedDate || post.data.pubDate,
     priority: 0.8,
   }));
 
   const categoryPages: SitemapPage[] = categories.map((cat: CollectionEntry<'categories'>) => ({
-    url: `${SITE_URL}/category/${cat.slug}/`,
+    url: new URL(categoryPath(cat.slug), SITE_URL).href,
     priority: 0.6,
   }));
 
   const authorPages: SitemapPage[] = authors.map((author: CollectionEntry<'authors'>) => ({
-    url: `${SITE_URL}/author/${author.slug}/`,
+    url: new URL(authorPath(author.slug), SITE_URL).href,
     priority: 0.5,
   }));
 

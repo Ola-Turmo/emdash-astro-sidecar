@@ -1,5 +1,5 @@
 ---
-import { COURSE_LINKS, MAIN_SITE_URL, SITE_NAME, blogPath } from '../consts';
+import { COURSE_LINKS, SECONDARY_CTA, SHELL_COPY, SITE_NAME, blogPath } from '../consts';
 
 interface Props {
   currentYear?: number;
@@ -14,14 +14,14 @@ const { currentYear = new Date().getFullYear() } = Astro.props;
       <div>
         <span class="font-bold text-lg">{SITE_NAME}</span>
         <p class="mt-3 max-w-md text-sm text-muted-foreground">
-          Forklarende artikler som hjelper leseren å forstå krav, ansvar og veien videre til riktig kurs.
+          {SHELL_COPY.footerDescription}
         </p>
       </div>
 
       <div>
-        <h3 class="mb-4 font-semibold">Kurs</h3>
+        <h3 class="mb-4 font-semibold">Tilbud</h3>
         <ul class="space-y-2">
-          {COURSE_LINKS.map((link) => (
+          {COURSE_LINKS.map((link: (typeof COURSE_LINKS)[number]) => (
             <li>
               <a href={link.href} class="text-sm text-muted-foreground transition-colors hover:text-foreground">
                 {link.label}
@@ -36,13 +36,13 @@ const { currentYear = new Date().getFullYear() } = Astro.props;
         <ul class="space-y-2">
           <li><a href={blogPath('/rss.xml')} class="text-sm text-muted-foreground transition-colors hover:text-foreground">RSS</a></li>
           <li><a href={blogPath('/sitemap.xml')} class="text-sm text-muted-foreground transition-colors hover:text-foreground">Sitemap</a></li>
-          <li><a href={MAIN_SITE_URL} class="text-sm text-muted-foreground transition-colors hover:text-foreground">Hovedside</a></li>
+          <li><a href={SECONDARY_CTA.href} class="text-sm text-muted-foreground transition-colors hover:text-foreground">{SECONDARY_CTA.label}</a></li>
         </ul>
       </div>
     </div>
 
     <div class="mt-12 border-t border-border pt-8">
-      <p class="text-sm text-muted-foreground">© {currentYear} {SITE_NAME}.</p>
+      <p class="text-sm text-muted-foreground">&copy; {currentYear} {SITE_NAME}.</p>
     </div>
   </div>
 </footer>

@@ -15,6 +15,13 @@ This is the correct shape when the blog lives under a host path such as:
 
 ## Pages Deployment
 
+Select the active site and concept before building when this repo hosts more than one mounted surface:
+
+```bash
+$env:EMDASH_SITE_KEY='kurs-ing'
+$env:EMDASH_CONCEPT_KEY='guide'
+```
+
 Build first:
 
 ```bash

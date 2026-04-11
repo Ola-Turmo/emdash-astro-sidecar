@@ -1,5 +1,5 @@
 import type { CollectionEntry } from 'astro:content';
-import { MAIN_SITE_URL, SITE_LOCALE, SITE_NAME, SITE_URL } from '../consts';
+import { DEFAULT_OG_IMAGE, MAIN_SITE_NAME, MAIN_SITE_URL, SITE_LOCALE, SITE_NAME, SITE_URL } from '../consts';
 
 export interface SeoConfig {
   title: string;
@@ -20,7 +20,7 @@ export function generateCanonicalUrl(path: string, baseUrl = SITE_URL): string {
 
 export function generateOgTags(config: SeoConfig): Record<string, string> {
   const { title, description, url, ogImage, ogType, pubDate, updatedDate, author, tags } = config;
-  const image = ogImage || `${MAIN_SITE_URL}/images/etablerer_hero.png`;
+  const image = ogImage || DEFAULT_OG_IMAGE;
 
   return {
     'og:title': title,
@@ -44,7 +44,7 @@ export function generateTwitterCard(config: SeoConfig): Record<string, string> {
     'twitter:card': 'summary_large_image',
     'twitter:title': title,
     'twitter:description': description,
-    'twitter:image': ogImage || `${MAIN_SITE_URL}/images/etablerer_hero.png`,
+    'twitter:image': ogImage || DEFAULT_OG_IMAGE,
   };
 }
 
@@ -70,17 +70,17 @@ export function generateArticleJsonLd(config: SeoConfig): string {
     headline: title,
     description,
     url,
-    image: ogImage ? [ogImage] : [`${MAIN_SITE_URL}/images/etablerer_hero.png`],
+    image: ogImage ? [ogImage] : [DEFAULT_OG_IMAGE],
     datePublished: pubDate?.toISOString(),
     dateModified: (updatedDate || pubDate)?.toISOString(),
     author: {
       '@type': 'Person',
-      name: author || 'Kurs.ing',
-      url: `${SITE_URL}/author/ola-turmo/`,
+      name: author || MAIN_SITE_NAME,
+      url: SITE_URL,
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Kurs.ing',
+      name: MAIN_SITE_NAME,
       logo: {
         '@type': 'ImageObject',
         url: `${MAIN_SITE_URL}/favicon.svg`,

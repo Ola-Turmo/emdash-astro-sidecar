@@ -1,10 +1,16 @@
 ---
-import BaseLayout from './BaseLayout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
 import { getEntry } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
-import { MAIN_SITE_URL, blogPath } from '../consts';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import BaseLayout from './BaseLayout.astro';
+import {
+  MAIN_SITE_NAME,
+  PRIMARY_CTA,
+  SECONDARY_CTA,
+  SHELL_COPY,
+  categoryPath,
+} from '../consts';
 
 interface Props {
   post: CollectionEntry<'blog'>;
@@ -17,7 +23,7 @@ const authorId = typeof author === 'string' ? author : ('id' in author ? author.
 const categoryId = typeof category === 'string' ? category : ('id' in category ? category.id : category.slug);
 const authorEntry = authorId ? await getEntry('authors', authorId) : undefined;
 const categoryEntry = categoryId ? await getEntry('categories', categoryId) : undefined;
-const authorName = authorEntry?.data.name ?? authorId ?? 'Kurs.ing';
+const authorName = authorEntry?.data.name ?? authorId ?? MAIN_SITE_NAME;
 const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
 const categorySlug = categoryEntry?.slug ?? categoryId ?? '';
 ---
@@ -35,7 +41,7 @@ const categorySlug = categoryEntry?.slug ?? categoryId ?? '';
   <main class="mx-auto max-w-5xl px-4 py-10 md:py-14">
     <article>
       <div class="mx-auto max-w-3xl">
-        <a href={blogPath(`/category/${categorySlug}`)} class="eyebrow inline-block">
+        <a href={categoryPath(categorySlug)} class="eyebrow inline-block">
           {categoryName}
         </a>
         <h1 class="display-title mt-4 text-4xl font-black leading-[1.05] text-slate-950 md:text-6xl">
@@ -83,13 +89,13 @@ const categorySlug = categoryEntry?.slug ?? categoryId ?? '';
 
         <aside class="space-y-5">
           <div class="shell-card p-5">
-            <p class="eyebrow">Neste steg</p>
+            <p class="eyebrow">{SHELL_COPY.articleNextStepEyebrow}</p>
             <p class="mt-3 text-sm leading-7 text-slate-600">
-              Når du er klar for pensum, oppgaver og eksamenstrening, går du videre til kurspakken på hovedsiden.
+              {SHELL_COPY.articleNextStepText}
             </p>
             <div class="mt-4 flex flex-col gap-3">
-              <a href={`${MAIN_SITE_URL}/kasse.html`} class="cta-primary text-sm">Kjøp kurset</a>
-              <a href={MAIN_SITE_URL} class="cta-secondary text-sm">Til kurs.ing</a>
+              <a href={PRIMARY_CTA.href} class="cta-primary text-sm">{PRIMARY_CTA.label}</a>
+              <a href={SECONDARY_CTA.href} class="cta-secondary text-sm">{SECONDARY_CTA.label}</a>
             </div>
           </div>
 
@@ -106,7 +112,7 @@ const categorySlug = categoryEntry?.slug ?? categoryId ?? '';
               </div>
               <div>
                 <dt class="font-bold text-slate-900">Formål</dt>
-                <dd class="text-slate-600">Forklare krav tydelig og lede videre til riktig kurs.</dd>
+                <dd class="text-slate-600">{SHELL_COPY.articleAboutPurpose}</dd>
               </div>
             </dl>
           </div>

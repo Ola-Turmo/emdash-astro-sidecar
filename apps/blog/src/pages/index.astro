@@ -1,14 +1,24 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import ArticleCard from '../components/ArticleCard.astro';
-import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
-import { COURSE_LINKS, MAIN_SITE_URL, SITE_DESCRIPTION, SITE_NAME } from '../consts';
+import ArticleCard from '../components/ArticleCard.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+  COURSE_LINKS,
+  PRIMARY_CTA,
+  SECONDARY_CTA,
+  SHELL_COPY,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+} from '../consts';
+import { getPublishedPosts } from '../lib/published-content';
 
-const allPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
-const sortedPosts = allPosts.sort((a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const allPosts = await getPublishedPosts();
+const sortedPosts = allPosts.sort(
+  (a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) =>
+    b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
 const featuredPosts = sortedPosts.slice(0, 6);
 ---
 
@@ -19,43 +29,39 @@ const featuredPosts = sortedPosts.slice(0, 6);
     <section class="overflow-hidden px-4 pb-16 pt-14 md:pb-24 md:pt-20">
       <div class="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.15fr,0.85fr] lg:items-center">
         <div>
-          <p class="eyebrow">Forklart enkelt</p>
+          <p class="eyebrow">{SHELL_COPY.homeEyebrow}</p>
           <h1 class="display-title mt-4 max-w-4xl text-5xl font-black leading-[1.03] text-slate-950 md:text-7xl">
-            Det du må vite om etablererprøven, skjenkebevilling og salgsbevilling.
+            {SHELL_COPY.homeTitle}
           </h1>
           <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-            Her finner du enkle forklaringer på vanlige spørsmål om krav, pensum og ansvar. Målet er å gjøre det lettere å forstå hva du må kunne før du kjøper kurs eller går opp til prøve.
+            {SHELL_COPY.homeDescription}
           </p>
           <div class="mt-8 flex flex-wrap gap-3">
-            <a href={`${MAIN_SITE_URL}/kasse.html`} class="cta-primary">
-              Start med kurspakken
+            <a href={PRIMARY_CTA.href} class="cta-primary">
+              {PRIMARY_CTA.label}
             </a>
-            <a href={MAIN_SITE_URL} class="cta-secondary">
-              Gå til kurs.ing
+            <a href={SECONDARY_CTA.href} class="cta-secondary">
+              {SECONDARY_CTA.label}
             </a>
           </div>
-          <div class="mt-10 grid gap-4 sm:grid-cols-3">
-            <div class="shell-card p-5">
-              <p class="text-3xl font-black text-slate-900">3</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">kurs i én pakke på hovedsiden</p>
+          {SHELL_COPY.homeStats.length > 0 && (
+            <div class="mt-10 grid gap-4 sm:grid-cols-3">
+              {SHELL_COPY.homeStats.map((stat: (typeof SHELL_COPY.homeStats)[number]) => (
+                <div class="shell-card p-5">
+                  <p class="text-3xl font-black text-slate-900">{stat.value}</p>
+                  <p class="mt-2 text-sm leading-6 text-slate-600">{stat.label}</p>
+                </div>
+              ))}
             </div>
-            <div class="shell-card p-5">
-              <p class="text-3xl font-black text-slate-900">8 uker</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">tilgang etter kjøp</p>
-            </div>
-            <div class="shell-card p-5">
-              <p class="text-3xl font-black text-slate-900">Norsk</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">innhold skrevet for norske krav og kommunale prøver</p>
-            </div>
-          </div>
+          )}
         </div>
 
         <aside class="shell-card relative overflow-hidden p-6 md:p-8">
           <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-teal-600/12 via-slate-900/8 to-amber-500/12"></div>
           <div class="relative">
-            <p class="eyebrow">Velg riktig kurs</p>
+            <p class="eyebrow">{SHELL_COPY.homeAsideEyebrow}</p>
             <div class="mt-6 space-y-5">
-              {COURSE_LINKS.map((link) => (
+              {COURSE_LINKS.map((link: (typeof COURSE_LINKS)[number]) => (
                 <a href={link.href} class="block rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-5 transition-transform hover:-translate-y-0.5">
                   <p class="text-lg font-extrabold tracking-tight text-slate-900">{link.label}</p>
                   <p class="mt-2 text-sm leading-6 text-slate-600">{link.description}</p>
@@ -63,9 +69,9 @@ const featuredPosts = sortedPosts.slice(0, 6);
               ))}
             </div>
             <div class="mt-6 rounded-[1.35rem] bg-slate-950 p-5 text-white">
-              <p class="text-sm font-bold uppercase tracking-[0.18em] text-emerald-300">Derfor finnes disse artiklene</p>
+              <p class="text-sm font-bold uppercase tracking-[0.18em] text-emerald-300">{SHELL_COPY.homeAsideReasonTitle}</p>
               <p class="mt-3 text-sm leading-7 text-slate-300">
-                Her får du raske og tydelige svar på det folk ofte lurer på før de velger kurs eller går opp til kommunens prøve.
+                {SHELL_COPY.homeAsideReasonText}
               </p>
             </div>
           </div>
@@ -77,13 +83,13 @@ const featuredPosts = sortedPosts.slice(0, 6);
       <div class="mx-auto max-w-6xl">
         <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p class="eyebrow">Artikler</p>
+            <p class="eyebrow">{SHELL_COPY.listingEyebrow}</p>
             <h2 class="display-title mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-              Dette lurer mange på før de går opp til prøve
+              {SHELL_COPY.listingTitle}
             </h2>
           </div>
           <p class="max-w-xl text-sm leading-7 text-slate-600">
-            Forklaringer av pensum, krav, ansvar og hvordan du forbereder deg best mulig.
+            {SHELL_COPY.listingDescription}
           </p>
         </div>
 

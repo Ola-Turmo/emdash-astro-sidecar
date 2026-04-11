@@ -4,6 +4,8 @@ import { defineCollection, z, reference } from 'astro:content';
 const blog = defineCollection({
   type: 'content',
   schema: z.object({
+    siteKey: z.string().optional(),
+    conceptKey: z.string().optional(),
     title: z.string(),
     description: z.string(),
     pubDate: z.coerce.date(),
@@ -26,6 +28,8 @@ const blog = defineCollection({
 const authors = defineCollection({
   type: 'content',
   schema: z.object({
+    siteKey: z.string().optional(),
+    conceptKey: z.string().optional(),
     name: z.string(),
     bio: z.string(),
     avatar: z.object({
@@ -45,6 +49,8 @@ const authors = defineCollection({
 const categories = defineCollection({
   type: 'content',
   schema: z.object({
+    siteKey: z.string().optional(),
+    conceptKey: z.string().optional(),
     name: z.string(),
     description: z.string(),
   }),
@@ -54,6 +60,8 @@ const categories = defineCollection({
 const tags = defineCollection({
   type: 'data',
   schema: z.object({
+    siteKey: z.string().optional(),
+    conceptKey: z.string().optional(),
     name: z.string(),
   }),
 });
@@ -66,11 +74,27 @@ const postsBak = defineCollection({
   type: 'content',
 });
 
+const municipalPages = defineCollection({
+  type: 'content',
+  schema: z.object({
+    siteKey: z.string().optional(),
+    conceptKey: z.string().optional(),
+    municipality: z.string(),
+    county: z.string().optional(),
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
 export const collections = {
   blog,
   authors,
   categories,
   tags,
   docs,
+  municipalPages,
   'posts.bak': postsBak,
 };

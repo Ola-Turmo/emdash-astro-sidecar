@@ -1,7 +1,7 @@
 ---
 import { getEntry } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
-import { MAIN_SITE_URL, blogPath } from '../consts';
+import { PRIMARY_CTA, SECONDARY_CTA, SHELL_COPY, articlePath } from '../consts';
 
 interface Props {
   post: CollectionEntry<'blog'>;
@@ -15,7 +15,7 @@ const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
 ---
 
 <article class="shell-card group overflow-hidden p-5 md:p-6">
-  <a href={blogPath(`/blog/${post.slug}`)} class="block">
+  <a href={articlePath(post.slug)} class="block">
     {featuredImage ? (
       <div class="mb-5 aspect-[1.4] overflow-hidden rounded-[1.35rem] bg-slate-100">
         <img
@@ -27,14 +27,14 @@ const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
       </div>
     ) : (
       <div class="mb-5 rounded-[1.35rem] bg-gradient-to-br from-teal-50 via-white to-slate-100 p-6">
-        <span class="eyebrow">Guide</span>
+        <span class="eyebrow">{SHELL_COPY.articleContextLabel}</span>
         <div class="mt-5 flex items-end justify-between gap-4">
           <div>
             <p class="display-title text-2xl font-bold text-slate-900">{categoryName}</p>
             <p class="mt-2 max-w-xs text-sm leading-6 text-slate-600">{excerpt}</p>
           </div>
           <span class="rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-teal-700">
-            På norsk
+            {SHELL_COPY.articleLanguageBadge}
           </span>
         </div>
       </div>
@@ -50,13 +50,13 @@ const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
       <time class="font-semibold text-slate-500" datetime={pubDate.toISOString()}>
         {pubDate.toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
       </time>
-      <span class="font-bold text-teal-700">Les artikkel</span>
+      <span class="font-bold text-teal-700">{SHELL_COPY.articlePrimaryActionText}</span>
     </div>
   </a>
 
   <div class="mt-5 border-t border-slate-200/80 pt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-    <a href={MAIN_SITE_URL} class="transition-colors hover:text-slate-900">Til hovedsiden</a>
+    <a href={SECONDARY_CTA.href} class="transition-colors hover:text-slate-900">{SECONDARY_CTA.label}</a>
     <span class="mx-2">/</span>
-    <a href={`${MAIN_SITE_URL}/kasse.html`} class="transition-colors hover:text-slate-900">Kjøp kurset</a>
+    <a href={PRIMARY_CTA.href} class="transition-colors hover:text-slate-900">{PRIMARY_CTA.label}</a>
   </div>
 </article>

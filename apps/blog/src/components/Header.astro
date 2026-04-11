@@ -1,21 +1,29 @@
 ---
-import { MAIN_NAV, MAIN_SITE_URL } from '../consts';
+import {
+  MAIN_NAV,
+  PRIMARY_CTA,
+  SECONDARY_CTA,
+  SITE_LOGO_MARK,
+  SITE_WORDMARK,
+  SHELL_COPY,
+  conceptPath,
+} from '../consts';
 ---
 
 <header class="sticky top-0 z-50 border-b border-slate-200/70 bg-white/80 backdrop-blur-xl">
   <div class="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4">
-    <a href="/guide/" class="inline-flex items-center gap-3">
+    <a href={conceptPath('/')} class="inline-flex items-center gap-3">
       <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#115E59] text-xl font-black text-white shadow-lg shadow-teal-900/20">
-        k
+        {SITE_LOGO_MARK}
       </span>
       <span>
-        <span class="block text-lg font-extrabold tracking-tight text-slate-900">kurs.ing</span>
-        <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Blogg</span>
+        <span class="block text-lg font-extrabold tracking-tight text-slate-900">{SITE_WORDMARK}</span>
+        <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{SHELL_COPY.subLabel}</span>
       </span>
     </a>
 
     <nav class="hidden items-center gap-6 lg:flex">
-      {MAIN_NAV.map((link) => (
+      {MAIN_NAV.map((link: (typeof MAIN_NAV)[number]) => (
         <a
           href={link.href}
           class="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900"
@@ -26,11 +34,11 @@ import { MAIN_NAV, MAIN_SITE_URL } from '../consts';
     </nav>
 
     <div class="flex items-center gap-3">
-      <a href={MAIN_SITE_URL} class="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900">
-        Hovedside
+      <a href={SECONDARY_CTA.href} class="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900">
+        {SECONDARY_CTA.label}
       </a>
-      <a href={`${MAIN_SITE_URL}/kasse.html`} class="cta-primary text-sm">
-        Kjøp kurset
+      <a href={PRIMARY_CTA.href} class="cta-primary text-sm">
+        {PRIMARY_CTA.label}
       </a>
     </div>
   </div>
@@ -38,7 +46,7 @@ import { MAIN_NAV, MAIN_SITE_URL } from '../consts';
 
 <div class="border-b border-slate-200/70 bg-white/50 lg:hidden">
   <div class="mx-auto flex max-w-6xl gap-4 overflow-x-auto px-4 py-3 text-sm font-semibold text-slate-600">
-    {MAIN_NAV.map((link) => (
+    {MAIN_NAV.map((link: (typeof MAIN_NAV)[number]) => (
       <a href={link.href} class="whitespace-nowrap transition-colors hover:text-slate-900">
         {link.label}
       </a>

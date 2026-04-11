@@ -93,6 +93,7 @@ pnpm audit:deployed:lighthouse
 Then edit:
 
 - [`apps/blog/src/site-config.ts`](apps/blog/src/site-config.ts)
+- [`apps/blog/site-profiles.mjs`](apps/blog/site-profiles.mjs)
 - [`apps/blog/astro.config.mjs`](apps/blog/astro.config.mjs)
 - [`apps/cloudflare/workers/guide-proxy/wrangler.toml`](apps/cloudflare/workers/guide-proxy/wrangler.toml)
 
@@ -128,7 +129,8 @@ That workflow gives you:
 - [`docs/troubleshooting.md`](docs/troubleshooting.md)
 - [`docs/cloudflare-resource-guardrails.md`](docs/cloudflare-resource-guardrails.md)
 - [`docs/provider-runtime.md`](docs/provider-runtime.md)
-- [`docs/deployment.md`](docs/deployment.md)
+- [`docs/multisite-and-multi-concept.md`](docs/multisite-and-multi-concept.md)
+- [`docs/TODO.md`](docs/TODO.md)
 - [`docs/prd-autonomous-content-control-plane.md`](docs/prd-autonomous-content-control-plane.md)
 
 ## Repo Skills

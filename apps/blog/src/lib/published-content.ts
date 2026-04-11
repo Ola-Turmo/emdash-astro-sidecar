@@ -1,8 +1,20 @@
 import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
+import { ACTIVE_CONCEPT_KEY, ACTIVE_SITE_KEY } from '../consts';
+
+function isActiveScopedEntry(
+  data: { siteKey?: string; conceptKey?: string; draft?: boolean },
+): boolean {
+  const siteMatches = !data.siteKey || data.siteKey === ACTIVE_SITE_KEY;
+  const conceptMatches = !data.conceptKey || data.conceptKey === ACTIVE_CONCEPT_KEY;
+  return siteMatches && conceptMatches;
+}
 
 export async function getPublishedPosts(): Promise<CollectionEntry<'blog'>[]> {
-  return getCollection('blog', ({ data }: CollectionEntry<'blog'>) => !data.draft);
+  return getCollection(
+    'blog',
+    ({ data }: CollectionEntry<'blog'>) => !data.draft && isActiveScopedEntry(data),
+  );
 }
 
 export function getPostCategorySlug(post: CollectionEntry<'blog'>): string | null {
@@ -35,7 +47,10 @@ export async function getActiveCategories(): Promise<CollectionEntry<'categories
       .filter((slug): slug is string => Boolean(slug)),
   );
 
-  return categories.filter((category: CollectionEntry<'categories'>) => activeCategorySlugs.has(category.slug));
+  return categories.filter(
+    (category: CollectionEntry<'categories'>) =>
+      isActiveScopedEntry(category.data) && activeCategorySlugs.has(category.slug),
+  );
 }
 
 export async function getActiveAuthors(): Promise<CollectionEntry<'authors'>[]> {
@@ -50,5 +65,9 @@ export async function getActiveAuthors(): Promise<CollectionEntry<'authors'>[]> 
       .filter((slug): slug is string => Boolean(slug)),
   );
 
-  return authors.filter((author: CollectionEntry<'authors'>) => activeAuthorSlugs.has(author.slug) || activeAuthorSlugs.has(author.id));
+  return authors.filter(
+    (author: CollectionEntry<'authors'>) =>
+      isActiveScopedEntry(author.data) &&
+      (activeAuthorSlugs.has(author.slug) || activeAuthorSlugs.has(author.id)),
+  );
 }

@@ -1,70 +1,122 @@
-/**
- * Edit this file first when onboarding the sidecar to a new host site.
- *
- * Keep the Astro `site` and `base` settings in `apps/blog/astro.config.mjs`
- * aligned with `siteUrl` and `basePath` below.
- */
-export const siteConfig = {
-  brand: {
-    mainSiteName: 'Kurs.ing',
-    blogName: 'Kurs.ing Blogg',
-    mainSiteUrl: 'https://www.kurs.ing',
-    siteUrl: 'https://www.kurs.ing/guide',
-    basePath: '/guide',
-    locale: 'nb-NO',
-    supportEmail: 'ola@kurs.ing',
-    description:
-      'Norske guider om etablererprøven, skjenkebevilling og salgsbevilling, skrevet for folk som vil bestå kommunens prøve og komme raskt i gang.',
-  },
-  cloudflare: {
-    pagesProject: 'emdash-astro-sidecar',
-    pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
-    routeWorkerName: 'kurs-ing-guide-proxy',
-  },
-  audit: {
-    sitemapUrls: ['https://www.kurs.ing/guide/sitemap.xml'],
-    extraUrls: ['https://www.kurs.ing/blog/salgsbevilling-pensum-og-vanlige-feil/'],
-  },
-  nav: [
-    { path: '/', label: 'Artikler' },
-    { path: '/category/etablererproven', label: 'Etablererprøven' },
-    { path: '/category/skjenkebevilling', label: 'Skjenkebevilling' },
-    { path: '/category/salgsbevilling', label: 'Salgsbevilling' },
-  ],
-  courseLinks: [
-    {
-      path: '/etablererproven',
-      label: 'Kurs for etablererprøven',
-      description: 'Pensum, oppgaver og råd før prøven i kommunen.',
-    },
-    {
-      path: '/skjenkebevilling',
-      label: 'Kurs for skjenkebevilling',
-      description: 'For styrer og stedfortreder som må dokumentere kunnskap om alkoholloven.',
-    },
-    {
-      path: '/salgsbevilling',
-      label: 'Kurs for salgsbevilling',
-      description: 'For butikker og utsalgssteder som skal søke eller drifte salgsbevilling.',
-    },
-  ],
-} as const;
+import { resolveActiveSiteRuntime, siteProfiles } from '../site-profiles.mjs';
 
-export const BLOG_BASE_PATH = siteConfig.brand.basePath;
-export const SITE_URL = siteConfig.brand.siteUrl;
-export const MAIN_SITE_URL = siteConfig.brand.mainSiteUrl;
-export const SITE_NAME = siteConfig.brand.blogName;
-export const SITE_DESCRIPTION = siteConfig.brand.description;
-export const SITE_LOCALE = siteConfig.brand.locale;
-export const SUPPORT_EMAIL = siteConfig.brand.supportEmail;
+type RuntimeShape = {
+  siteKey: string;
+  conceptKey: string;
+  site: {
+    brand: {
+      mainSiteName: string;
+      wordmark: string;
+      mainSiteUrl: string;
+      locale: string;
+      supportEmail: string;
+      defaultOgImagePath: string;
+      logoMark: string;
+    };
+    cloudflare: {
+      pagesProject: string;
+      pagesPreviewAlias: string;
+      routeWorkerName: string;
+    };
+    courseLinks: Array<{
+      path: string;
+      label: string;
+      description: string;
+    }>;
+  };
+  concept: {
+    key: string;
+    label: string;
+    pageStructure: string;
+    basePath: string;
+    siteUrl: string;
+    siteName: string;
+    description: string;
+    routes: {
+      articlePrefix: string;
+      categoryPrefix: string;
+      authorPrefix: string;
+    };
+    audit: {
+      sitemapUrls: string[];
+      extraUrls: string[];
+    };
+    nav: Array<{
+      path: string;
+      label: string;
+    }>;
+    callsToAction: {
+      primary: { href: string; label: string };
+      secondary: { href: string; label: string };
+    };
+    shell: {
+      subLabel: string;
+      homeEyebrow: string;
+      homeTitle: string;
+      homeDescription: string;
+      homeStats: Array<{ value: string; label: string }>;
+      homeAsideEyebrow: string;
+      homeAsideReasonTitle: string;
+      homeAsideReasonText: string;
+      listingEyebrow: string;
+      listingTitle: string;
+      listingDescription: string;
+      articleContextLabel: string;
+      articleLanguageBadge: string;
+      articlePrimaryActionText: string;
+      articleNextStepEyebrow: string;
+      articleNextStepText: string;
+      articleAboutPurpose: string;
+      footerEyebrow: string;
+      footerTitle: string;
+      footerDescription: string;
+      footerCopyright: string;
+      footerNote: string;
+    };
+  };
+};
 
-export const CLOUDFLARE_PAGES_PROJECT = siteConfig.cloudflare.pagesProject;
-export const CLOUDFLARE_PAGES_PREVIEW_ALIAS = siteConfig.cloudflare.pagesPreviewAlias;
-export const CLOUDFLARE_ROUTE_WORKER = siteConfig.cloudflare.routeWorkerName;
-export const DEPLOY_AUDIT_SITEMAPS = siteConfig.audit.sitemapUrls;
-export const DEPLOY_AUDIT_EXTRA_URLS = siteConfig.audit.extraUrls;
+const activeRuntime = resolveActiveSiteRuntime(process.env) as RuntimeShape;
 
-export function blogPath(path = ''): string {
+export const siteRegistry = siteProfiles;
+export const siteConfig = activeRuntime;
+
+export const ACTIVE_SITE_KEY = activeRuntime.siteKey;
+export const ACTIVE_CONCEPT_KEY = activeRuntime.conceptKey;
+
+export const ACTIVE_SITE = activeRuntime.site;
+export const ACTIVE_CONCEPT = activeRuntime.concept;
+
+export const MAIN_SITE_NAME = ACTIVE_SITE.brand.mainSiteName;
+export const MAIN_SITE_URL = ACTIVE_SITE.brand.mainSiteUrl;
+export const SITE_WORDMARK = ACTIVE_SITE.brand.wordmark;
+export const SITE_LOGO_MARK = ACTIVE_SITE.brand.logoMark;
+export const SITE_LOCALE = ACTIVE_SITE.brand.locale;
+export const SITE_LANGUAGE = ACTIVE_SITE.brand.locale.split('-')[0] ?? 'en';
+export const SUPPORT_EMAIL = ACTIVE_SITE.brand.supportEmail;
+export const DEFAULT_OG_IMAGE = `${MAIN_SITE_URL}${ACTIVE_SITE.brand.defaultOgImagePath}`;
+
+export const CONCEPT_NAME = ACTIVE_CONCEPT.siteName;
+export const CONCEPT_LABEL = ACTIVE_CONCEPT.label;
+export const CONCEPT_PAGE_STRUCTURE = ACTIVE_CONCEPT.pageStructure;
+export const BLOG_BASE_PATH = ACTIVE_CONCEPT.basePath;
+export const SITE_URL = ACTIVE_CONCEPT.siteUrl;
+export const SITE_NAME = ACTIVE_CONCEPT.siteName;
+export const SITE_DESCRIPTION = ACTIVE_CONCEPT.description;
+
+export const CLOUDFLARE_PAGES_PROJECT = ACTIVE_SITE.cloudflare.pagesProject;
+export const CLOUDFLARE_PAGES_PREVIEW_ALIAS = ACTIVE_SITE.cloudflare.pagesPreviewAlias;
+export const CLOUDFLARE_ROUTE_WORKER = ACTIVE_SITE.cloudflare.routeWorkerName;
+export const DEPLOY_AUDIT_SITEMAPS = ACTIVE_CONCEPT.audit.sitemapUrls;
+export const DEPLOY_AUDIT_EXTRA_URLS = ACTIVE_CONCEPT.audit.extraUrls;
+
+export const PRIMARY_CTA = ACTIVE_CONCEPT.callsToAction.primary;
+export const SECONDARY_CTA = ACTIVE_CONCEPT.callsToAction.secondary;
+export const SHELL_COPY = ACTIVE_CONCEPT.shell;
+
+export const CONTENT_ROUTES = ACTIVE_CONCEPT.routes;
+
+export function conceptPath(path = ''): string {
   if (!path || path === '/') return BLOG_BASE_PATH;
   const normalized = path.startsWith('/') ? path : `/${path}`;
   const [pathname, suffix = ''] = normalized.split(/(?=[?#])/);
@@ -73,12 +125,33 @@ export function blogPath(path = ''): string {
   return `${BLOG_BASE_PATH}${routePath}${suffix}`;
 }
 
-export const MAIN_NAV = siteConfig.nav.map((item) => ({
-  href: blogPath(item.path),
+export function blogPath(path = ''): string {
+  return conceptPath(path);
+}
+
+function conceptRoutePath(prefix: string, slug: string): string {
+  const normalizedPrefix = prefix === '/' ? '' : prefix;
+  return conceptPath(`${normalizedPrefix}/${slug}`);
+}
+
+export function articlePath(slug: string): string {
+  return conceptRoutePath(CONTENT_ROUTES.articlePrefix, slug);
+}
+
+export function categoryPath(slug: string): string {
+  return conceptRoutePath(CONTENT_ROUTES.categoryPrefix, slug);
+}
+
+export function authorPath(slug: string): string {
+  return conceptRoutePath(CONTENT_ROUTES.authorPrefix, slug);
+}
+
+export const MAIN_NAV = ACTIVE_CONCEPT.nav.map((item) => ({
+  href: conceptPath(item.path),
   label: item.label,
 }));
 
-export const COURSE_LINKS = siteConfig.courseLinks.map((item) => ({
+export const COURSE_LINKS = ACTIVE_SITE.courseLinks.map((item) => ({
   href: `${MAIN_SITE_URL}${item.path}`,
   label: item.label,
   description: item.description,

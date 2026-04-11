@@ -13,10 +13,12 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { resolveActiveSiteRuntime } from './site-profiles.mjs';
 
 const BLOG_DIR = join(process.cwd(), 'apps/blog');
 const OUTPUT_DIR = join(BLOG_DIR, 'dist');
-const DEFAULT_PROJECT_NAME = process.env.PAGES_PROJECT_NAME || 'emdash-astro-sidecar';
+const { site, concept } = resolveActiveSiteRuntime(process.env);
+const DEFAULT_PROJECT_NAME = process.env.PAGES_PROJECT_NAME || site.cloudflare.pagesProject;
 const quotedOutputDir = `"${OUTPUT_DIR}"`;
 
 const green = (msg) => `\x1b[32m${msg}\x1b[0m`;
@@ -62,6 +64,7 @@ async function main() {
   console.log(`${green('============================================')}`);
   console.log(`Environment: ${yellow(env)}`);
   console.log(`Blog directory: ${blue(BLOG_DIR)}`);
+  console.log(`Active site/concept: ${yellow(`${site.key}/${concept.key}`)}`);
 
   if (!skipBuild) {
     logStep(1, 'Building Astro app');

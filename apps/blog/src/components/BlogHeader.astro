@@ -23,7 +23,7 @@ const isActive = (href: string) => {
       </a>
 
       <div class="hidden items-center gap-6 md:flex">
-        {navItems.map((item) => (
+        {navItems.map((item: (typeof navItems)[number]) => (
           <a
             href={item.href}
             class:list={[

@@ -1,9 +1,9 @@
 ---
-import BaseLayout from './BaseLayout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
 import type { CollectionEntry } from 'astro:content';
-import { blogPath } from '../consts';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { articlePath } from '../consts';
+import BaseLayout from './BaseLayout.astro';
 
 interface Props {
   category: CollectionEntry<'categories'>;
@@ -31,7 +31,7 @@ const { name, description } = category.data;
         {posts.map((post) => (
           <div class="shell-card p-6">
             <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">
-              <a href={blogPath(`/blog/${post.slug}`)} class="transition-colors hover:text-teal-800">
+              <a href={articlePath(post.slug)} class="transition-colors hover:text-teal-800">
                 {post.data.title}
               </a>
             </h2>

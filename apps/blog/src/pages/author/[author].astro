@@ -1,11 +1,11 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
-import ArticleCard from '../../components/ArticleCard.astro';
 import type { CollectionEntry } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
 import { getActiveAuthors, getPostAuthorSlug, getPublishedPosts } from '../../lib/published-content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const [authors, allPosts] = await Promise.all([

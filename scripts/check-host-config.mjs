@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import path from 'node:path';
-import { readUtf8, extractStringValue, failIfFindings } from './lib/repo-utils.mjs';
+import { pathToFileURL } from 'node:url';
+import { readUtf8, failIfFindings } from './lib/repo-utils.mjs';
 
 const repoRoot = process.cwd();
 const findings = [];
@@ -20,17 +21,30 @@ const guideWorkerSource = await readUtf8(guideWorkerConfigPath);
 const ciWorkflowSource = await readUtf8(ciWorkflowPath);
 const deployWorkflowSource = await readUtf8(deployWorkflowPath);
 
-const siteUrl = extractStringValue(siteConfigSource, 'siteUrl');
-const basePath = extractStringValue(siteConfigSource, 'basePath');
-const pagesProject = extractStringValue(siteConfigSource, 'pagesProject');
-const routeWorkerName = extractStringValue(siteConfigSource, 'routeWorkerName');
+const siteProfilesModuleUrl = pathToFileURL(path.join(repoRoot, 'apps/blog/site-profiles.mjs')).href;
+const { resolveActiveSiteRuntime } = await import(siteProfilesModuleUrl);
+const runtime = resolveActiveSiteRuntime(process.env);
+const siteUrl = runtime.concept.siteUrl;
+const basePath = runtime.concept.basePath;
+const pagesProject = runtime.site.cloudflare.pagesProject;
+const routeWorkerName = runtime.site.cloudflare.routeWorkerName;
+const hostname = new URL(runtime.site.brand.mainSiteUrl).hostname;
+const wwwPatternHost = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
 
-if (!astroConfigSource.includes(`site: '${siteUrl}'`)) {
-  findings.push(`apps/blog/astro.config.mjs site must match ${siteUrl}`);
+if (!astroConfigSource.includes('resolveActiveSiteRuntime')) {
+  findings.push('apps/blog/astro.config.mjs must resolve the active site/concept profile');
 }
 
-if (!astroConfigSource.includes(`base: '${basePath}'`)) {
-  findings.push(`apps/blog/astro.config.mjs base must match ${basePath}`);
+if (!astroConfigSource.includes('site: concept.siteUrl')) {
+  findings.push('apps/blog/astro.config.mjs must use concept.siteUrl');
+}
+
+if (!astroConfigSource.includes('base: concept.basePath')) {
+  findings.push('apps/blog/astro.config.mjs must use concept.basePath');
+}
+
+if (!siteConfigSource.includes('resolveActiveSiteRuntime')) {
+  findings.push('apps/blog/src/site-config.ts must use the shared site registry');
 }
 
 if (!wranglerSource.includes(`"name": "${pagesProject}"`)) {
@@ -45,7 +59,7 @@ if (!guideWorkerSource.includes(`name = "${routeWorkerName}"`)) {
   findings.push(`guide-proxy worker name must match ${routeWorkerName}`);
 }
 
-if (!guideWorkerSource.includes(`pattern = "www.kurs.ing${basePath}*"`)) {
+if (!guideWorkerSource.includes(`pattern = "${wwwPatternHost}${basePath}*"`)) {
   findings.push(`guide-proxy worker routes must include the mounted base path ${basePath}`);
 }
 
