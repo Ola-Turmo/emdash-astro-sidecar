@@ -14,7 +14,8 @@
       "@emdash/cloudflare-guardrails": ["packages/cloudflare-guardrails/src/index.ts"],
       "@emdash/host-control": ["packages/host-control/src/index.ts"],
       "@emdash/host-jobs": ["packages/host-jobs/src/index.ts"],
-      "@emdash/publish-engine": ["packages/publish-engine/src/index.ts"]
+      "@emdash/publish-engine": ["packages/publish-engine/src/index.ts"],
+      "@emdash/metrics-ingestion": ["packages/metrics-ingestion/src/index.ts"]
     }
   },
   "include": [
@@ -27,6 +28,7 @@
     "./research-worker/src/**/*.ts",
     "./draft-worker/src/**/*.ts",
     "./eval-worker/src/**/*.ts",
-    "./publish-worker/src/**/*.ts"
+    "./publish-worker/src/**/*.ts",
+    "./metrics-worker/src/**/*.ts"
   ]
 }

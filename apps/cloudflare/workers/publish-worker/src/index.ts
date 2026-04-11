@@ -213,7 +213,7 @@ async function runPublishStep(
       crypto.randomUUID(),
       hostId,
       draft.id,
-      draft.slug,
+      artifact.slug,
       artifact.url,
       artifact.title,
       artifact.description,
@@ -240,7 +240,7 @@ async function runPublishStep(
       artifactId,
       hostId,
       draft.id,
-      `apps/blog/src/content/blog/${draft.slug}.mdx`,
+      `apps/blog/src/content/blog/${artifact.slug}.mdx`,
     )
     .run();
 

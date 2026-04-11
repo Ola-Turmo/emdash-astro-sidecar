@@ -129,6 +129,7 @@ That workflow gives you:
 - [`docs/troubleshooting.md`](docs/troubleshooting.md)
 - [`docs/cloudflare-resource-guardrails.md`](docs/cloudflare-resource-guardrails.md)
 - [`docs/provider-runtime.md`](docs/provider-runtime.md)
+- [`docs/telemetry-ingestion.md`](docs/telemetry-ingestion.md)
 - [`docs/multisite-and-multi-concept.md`](docs/multisite-and-multi-concept.md)
 - [`docs/TODO.md`](docs/TODO.md)
 - [`docs/prd-autonomous-content-control-plane.md`](docs/prd-autonomous-content-control-plane.md)

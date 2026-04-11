@@ -126,6 +126,8 @@ Deploy autonomous control-plane workers:
 pnpm autonomous:deploy-workers -- --kind=control-plane
 ```
 
+That registry now includes `metrics-worker`, which is the first Cloudflare-native telemetry ingestion worker for Search Console, CrUX, Bing, and IndexNow.
+
 Sync worker secrets directly to Cloudflare without GitHub:
 
 ```bash

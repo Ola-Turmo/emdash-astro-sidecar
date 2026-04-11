@@ -14,6 +14,9 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 
 ## P1
 
+- [x] Add a first telemetry-ingestion foundation package and worker for Search Console, CrUX, Bing, and IndexNow.
+- [x] Add a safer multisite / multi-concept registry so unrelated domains and mounted sections stop sharing one flat host config.
+
 - [ ] Improve first-party source quality in `research-worker` with richer extraction from course pages, FAQs, checkout, and support content.
 - [ ] Strengthen semantic tag generation and controlled taxonomy handling for static and edge-only articles.
 - [ ] Add a Cloudflare-hosted review UI on top of `content-api`, not just review endpoints.
@@ -27,7 +30,7 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 - [x] Add content scoping fields (`siteKey`, `conceptKey`) so future content can be filtered cleanly.
 - [x] Scaffold `kurs-ing/kommune` as a separate concept with its own base path and page structure intent.
 - [x] Scaffold an unrelated site example (`gatareba-ge`) to prove separation.
-- [ ] Add a dedicated route/template system for non-blog concepts like `/kommune/{slug}`.
+- [x] Add a dedicated route/template system for non-blog concepts like `/kommune/{slug}`.
 - [ ] Add separate audit targets and quality gates per site and per concept.
 - [ ] Split deploy surfaces further so each site/concept can choose its own Pages project, worker bindings, and release mode.
 

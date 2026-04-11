@@ -1,3 +1,5 @@
+import { buildSemanticSlug, normalizeSearchText, normalizeSemanticTag } from '../../model-runtime/src/index.js';
+
 export interface PublicationHostContext {
   hostId: string;
   hostName: string;
@@ -20,6 +22,7 @@ export interface PublicationDraftContext {
 
 export interface PublicationArtifact {
   url: string;
+  slug: string;
   title: string;
   description: string;
   mdx: string;
@@ -33,12 +36,20 @@ export function buildPublicationArtifact(
   host: PublicationHostContext,
   draft: PublicationDraftContext,
 ): PublicationArtifact {
-  const title = draft.title?.trim() || toTitle(draft.topic);
-  const description = draft.description?.trim() || summarizeDescription(draft.sections);
-  const excerpt = draft.excerpt?.trim() || summarizeExcerpt(draft.sections);
-  const url = new URL(`${normalizeBasePath(host.basePath)}/blog/${draft.slug}/`, host.siteUrl).toString();
+  const title = normalizeSearchText(draft.title?.trim() || toTitle(draft.topic));
+  const sections = draft.sections.map((section) => ({
+    heading: normalizeSearchText(section.heading),
+    body: normalizeSearchText(section.body),
+  }));
+  const description = normalizeSearchText(draft.description?.trim() || summarizeDescription(sections));
+  const excerpt = normalizeSearchText(draft.excerpt?.trim() || summarizeExcerpt(sections));
+  const slug = buildSemanticSlug(draft.slug || draft.title || draft.topic, {
+    fallback: title || draft.topic,
+  });
+  const url = new URL(`${normalizeBasePath(host.basePath)}/blog/${slug}/`, host.siteUrl).toString();
   const category = inferCategory(draft);
-  const tags = inferTags(draft);
+  const tags = inferTags(draft, sections);
+  const brand = buildBrandContext(host);
 
   const frontmatterLines = [
     '---',
@@ -54,22 +65,22 @@ export function buildPublicationArtifact(
     '---',
   ];
 
-  const body = draft.sections
-    .map((section) => `## ${section.heading}\n\n${section.body}`)
-    .join('\n\n');
+  const body = sections.map((section) => `## ${section.heading}\n\n${section.body}`).join('\n\n');
 
   return {
     url,
+    slug,
     title,
     description,
     html: buildEdgeHtml({
-      title,
+      canonicalUrl: url,
+      category,
+      brand,
       description,
       excerpt,
-      category,
+      sections,
       tags,
-      sections: draft.sections,
-      canonicalUrl: url,
+      title,
     }),
     excerpt,
     category,
@@ -79,51 +90,106 @@ export function buildPublicationArtifact(
 }
 
 function inferCategory(draft: PublicationDraftContext): string {
-  const haystack = `${draft.slug} ${draft.topic} ${draft.title ?? ''}`.toLowerCase();
+  const haystack = normalizeSearchText(`${draft.slug} ${draft.topic} ${draft.title ?? ''}`).toLowerCase();
   if (haystack.includes('skjenk')) return 'skjenkebevilling';
   if (haystack.includes('etablerer')) return 'etablererproven';
+  if (haystack.includes('kommune')) return 'kommune';
   return 'salgsbevilling';
 }
 
-function inferTags(draft: PublicationDraftContext): string[] {
-  const tags = new Set<string>();
-  const haystack = `${draft.slug} ${draft.topic} ${draft.title ?? ''}`.toLowerCase();
-  const category = inferCategory(draft);
+function inferTags(
+  draft: PublicationDraftContext,
+  sections: Array<{ heading: string; body: string }>,
+): string[] {
+  const normalizedTopic = normalizeSearchText(`${draft.slug} ${draft.topic} ${draft.title ?? ''}`).toLowerCase();
+  const normalizedSections = sections
+    .map((section) => `${section.heading} ${section.body}`)
+    .join(' ')
+    .toLowerCase();
+  const haystack = `${normalizedTopic} ${normalizedSections}`;
 
+  const tags = new Set<string>();
+  const category = inferCategory(draft);
   tags.add(category);
+
   for (const [needle, tag] of semanticTagMap) {
     if (haystack.includes(needle)) {
       tags.add(tag);
     }
   }
 
-  for (const token of draft.slug.split('-').filter((entry) => entry && entry.length >= 4)) {
-    if (tags.size >= 5) break;
-    tags.add(token);
+  for (const candidate of extractSemanticTokens(haystack)) {
+    tags.add(candidate);
+    if (tags.size >= 6) break;
   }
 
   if (tags.size < 3) {
     tags.add('kurs');
     tags.add('prove');
   }
+
   return [...tags].slice(0, 6);
 }
 
 const semanticTagMap: Array<[needle: string, tag: string]> = [
   ['alkoholloven', 'alkoholloven'],
   ['serveringsloven', 'serveringsloven'],
+  ['etablererprøven', 'etablererproven'],
+  ['etablererproven', 'etablererproven'],
+  ['skjenkebevilling', 'skjenkebevilling'],
+  ['salgsbevilling', 'salgsbevilling'],
   ['styrer', 'styrer'],
   ['stedfortreder', 'stedfortreder'],
   ['pensum', 'pensum'],
   ['vanlige feil', 'vanlige-feil'],
   ['forberede', 'forberedelse'],
-  ['forbered', 'forberedelse'],
   ['ansvar', 'ansvar'],
   ['internkontroll', 'internkontroll'],
-  ['kommune', 'kommunens-prove'],
-  ['prøve', 'prove'],
-  ['prove', 'prove'],
+  ['kommune', 'kommune'],
+  ['kommunens prøve', 'kommunens-prove'],
+  ['kommunens prove', 'kommunens-prove'],
+  ['bestå', 'besta'],
+  ['besta', 'besta'],
 ];
+
+function extractSemanticTokens(haystack: string): string[] {
+  const stopWords = new Set([
+    'dette',
+    'denne',
+    'hva',
+    'hvor',
+    'hvordan',
+    'hvilke',
+    'hvilken',
+    'for',
+    'med',
+    'til',
+    'hos',
+    'som',
+    'det',
+    'der',
+    'leser',
+    'klart',
+    'guide',
+    'kurs',
+    'prove',
+    'prøve',
+  ]);
+
+  const seen = new Set<string>();
+  const tokens: string[] = [];
+
+  for (const rawToken of haystack.split(/[^a-z0-9æøå]+/i)) {
+    const token = normalizeSemanticTag(rawToken);
+    if (!token || token.length < 4 || stopWords.has(token) || seen.has(token)) {
+      continue;
+    }
+    seen.add(token);
+    tokens.push(token);
+  }
+
+  return tokens;
+}
 
 function normalizeBasePath(basePath: string): string {
   if (!basePath.startsWith('/')) return `/${basePath}`;
@@ -131,17 +197,12 @@ function normalizeBasePath(basePath: string): string {
 }
 
 function toTitle(topic: string): string {
-  const trimmed = topic.trim();
+  const trimmed = normalizeSearchText(topic);
   if (!trimmed) return 'Ny guide';
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
-function summarizeDescription(
-  sections: Array<{
-    heading: string;
-    body: string;
-  }>,
-): string {
+function summarizeDescription(sections: Array<{ heading: string; body: string }>): string {
   const summary = sections
     .map((section) => section.body.trim())
     .join(' ')
@@ -152,12 +213,7 @@ function summarizeDescription(
   return summary || 'Kort forklaring og neste steg for leseren.';
 }
 
-function summarizeExcerpt(
-  sections: Array<{
-    heading: string;
-    body: string;
-  }>,
-): string {
+function summarizeExcerpt(sections: Array<{ heading: string; body: string }>): string {
   const summary = sections
     .map((section) => section.body.trim())
     .join(' ')
@@ -172,6 +228,31 @@ function escapeYaml(value: string): string {
   return value.replace(/"/g, '\\"');
 }
 
+function buildBrandContext(host: PublicationHostContext): {
+  brandName: string;
+  wordmark: string;
+  supportEmail: string;
+  primaryCtaLabel: string;
+  secondaryCtaLabel: string;
+  primaryCtaUrl: string;
+  secondaryCtaUrl: string;
+} {
+  const site = new URL(host.siteUrl);
+  const hostname = site.hostname.replace(/^www\./, '');
+  const titleCase = host.hostName?.trim() || hostname;
+  const supportEmail = `hello@${hostname}`;
+
+  return {
+    brandName: titleCase,
+    wordmark: hostname,
+    supportEmail,
+    primaryCtaLabel: 'Gå til hovedsiden',
+    secondaryCtaLabel: 'Flere artikler',
+    primaryCtaUrl: new URL('/', host.siteUrl).toString(),
+    secondaryCtaUrl: new URL(`${normalizeBasePath(host.basePath)}/`, host.siteUrl).toString(),
+  };
+}
+
 function buildEdgeHtml(input: {
   title: string;
   description: string;
@@ -183,6 +264,15 @@ function buildEdgeHtml(input: {
     body: string;
   }>;
   canonicalUrl: string;
+  brand: {
+    brandName: string;
+    wordmark: string;
+    supportEmail: string;
+    primaryCtaLabel: string;
+    secondaryCtaLabel: string;
+    primaryCtaUrl: string;
+    secondaryCtaUrl: string;
+  };
 }): string {
   const articleHtml = input.sections
     .map(
@@ -191,28 +281,26 @@ function buildEdgeHtml(input: {
     )
     .join('');
 
-  const tags = input.tags
-    .map((tag) => `<li>${escapeHtml(tag)}</li>`)
-    .join('');
+  const tags = input.tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join('');
 
   return `<!DOCTYPE html>
 <html lang="nb">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${escapeHtml(input.title)} | Kurs.ing Blogg</title>
+    <title>${escapeHtml(input.title)} | ${escapeHtml(input.brand.brandName)}</title>
     <meta name="description" content="${escapeHtml(input.description)}" />
     <link rel="canonical" href="${escapeHtml(input.canonicalUrl)}" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta name="theme-color" content="#115E59" />
-    <meta property="og:title" content="${escapeHtml(input.title)} | Kurs.ing Blogg" />
+    <meta property="og:title" content="${escapeHtml(input.title)} | ${escapeHtml(input.brand.brandName)}" />
     <meta property="og:description" content="${escapeHtml(input.description)}" />
     <meta property="og:type" content="article" />
     <meta property="og:url" content="${escapeHtml(input.canonicalUrl)}" />
-    <meta property="og:site_name" content="Kurs.ing Blogg" />
+    <meta property="og:site_name" content="${escapeHtml(input.brand.brandName)}" />
     <meta property="og:locale" content="nb_NO" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${escapeHtml(input.title)} | Kurs.ing Blogg" />
+    <meta name="twitter:title" content="${escapeHtml(input.title)} | ${escapeHtml(input.brand.brandName)}" />
     <meta name="twitter:description" content="${escapeHtml(input.description)}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -283,31 +371,27 @@ function buildEdgeHtml(input: {
   <body>
     <header class="header">
       <div class="header-inner">
-        <a href="/guide/" class="brand">
-          <span class="brand-mark">k</span>
+        <a href="${escapeHtml(input.brand.secondaryCtaUrl)}" class="brand">
+          <span class="brand-mark">${escapeHtml(input.brand.wordmark.charAt(0) || 'g')}</span>
           <span>
-            <span class="brand-name">kurs.ing</span>
-            <span class="brand-sub">Blogg</span>
+            <span class="brand-name">${escapeHtml(input.brand.wordmark)}</span>
+            <span class="brand-sub">Guide</span>
           </span>
         </a>
         <nav class="nav">
-          <a href="/guide/">Artikler</a>
-          <a href="/guide/category/etablererproven/">Etablererprøven</a>
-          <a href="/guide/category/skjenkebevilling/">Skjenkebevilling</a>
-          <a href="/guide/category/salgsbevilling/">Salgsbevilling</a>
+          <a href="${escapeHtml(input.brand.secondaryCtaUrl)}">Artikler</a>
+          <a href="${escapeHtml(input.brand.primaryCtaUrl)}">Hovedside</a>
         </nav>
         <div class="header-links">
-          <a href="https://www.kurs.ing">Hovedside</a>
-          <a href="https://www.kurs.ing/kasse.html" class="cta-primary">Kjøp kurset</a>
+          <a href="${escapeHtml(input.brand.primaryCtaUrl)}">${escapeHtml(input.brand.primaryCtaLabel)}</a>
+          <a href="${escapeHtml(input.brand.secondaryCtaUrl)}" class="cta-primary">${escapeHtml(input.brand.secondaryCtaLabel)}</a>
         </div>
       </div>
     </header>
     <div class="mobile-wrap">
       <div class="mobile-nav">
-        <a href="/guide/">Artikler</a>
-        <a href="/guide/category/etablererproven/">Etablererprøven</a>
-        <a href="/guide/category/skjenkebevilling/">Skjenkebevilling</a>
-        <a href="/guide/category/salgsbevilling/">Salgsbevilling</a>
+        <a href="${escapeHtml(input.brand.secondaryCtaUrl)}">Artikler</a>
+        <a href="${escapeHtml(input.brand.primaryCtaUrl)}">Hovedside</a>
       </div>
     </div>
     <main>
@@ -317,7 +401,6 @@ function buildEdgeHtml(input: {
         <p class="lead">${escapeHtml(input.excerpt)}</p>
         <div class="meta">
           <span>${new Date().toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          <span>Ola Turmo</span>
           <span>Publisert fra Cloudflare</span>
         </div>
       </div>
@@ -325,15 +408,15 @@ function buildEdgeHtml(input: {
         <article class="shell-card article-card">
           ${articleHtml}
           <ul class="tags">${tags}</ul>
-          <p class="footer-note">Denne artikkelen er publisert direkte fra den autonome innholdsløypen i Cloudflare. Den kan senere bli materialisert inn i den statiske Astro-siden uten å endre URL.</p>
+          <p class="footer-note">Denne artikkelen er publisert direkte fra den autonome innholdsløypen i Cloudflare. Den kan senere materialiseres inn i den statiske Astro-siden uten å endre URL.</p>
         </article>
         <aside class="aside">
           <div class="shell-card aside-card">
             <p class="eyebrow">Neste steg</p>
-            <p>Når du er klar for pensum, oppgaver og eksamenstrening, går du videre til kurspakken på hovedsiden.</p>
+            <p>Hvis du vil ha mer kontekst eller gå videre til riktig tilbud, fortsetter du på hovedsiden eller i guideseksjonen.</p>
             <div class="aside-actions">
-              <a href="https://www.kurs.ing/kasse.html" class="cta-primary">Kjøp kurset</a>
-              <a href="https://www.kurs.ing" class="cta-secondary">Til kurs.ing</a>
+              <a href="${escapeHtml(input.brand.primaryCtaUrl)}" class="cta-primary">${escapeHtml(input.brand.primaryCtaLabel)}</a>
+              <a href="${escapeHtml(input.brand.secondaryCtaUrl)}" class="cta-secondary">${escapeHtml(input.brand.secondaryCtaLabel)}</a>
             </div>
           </div>
           <div class="shell-card aside-card">
@@ -342,7 +425,7 @@ function buildEdgeHtml(input: {
               <dt>Kategori</dt>
               <dd>${escapeHtml(input.category)}</dd>
               <dt>Formål</dt>
-              <dd>Forklare krav tydelig og lede videre til riktig kurs.</dd>
+              <dd>Forklare spørsmålet tydelig og lede leseren videre til et trygt neste steg.</dd>
               <dt>Publisering</dt>
               <dd>Cloudflare edge-artikkel</dd>
             </dl>
@@ -353,36 +436,34 @@ function buildEdgeHtml(input: {
     <footer class="footer">
       <div class="footer-grid">
         <div>
-          <p class="eyebrow" style="color:#6ee7b7">Kurs.ing blogg</p>
-          <p class="footer-display">Artikler som hjelper deg å forstå kravene før du kjøper eller går opp til prøve.</p>
-          <p class="footer-copy">Her finner du forklaringer og råd som gjør det lettere å forstå kravene rundt etablererprøven, skjenkebevilling og salgsbevilling.</p>
+          <p class="eyebrow" style="color:#6ee7b7">${escapeHtml(input.brand.brandName)}</p>
+          <p class="footer-display">Forklaringer og artikler som hjelper leseren videre uten å bryte med vertssidens opplevelse.</p>
+          <p class="footer-copy">Denne edge-siden følger den samme publiseringslinjen som resten av sidecar-oppsettet, men kan gå live uten at en ny statisk Pages-build må være ferdig først.</p>
           <div class="footer-cta">
-            <a href="https://www.kurs.ing/kasse.html" class="cta-primary">Start kurset</a>
-            <a href="mailto:ola@kurs.ing" class="cta-secondary" style="background:#0f172a;color:white;border-color:#334155">Kontakt Ola</a>
+            <a href="${escapeHtml(input.brand.primaryCtaUrl)}" class="cta-primary">${escapeHtml(input.brand.primaryCtaLabel)}</a>
+            <a href="mailto:${escapeHtml(input.brand.supportEmail)}" class="cta-secondary" style="background:#0f172a;color:white;border-color:#334155">Kontakt</a>
           </div>
         </div>
         <div class="footer-links">
           <div>
-            <p class="footer-title">Kurs</p>
-            <a href="https://www.kurs.ing/etablererproven">Kurs for etablererprøven</a><br />
-            <span class="muted">Pensum, oppgaver og råd før prøven i kommunen.</span><br /><br />
-            <a href="https://www.kurs.ing/skjenkebevilling">Kurs for skjenkebevilling</a><br />
-            <span class="muted">For styrer og stedfortreder som må dokumentere kunnskap om alkoholloven.</span><br /><br />
-            <a href="https://www.kurs.ing/salgsbevilling">Kurs for salgsbevilling</a><br />
-            <span class="muted">For butikker og utsalgssteder som skal søke eller drifte salgsbevilling.</span>
+            <p class="footer-title">Videre</p>
+            <a href="${escapeHtml(input.brand.primaryCtaUrl)}">Gå til hovedsiden</a><br />
+            <span class="muted">Bruk hovedsiden når leseren trenger tilbud, checkout eller neste kommersielle steg.</span><br /><br />
+            <a href="${escapeHtml(input.brand.secondaryCtaUrl)}">Flere artikler</a><br />
+            <span class="muted">Guideseksjonen kan utvides uten å endre hoveddomenets grunnstruktur.</span>
           </div>
           <div>
             <p class="footer-title">Teknisk</p>
-            <a href="/guide/rss.xml">RSS-feed</a><br />
-            <a href="/guide/sitemap.xml">Sitemap</a><br />
-            <a href="https://www.kurs.ing">kurs.ing</a><br />
-            <a href="mailto:ola@kurs.ing">ola@kurs.ing</a>
+            <a href="${escapeHtml(new URL('rss.xml', input.brand.secondaryCtaUrl).toString())}">RSS-feed</a><br />
+            <a href="${escapeHtml(new URL('sitemap.xml', input.brand.secondaryCtaUrl).toString())}">Sitemap</a><br />
+            <a href="${escapeHtml(input.brand.primaryCtaUrl)}">${escapeHtml(input.brand.wordmark)}</a><br />
+            <a href="mailto:${escapeHtml(input.brand.supportEmail)}">${escapeHtml(input.brand.supportEmail)}</a>
           </div>
         </div>
       </div>
       <div class="footer-bar">
-        <span>&copy; 2026 Kurs.ing. Innhold for Norge, skrevet på norsk.</span>
-        <span>Beståttgaranti og produktinformasjon finner du på hovedsiden.</span>
+        <span>&copy; ${new Date().getFullYear()} ${escapeHtml(input.brand.brandName)}.</span>
+        <span>Edge-publisert innhold med samme URL-struktur som den statiske siden.</span>
       </div>
     </footer>
   </body>

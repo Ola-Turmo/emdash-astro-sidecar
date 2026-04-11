@@ -24,6 +24,8 @@ Use these docs as the operational runbook for the sidecar.
   Conservative runtime budgets and worker-level limits to avoid overusing Cloudflare services during continuous operation.
 - [provider-runtime.md](./provider-runtime.md)
   Provider runtime, secret contract, routing defaults, and health-check workflow for TheClawBay and MiniMax.
+- [telemetry-ingestion.md](./telemetry-ingestion.md)
+  Search Console, CrUX, Bing, and IndexNow ingestion foundation for the autonomous control plane.
 - [multisite-and-multi-concept.md](./multisite-and-multi-concept.md)
   How the repo separates unrelated domains from multiple mounted concepts on the same site.
 - [TODO.md](./TODO.md)

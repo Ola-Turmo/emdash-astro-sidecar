@@ -11,6 +11,7 @@ const requiredFiles = [
   'packages/host-control/src/index.ts',
   'packages/host-jobs/src/index.ts',
   'packages/publish-engine/src/index.ts',
+  'packages/metrics-ingestion/src/index.ts',
   'apps/cloudflare/d1/migrations/0002_host_runtime_control.sql',
   'apps/cloudflare/d1/migrations/0003_host_jobs.sql',
   'apps/cloudflare/d1/migrations/0004_content_artifacts.sql',
@@ -18,6 +19,7 @@ const requiredFiles = [
   'apps/cloudflare/d1/migrations/0006_publication_materializations.sql',
   'apps/cloudflare/d1/migrations/0007_host_jobs_publish_worker.sql',
   'apps/cloudflare/d1/migrations/0008_draft_metadata.sql',
+  'apps/cloudflare/d1/migrations/0010_metrics_ingestion.sql',
   'apps/cloudflare/workers/scheduler/wrangler.toml',
   'apps/cloudflare/workers/orchestrator/wrangler.toml',
   'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',
@@ -26,6 +28,7 @@ const requiredFiles = [
   'apps/cloudflare/workers/draft-worker/wrangler.toml',
   'apps/cloudflare/workers/eval-worker/wrangler.toml',
   'apps/cloudflare/workers/publish-worker/wrangler.toml',
+  'apps/cloudflare/workers/metrics-worker/wrangler.toml',
 ];
 
 const workerExpectations = [
@@ -67,6 +70,10 @@ const workerExpectations = [
   {
     path: 'apps/cloudflare/workers/content-api/wrangler.toml',
     checks: ['[limits]', 'cpu_ms', 'AUTONOMOUS_DB', 'MATERIALIZE_BATCH_LIMIT'],
+  },
+  {
+    path: 'apps/cloudflare/workers/metrics-worker/wrangler.toml',
+    checks: ['[limits]', 'cpu_ms', 'AUTONOMOUS_DB', 'JOB_LEASE_SECONDS', 'METRICS_MAX_SOURCES_PER_RUN'],
   },
   {
     path: 'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',

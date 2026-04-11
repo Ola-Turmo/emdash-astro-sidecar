@@ -1,3 +1,4 @@
+import { normalizeSearchText } from '../../../../../packages/model-runtime/src/index';
 import { claimNextJob, clampLeaseSeconds, completeJob, failJob } from '../../shared/job-runtime';
 
 interface Env {
@@ -295,6 +296,7 @@ function buildResearchUrls(siteUrl: string, basePath: string): Array<{ url: stri
   const candidates = [
     { url: new URL('/', siteUrl).toString(), sourceType: 'host-homepage' },
     { url: new URL(normalizeBasePath(basePath), siteUrl).toString(), sourceType: 'host-guide-root' },
+    { url: new URL('/kasse.html', siteUrl).toString(), sourceType: 'host-checkout-page' },
     { url: new URL('/etablererproven', siteUrl).toString(), sourceType: 'host-course-page' },
     { url: new URL('/skjenkebevilling', siteUrl).toString(), sourceType: 'host-course-page' },
     { url: new URL('/salgsbevilling', siteUrl).toString(), sourceType: 'host-course-page' },
@@ -348,10 +350,10 @@ function extractHtmlSnapshot(
     .slice(0, 10);
 
   return {
-    title,
-    metaDescription,
-    h1,
-    bodyExcerpt,
+    title: normalizeSearchText(title),
+    metaDescription: normalizeSearchText(metaDescription),
+    h1: normalizeSearchText(h1),
+    bodyExcerpt: normalizeSearchText(bodyExcerpt),
     firstPartyLinks,
   };
 }

@@ -71,3 +71,10 @@ export async function getActiveAuthors(): Promise<CollectionEntry<'authors'>[]> 
       (activeAuthorSlugs.has(author.slug) || activeAuthorSlugs.has(author.id)),
   );
 }
+
+export async function getPublishedMunicipalPages(): Promise<CollectionEntry<'municipalPages'>[]> {
+  return getCollection(
+    'municipalPages',
+    ({ data }: CollectionEntry<'municipalPages'>) => !data.draft && isActiveScopedEntry(data),
+  );
+}

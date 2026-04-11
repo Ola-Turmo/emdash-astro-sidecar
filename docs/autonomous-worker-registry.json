@@ -56,6 +56,13 @@
       "requiredSecrets": []
     },
     {
+      "name": "metrics-worker",
+      "wranglerConfig": "apps/cloudflare/workers/metrics-worker/wrangler.toml",
+      "kind": "control-plane",
+      "requiredSecrets": [],
+      "optionalSecrets": ["GSC_ACCESS_TOKEN", "CRUX_API_KEY", "BING_WEBMASTER_API_KEY", "INDEXNOW_KEY"]
+    },
+    {
       "name": "content-api",
       "wranglerConfig": "apps/cloudflare/workers/content-api/wrangler.toml",
       "kind": "control-plane",
@@ -70,6 +77,10 @@
     "THECLAWBAY_API_KEY",
     "MINIMAX_API_KEY",
     "GEMINI_API_KEY",
+    "GSC_ACCESS_TOKEN",
+    "CRUX_API_KEY",
+    "BING_WEBMASTER_API_KEY",
+    "INDEXNOW_KEY",
     "CONTENT_API_URL",
     "ENABLE_AUTONOMOUS_PUBLICATION_SYNC"
   ]

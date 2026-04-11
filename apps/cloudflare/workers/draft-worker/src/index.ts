@@ -3,7 +3,9 @@ import {
   buildAutonomousDraftPrompt,
   buildDefaultProviderRegistry,
   buildFallbackDraftArtifact,
+  buildSemanticSlug,
   countDraftWords,
+  normalizeSearchText,
   normalizeAutonomousDraftArtifact,
   parseAutonomousDraftArtifact,
   resolveRoutingRuleFromEnvironment,
@@ -284,7 +286,9 @@ async function runDraftStepForHost(
   }
 
   const draftId = crypto.randomUUID();
-  const slug = toSafeSlug(candidate.topic);
+  const slug = buildSemanticSlug(candidate.topic, {
+    fallback: artifact.title || candidate.topic,
+  });
   const qualityNotes = [...new Set(artifact.qualityNotes)].sort();
 
   await db
@@ -534,11 +538,12 @@ async function buildDraftRequest(
 
   const internalLinks = buildInternalLinks(input.siteUrl, input.basePath, publications.results);
   const sourceExcerpts: AutonomousSourceExcerpt[] = sources.results.map((source) => ({
-    title: source.title ?? `${input.hostName} kilde`,
+    title: normalizeSearchText(source.title ?? `${input.hostName} kilde`),
     url: source.source_url,
-    excerpt:
+    excerpt: normalizeSearchText(
       source.body_excerpt ??
-      `Kildesammendrag fra ${input.hostName}. Bruk denne informasjonen forsiktig og konkret.`,
+        `Kildesammendrag fra ${input.hostName}. Bruk denne informasjonen forsiktig og konkret.`,
+    ),
   }));
 
   return {

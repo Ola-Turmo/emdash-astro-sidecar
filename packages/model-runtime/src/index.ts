@@ -675,3 +675,4 @@ const taskInstructionsByType: Record<AgentStepRequest['taskType'], string> = {
 };
 
 export * from './autonomous-content.js';
+export * from './slug.js';

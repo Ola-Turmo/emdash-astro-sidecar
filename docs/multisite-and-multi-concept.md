@@ -53,7 +53,7 @@ The app is fully wired for one active site/concept build at a time.
 That means:
 
 - `kurs-ing / guide` works today
-- `kurs-ing / kommune` is scaffolded in config, but still needs its own page templates and routes
+- `kurs-ing / kommune` now has its own collection and route scaffold, but still needs real kommune content and a richer municipality-specific layout
 - unrelated sites can now be represented cleanly in config, but still need their own content, copy, and deployment settings
 
 ## Content Separation
@@ -76,9 +76,9 @@ Relevant files:
 
 To support concepts like `kurs.ing/kommune/oslo` cleanly, the next implementation step is:
 
-1. add a dedicated collection for municipality pages
-2. add routes and templates for directory-style concepts
-3. add concept-specific sitemap/audit handling
+1. add real kommune content entries
+2. enrich the municipality template with kommune-specific sections, related content, and CTA logic
+3. add concept-specific audit handling once kommune pages are live
 4. add concept-specific worker routing where needed
 
 ## Recommended Usage
