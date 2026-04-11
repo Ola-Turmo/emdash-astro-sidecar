@@ -32,9 +32,9 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 - [x] Scaffold `kurs-ing/kommune` as a separate concept with its own base path and page structure intent.
 - [x] Scaffold an unrelated site example (`gatareba-ge`) to prove separation.
 - [x] Add a dedicated route/template system for non-blog concepts like `/kommune/{slug}`.
-- [ ] Add separate audit targets and quality gates per site and per concept.
+- [x] Add separate audit targets and quality gates per site and per concept.
 - [ ] Split deploy surfaces further so each site/concept can choose its own Pages project, worker bindings, and release mode.
-- [ ] Add municipality-specific visual/audit checks when `EMDASH_CONCEPT_KEY=kommune`.
+- [x] Add municipality-specific visual/audit checks when `EMDASH_CONCEPT_KEY=kommune`.
 
 ## P2
 
@@ -74,3 +74,8 @@ These are only required when moving from generic infrastructure work into a real
 - [ ] CTA targets and business goal
 - [ ] Copy direction for headings, intros, and footer text
 - [ ] Content source or editorial source of truth
+
+## Recently Completed
+
+- [x] Added concept-aware build verification for `kurs-ing/guide`, `kurs-ing/kommune`, and `gatareba-ge/guide`.
+- [x] Expanded the first generated kommune content set to cover multiple large municipalities from `Ola-Turmo/kommune.no.apimcp.site`.

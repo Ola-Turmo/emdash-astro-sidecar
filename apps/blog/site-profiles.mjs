@@ -125,7 +125,12 @@ const siteProfiles = {
         },
         audit: {
           sitemapUrls: ['https://www.kurs.ing/kommune/sitemap.xml'],
-          extraUrls: [],
+          extraUrls: [
+            'https://www.kurs.ing/kommune/oslo/',
+            'https://www.kurs.ing/kommune/bergen/',
+            'https://www.kurs.ing/kommune/trondheim/',
+            'https://www.kurs.ing/kommune/stavanger/',
+          ],
         },
         nav: [
           { path: '/', label: 'Kommuner' },

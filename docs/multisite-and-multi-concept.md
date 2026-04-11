@@ -104,8 +104,36 @@ Current generated municipality pages:
 
 - Oslo
 - Bergen
+- Trondheim
+- Stavanger
+- Kristiansand
+- Tromsø
+- Bærum
+- Sandnes
+- Drammen
+- Fredrikstad
+- Asker
+- Lillestrøm
 - Sandefjord
 - Alta
+
+## Concept Verification
+
+The repo now verifies multiple site/concept combinations as part of the normal verification path:
+
+- `kurs-ing / guide`
+- `kurs-ing / kommune`
+- `gatareba-ge / guide`
+
+Verification script:
+
+- [scripts/verify-concepts.mjs](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\scripts\verify-concepts.mjs)
+
+This script does three things:
+
+- runs `astro check` for each concept target
+- runs a real build for each concept target
+- asserts concept-specific output files and expected HTML snippets so kommune pages do not silently regress
 
 ## Recommended Usage
 

@@ -153,6 +153,12 @@ Run:
 pnpm generate:municipal-pages
 ```
 
+Concept separation is also enforced in normal verification:
+
+```bash
+pnpm verify:concepts
+```
+
 ## License
 
 MIT
