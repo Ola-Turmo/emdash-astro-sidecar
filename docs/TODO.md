@@ -16,6 +16,7 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 
 - [x] Add a first telemetry-ingestion foundation package and worker for Search Console, CrUX, Bing, and IndexNow.
 - [x] Add a safer multisite / multi-concept registry so unrelated domains and mounted sections stop sharing one flat host config.
+- [x] Add a first generated kommune content set from `Ola-Turmo/kommune.no.apimcp.site`.
 
 - [ ] Improve first-party source quality in `research-worker` with richer extraction from course pages, FAQs, checkout, and support content.
 - [ ] Strengthen semantic tag generation and controlled taxonomy handling for static and edge-only articles.
@@ -33,6 +34,7 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 - [x] Add a dedicated route/template system for non-blog concepts like `/kommune/{slug}`.
 - [ ] Add separate audit targets and quality gates per site and per concept.
 - [ ] Split deploy surfaces further so each site/concept can choose its own Pages project, worker bindings, and release mode.
+- [ ] Add municipality-specific visual/audit checks when `EMDASH_CONCEPT_KEY=kommune`.
 
 ## P2
 

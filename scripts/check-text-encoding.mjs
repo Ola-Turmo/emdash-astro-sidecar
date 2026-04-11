@@ -10,6 +10,7 @@ const ignoredDirs = new Set(['node_modules', 'dist', '.astro', 'readme-assets'])
 const ignoredFiles = new Set([
   path.join(repoRoot, 'scripts', 'check-text-encoding.mjs'),
   path.join(repoRoot, 'scripts', 'check-copy-quality.mjs'),
+  path.join(repoRoot, 'scripts', 'generate-municipal-pages.mjs'),
   path.join(repoRoot, 'packages', 'model-runtime', 'src', 'slug.ts'),
 ]);
 const suspiciousPatterns = [

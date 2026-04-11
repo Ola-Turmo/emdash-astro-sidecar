@@ -1,26 +1,76 @@
 ---
 siteKey: kurs-ing
 conceptKey: kommune
-municipality: Oslo
-county: Oslo
-title: Et eksempel på hvordan en kommuneside kan bygges for Oslo
-description: Kladd for en kommuneside under kurs.ing/kommune/oslo. Denne siden er kun en intern mal og publiseres ikke før reelt innhold er klart.
-pubDate: 2026-04-11
-draft: true
+municipalityNumber: "0301"
+municipality: "Oslo"
+county: "Oslo"
+languageForm: "nøytral"
+domain: "www.oslo.kommune.no"
+municipalitySiteUrl: "https://www.oslo.kommune.no"
+alcoholPolicyPlanUrl: "https://www.oslo.kommune.no/skjenketider"
+formsUrl: "https://skjema.oslo.kommune.no/ekstern/veiledere/datadrevet/"
+publicRecordsUrl: "https://einnsyn.no/sok?entity=journalpost&sort=registreringsaar%20desc"
+publicRecordsPlatform: "eInnsyn"
+municipalitySitePlatform: "Drupal"
+serviceLinks:
+  - label: "Hovedside for salg, servering og skjenking"
+    url: "https://www.oslo.kommune.no/skatt-og-naring/salg-servering-og-skjenking/"
+  - label: "Relevant kommuneside 2"
+    url: "https://www.oslo.kommune.no/skatt-og-naring/salg-servering-og-skjenking/soke-bevilling-eller-gjore-endringer/"
+  - label: "Relevant kommuneside 3"
+    url: "https://www.oslo.kommune.no/skatt-og-naring/salg-servering-og-skjenking/soke-bevilling-eller-gjore-endringer/salgsbevilling/"
+  - label: "Relevant kommuneside 4"
+    url: "https://www.oslo.kommune.no/skatt-og-naring/salg-servering-og-skjenking/soke-bevilling-eller-gjore-endringer/serveringsbevilling/"
+  - label: "Relevant kommuneside 5"
+    url: "https://www.oslo.kommune.no/skatt-og-naring/salg-servering-og-skjenking/soke-bevilling-eller-gjore-endringer/skjenkebevilling/"
+regulationsLinks:
+  - label: "Forskrift 1"
+    url: "https://www.oslo.kommune.no/brannvern-ildsted-og-feiing/bal-og-grill/lokal-forskrift-om-apen-brenning-og-brenning-av-avfall/"
+  - label: "Forskrift 2"
+    url: "https://www.oslo.kommune.no/kunngjoringer/horing-ny-forskrift-om-gravplassvedtekter-for-oslo-kommune/"
+  - label: "Forskrift 3"
+    url: "https://www.oslo.kommune.no/kunngjoringer/horing-forskrift-om-bruk-av-nullutslippslosninger-og-biogass-pa-bygge-og-anleggsplasser-i-oslo/"
+  - label: "Forskrift 4"
+    url: "https://www.oslo.kommune.no/kunngjoringer/horing-endringer-i-forskrift-om-skoleregler-og-skoledemokrati-i-osloskolen/"
+  - label: "Forskrift 5"
+    url: "https://www.oslo.kommune.no/kunngjoringer/horing-forskrift-om-rabattordning-i-stedet-for-gratis-skoleskyss-eller-full-skyssgodtgjorelse/"
+bylawLinks:
+  - label: "Vedtekt 1"
+    url: "https://www.oslo.kommune.no/kunngjoringer/horing-ny-forskrift-om-gravplassvedtekter-for-oslo-kommune/"
+openingHoursRules:
+  -
+    appliesTo: "serving_place"
+    days: "Alle dager"
+    endTime: "03:30"
+    note: "Skjenkesteder skal stenges senest 30 minutter etter skjenkeslutt kl. 03:00"
+  -
+    appliesTo: "outdoor_area"
+    days: "Alle dager"
+    startTime: "00:00"
+    endTime: "06:00"
+    note: "Uteservering tillates ikke mellom kl. 00:00 og 06:00 uten saerskilt tillatelse"
+alcoholServingRules:
+  -
+    area: "all"
+    groups: ["1", "2", "3"]
+    days: "alle dager"
+    endTime: "03:00"
+    note: "Maksimaltid for skjenking. Oslo kommune."
+sourceRepo: "Ola-Turmo/kommune.no.apimcp.site"
+sourceLastChecked: "2026-03-10T06:30:00Z"
+title: "Oslo: skjenking, innsyn og praktiske lenker i kommunen"
+description: "Oslo kommune samlet på ett sted: skjenking, servering, innsyn, skjema og lenker du kan bruke når du trenger oversikt over lokale sider og praktiske veier videre."
+pubDate: 2026-04-12
+draft: false
 ---
 
-Denne siden er en intern mal for hvordan et kommunekonsept kan se ut når det fylles med ekte innhold.
+Denne siden samler praktiske innganger for Oslo kommune når du trenger oversikt over salg, servering, skjenking, innsyn og relevante kommunesider.
+## Hva du finner her
+- lenker til kommunens egne sider om salg, servering og skjenking
+- hvor du finner innsyn og skjema
+- kjente åpningstids- eller skjenkeregler fra det strukturerte datagrunnlaget
+## Hvordan bruke siden
+Start med kommunens egne sider hvis du trenger lokal praksis eller vil finne riktig skjema. Bruk deretter guideseksjonen og kursene på kurs.ing når du vil forstå kravene bedre før du går videre.
+## Innsyn og dokumentasjon
 
-## Hva siden skal forklare
-
-- hva som er viktigst å vite i akkurat denne kommunen
-- hvilke spørsmål som går igjen
-- hvilke guider og kurs som er mest relevante videre
-
-## Hvordan den skal brukes
-
-Når det reelle innholdet er klart, kan denne malen erstattes med:
-
-- lokale forklaringer
-- kommuneorienterte vanlige spørsmål
-- tydelige neste steg til riktig kurs eller guide
+Kommunen bruker eInnsyn for innsyn eller journaltilgang. Det er nyttig hvis du trenger å forstå hvordan kommunen publiserer saker, postlister eller offentlig dokumentasjon.

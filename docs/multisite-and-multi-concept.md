@@ -76,10 +76,36 @@ Relevant files:
 
 To support concepts like `kurs.ing/kommune/oslo` cleanly, the next implementation step is:
 
-1. add real kommune content entries
-2. enrich the municipality template with kommune-specific sections, related content, and CTA logic
-3. add concept-specific audit handling once kommune pages are live
-4. add concept-specific worker routing where needed
+1. enrich the municipality template with more kommune-specific editorial copy and CTA logic
+2. add concept-specific audit handling once kommune pages are live
+3. add concept-specific worker routing where needed
+
+## Current Kommune Content Source
+
+The first kommune pages are now generated from the structured catalog in:
+
+- `Ola-Turmo/kommune.no.apimcp.site`
+
+Local source path used during generation:
+
+- `G:\My Drive\_local\_myrepos\kommune.no.apimcp.site\kommune_catalog.enriched.json`
+
+Generator:
+
+- [scripts/generate-municipal-pages.mjs](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\scripts\generate-municipal-pages.mjs)
+
+Command:
+
+```bash
+pnpm generate:municipal-pages
+```
+
+Current generated municipality pages:
+
+- Oslo
+- Bergen
+- Sandefjord
+- Alta
 
 ## Recommended Usage
 

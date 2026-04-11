@@ -30,24 +30,49 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 const { page } = Astro.props as { page: CollectionEntry<'municipalPages'> };
-const { municipality, county, title, description, pubDate, updatedDate } = page.data;
+const {
+  municipality,
+  municipalityNumber,
+  county,
+  languageForm,
+  domain,
+  municipalitySiteUrl,
+  alcoholPolicyPlanUrl,
+  formsUrl,
+  publicRecordsUrl,
+  publicRecordsPlatform,
+  municipalitySitePlatform,
+  siteLastUpdated,
+  serviceLinks,
+  regulationsLinks,
+  bylawLinks,
+  openingHoursRules,
+  alcoholServingRules,
+  sourceRepo,
+  sourceLastChecked,
+  title,
+  description,
+  pubDate,
+  updatedDate,
+} = page.data;
 const { Content } = await page.render();
 ---
 
 <BaseLayout title={title} description={description} pubDate={pubDate}>
   <Header />
 
-  <main class="mx-auto max-w-5xl px-4 py-10 md:py-14">
+  <main class="mx-auto max-w-6xl px-3 py-8 sm:px-4 md:py-14">
     <article>
-      <div class="mx-auto max-w-3xl">
+      <div class="mx-auto max-w-4xl">
         <p class="eyebrow">{SHELL_COPY.articleContextLabel}</p>
         <h1 class="display-title mt-4 text-4xl font-black leading-[1.05] text-slate-950 md:text-6xl">
           {title}
         </h1>
-        <p class="mt-5 text-lg leading-8 text-slate-600">{description}</p>
+        <p class="mt-5 max-w-3xl text-lg leading-8 text-slate-600">{description}</p>
         <div class="mt-6 flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500">
           <span>{municipality}</span>
           {county && <span>{county}</span>}
+          {municipalityNumber && <span>Kommune {municipalityNumber}</span>}
           <time datetime={pubDate.toISOString()}>{pubDate.toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
           {updatedDate && (
             <span>Oppdatert <time datetime={updatedDate.toISOString()}>{updatedDate.toLocaleDateString('nb-NO')}</time></span>
@@ -55,11 +80,86 @@ const { Content } = await page.render();
         </div>
       </div>
 
-      <div class="mx-auto mt-10 grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr),18rem]">
-        <div class="shell-card overflow-hidden p-6 md:p-10">
-          <div class="article-prose prose prose-lg max-w-none prose-headings:scroll-mt-28">
-            <Content />
+      <div class="mx-auto mt-10 grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr),20rem]">
+        <div class="space-y-6">
+          <div class="shell-card overflow-hidden p-5 sm:p-6 md:p-10">
+            <div class="article-prose prose prose-lg max-w-none prose-headings:scroll-mt-28">
+              <Content />
+            </div>
           </div>
+
+          <div class="grid gap-6 md:grid-cols-2">
+            <section class="shell-card p-5">
+              <p class="eyebrow">Kontaktpunkter</p>
+              <div class="mt-4 space-y-4 text-sm leading-7 text-slate-600">
+                {municipalitySiteUrl && <p><strong>Kommunenettsted:</strong> <a href={municipalitySiteUrl}>{municipalitySiteUrl}</a></p>}
+                {formsUrl && <p><strong>Skjema:</strong> <a href={formsUrl}>{formsUrl}</a></p>}
+                {publicRecordsUrl && <p><strong>Innsyn:</strong> <a href={publicRecordsUrl}>{publicRecordsUrl}</a></p>}
+                {publicRecordsPlatform && <p><strong>Innsynsløsning:</strong> {publicRecordsPlatform}</p>}
+                {municipalitySitePlatform && <p><strong>Nettstedsplattform:</strong> {municipalitySitePlatform}</p>}
+                {domain && <p><strong>Domene:</strong> {domain}</p>}
+                {languageForm && <p><strong>Målform:</strong> {languageForm}</p>}
+              </div>
+            </section>
+
+            <section class="shell-card p-5">
+              <p class="eyebrow">Skjenking og servering</p>
+              <div class="mt-4 space-y-4 text-sm leading-7 text-slate-600">
+                {alcoholPolicyPlanUrl && (
+                  <p><strong>Plan eller retningslinjer:</strong> <a href={alcoholPolicyPlanUrl}>{alcoholPolicyPlanUrl}</a></p>
+                )}
+                {alcoholServingRules.length > 0 ? (
+                  <ul class="space-y-3">
+                    {alcoholServingRules.map((rule: (typeof alcoholServingRules)[number]) => (
+                      <li>
+                        <strong>{rule.groups.length ? `Gruppe ${rule.groups.join(', ')}` : 'Regel'}:</strong> {rule.note}
+                        {(rule.days || rule.endTime || rule.startTime) && (
+                          <span> {rule.days ? `${rule.days}. ` : ''}{rule.startTime || rule.endTime ? `${rule.startTime ?? 'Fra ukjent tid'} - ${rule.endTime ?? 'ukjent sluttid'}` : ''}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Ingen konkrete skjenkeregler er lagt inn ennå.</p>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {(openingHoursRules.length > 0 || serviceLinks.length > 0 || regulationsLinks.length > 0 || bylawLinks.length > 0) && (
+            <div class="grid gap-6 lg:grid-cols-3">
+              <section class="shell-card p-5">
+                <p class="eyebrow">Åpningstider</p>
+                <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                  {openingHoursRules.length > 0 ? openingHoursRules.map((rule: (typeof openingHoursRules)[number]) => (
+                    <p><strong>{rule.appliesTo || 'Serveringssted'}:</strong> {rule.note}</p>
+                  )) : <p>Ingen åpningstidsregler er lagt inn ennå.</p>}
+                </div>
+              </section>
+
+              <section class="shell-card p-5">
+                <p class="eyebrow">Relevante sider</p>
+                <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                  {serviceLinks.length > 0 ? serviceLinks.map((link: (typeof serviceLinks)[number]) => (
+                    <p><a href={link.url}>{link.label}</a>{link.note ? ` – ${link.note}` : ''}</p>
+                  )) : <p>Ingen tjenestelenker er lagt inn ennå.</p>}
+                </div>
+              </section>
+
+              <section class="shell-card p-5">
+                <p class="eyebrow">Forskrifter og vedtekter</p>
+                <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                  {regulationsLinks.map((link: (typeof regulationsLinks)[number]) => (
+                    <p><a href={link.url}>{link.label}</a>{link.note ? ` – ${link.note}` : ''}</p>
+                  ))}
+                  {bylawLinks.map((link: (typeof bylawLinks)[number]) => (
+                    <p><a href={link.url}>{link.label}</a>{link.note ? ` – ${link.note}` : ''}</p>
+                  ))}
+                  {regulationsLinks.length === 0 && bylawLinks.length === 0 && <p>Ingen lokale regel-lenker er lagt inn ennå.</p>}
+                </div>
+              </section>
+            </div>
+          )}
         </div>
 
         <aside class="space-y-5">
@@ -75,7 +175,7 @@ const { Content } = await page.render();
           </div>
 
           <div class="shell-card p-5">
-            <p class="eyebrow">Om siden</p>
+            <p class="eyebrow">Kort oppsummert</p>
             <dl class="mt-4 space-y-3 text-sm">
               <div>
                 <dt class="font-bold text-slate-900">Kommune</dt>
@@ -87,11 +187,28 @@ const { Content } = await page.render();
                   <dd class="text-slate-600">{county}</dd>
                 </div>
               )}
-              <div>
-                <dt class="font-bold text-slate-900">Formål</dt>
-                <dd class="text-slate-600">{SHELL_COPY.articleAboutPurpose}</dd>
-              </div>
+              {publicRecordsPlatform && (
+                <div>
+                  <dt class="font-bold text-slate-900">Innsyn</dt>
+                  <dd class="text-slate-600">{publicRecordsPlatform}</dd>
+                </div>
+              )}
+              {siteLastUpdated?.value && (
+                <div>
+                  <dt class="font-bold text-slate-900">Sist oppdatert nettsted</dt>
+                  <dd class="text-slate-600">{siteLastUpdated.value}</dd>
+                </div>
+              )}
             </dl>
+          </div>
+
+          <div class="shell-card p-5">
+            <p class="eyebrow">Datagrunnlag</p>
+            <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+              {sourceRepo && <p><strong>Kilde:</strong> {sourceRepo}</p>}
+              {sourceLastChecked && <p><strong>Sist kontrollert:</strong> {sourceLastChecked}</p>}
+              <p>Denne siden er bygd på strukturert kommuneinformasjon og kan senere utvides med mer redaksjonelt innhold.</p>
+            </div>
           </div>
         </aside>
       </div>

@@ -10,6 +10,7 @@
     "lint": "pnpm -r run lint",
     "dev": "pnpm --filter @emdash/blog dev",
     "design:clone": "node ./scripts/design-clone.mjs",
+    "generate:municipal-pages": "node ./scripts/generate-municipal-pages.mjs",
     "sync:guide-seo": "node ./scripts/sync-guide-seo-artifacts.mjs",
     "audit:deployed": "node ./scripts/audit-deployed-urls.mjs",
     "audit:deployed:lighthouse": "node ./scripts/audit-deployed-urls.mjs --lighthouse",

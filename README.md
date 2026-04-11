@@ -143,6 +143,16 @@ For repeatable future rollouts, start from:
 - [`packages/skills/src/quality-gates/SKILL.md`](packages/skills/src/quality-gates/SKILL.md)
 - [`packages/skills/src/deployed-url-audit/SKILL.md`](packages/skills/src/deployed-url-audit/SKILL.md)
 
+## Kommune Content
+
+The repo can now generate kommune concept pages from the structured municipality dataset in `Ola-Turmo/kommune.no.apimcp.site`.
+
+Run:
+
+```bash
+pnpm generate:municipal-pages
+```
+
 ## License
 
 MIT
