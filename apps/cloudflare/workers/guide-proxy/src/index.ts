@@ -85,11 +85,13 @@ export default {
     }
 
     if (incomingUrl.pathname === `${GUIDE_PREFIX}/rss.xml`) {
-      return responseWithBody(guideRssXml, 'application/xml');
+      const merged = await mergeRssXml(env.AUTONOMOUS_DB, guideRssXml);
+      return responseWithBody(merged, 'application/xml');
     }
 
     if (incomingUrl.pathname === `${GUIDE_PREFIX}/sitemap.xml`) {
-      return responseWithBody(guideSitemapXml, 'application/xml');
+      const merged = await mergeSitemapXml(env.AUTONOMOUS_DB, guideSitemapXml);
+      return responseWithBody(merged, 'application/xml');
     }
 
     if (incomingUrl.pathname === `${GUIDE_PREFIX}/robots.txt`) {
@@ -215,4 +217,78 @@ function isSoftFallbackHtml(html: string, incomingUrl: URL): boolean {
 
   const title = html.match(/<title[^>]*>(.*?)<\/title>/is)?.[1]?.replace(/\s+/g, ' ').trim() ?? '';
   return title === 'Kurs.ing Blogg';
+}
+
+async function mergeSitemapXml(db: D1Database, staticXml: string): Promise<string> {
+  const edgeArticles = await listEdgeArticles(db);
+  if (!edgeArticles.length) return staticXml;
+
+  const existingEntries = [...staticXml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((match) => match[1] ?? '');
+  const existingLocs = new Set([...staticXml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]));
+  const mergedEntries = [...existingEntries];
+
+  for (const article of edgeArticles) {
+    if (existingLocs.has(article.url)) continue;
+    mergedEntries.push(`
+    <loc>${article.url}</loc>
+    <lastmod>${toIsoDateTime(article.created_at)}</lastmod>
+    <priority>0.8</priority>
+  `);
+  }
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${mergedEntries.map((entry) => `  <url>${entry}</url>`).join('\n')}
+</urlset>`;
+}
+
+async function mergeRssXml(db: D1Database, staticXml: string): Promise<string> {
+  const edgeArticles = await listEdgeArticles(db);
+  if (!edgeArticles.length) return staticXml;
+
+  const existingItems = [...staticXml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((match) => match[1] ?? '');
+  const existingLinks = new Set(
+    [...staticXml.matchAll(/<item>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<\/item>/g)].map((match) => match[1]),
+  );
+  const mergedItems = [...existingItems];
+
+  for (const article of edgeArticles) {
+    if (existingLinks.has(article.url)) continue;
+    mergedItems.push(
+      `<title>${escapeXml(article.title)}</title><link>${article.url}</link><guid isPermaLink="true">${article.url}</guid><description>${escapeXml(article.description)}</description><pubDate>${new Date(article.created_at).toUTCString()}</pubDate>`,
+    );
+  }
+
+  const channelPrefix = staticXml.split('<item>')[0];
+  return `${channelPrefix}${mergedItems.map((item) => `<item>${item}</item>`).join('')}</channel></rss>`;
+}
+
+async function listEdgeArticles(
+  db: D1Database,
+): Promise<Array<{ slug: string; url: string; title: string; description: string; created_at: string }>> {
+  const result = await db
+    .prepare(
+      `
+        SELECT slug, url, title, description, created_at
+        FROM publication_edge_artifacts
+        ORDER BY created_at DESC
+        LIMIT 50
+      `,
+    )
+    .all<{ slug: string; url: string; title: string; description: string; created_at: string }>();
+
+  return result.results;
+}
+
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function toIsoDateTime(value: string): string {
+  return new Date(value).toISOString();
 }

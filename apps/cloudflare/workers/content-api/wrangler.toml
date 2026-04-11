@@ -13,3 +13,4 @@ database_id = "a1cd1a45-8a71-48e1-a067-df7f1e6924ea"
 [vars]
 MATERIALIZE_BATCH_LIMIT = "3"
 REVIEW_BATCH_LIMIT = "10"
+PUBLISH_WORKER_URL = "https://emdash-publish-worker.ola-turmo.workers.dev"

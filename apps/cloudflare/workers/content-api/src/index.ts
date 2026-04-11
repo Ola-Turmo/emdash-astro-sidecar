@@ -3,6 +3,7 @@ interface Env {
   MATERIALIZE_BATCH_LIMIT?: string;
   CONTENT_API_TOKEN?: string;
   REVIEW_BATCH_LIMIT?: string;
+  PUBLISH_WORKER_URL?: string;
 }
 
 interface MaterializationRow {
@@ -150,6 +151,61 @@ export default {
         ok: true,
         draftId: payload.draftId,
         status: 'approved_for_publish',
+      });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/review/approve-and-publish') {
+      const payload = (await request.json().catch(() => ({}))) as {
+        draftId?: string;
+        hostId?: string;
+      };
+
+      if (!payload.draftId || !payload.hostId) {
+        return Response.json(
+          { ok: false, error: 'draftId and hostId are required.' },
+          { status: 400 },
+        );
+      }
+
+      await env.AUTONOMOUS_DB
+        .prepare(
+          `
+            UPDATE drafts
+            SET status = 'approved_for_publish'
+            WHERE id = ?1
+              AND status = 'ready_for_review'
+          `,
+        )
+        .bind(payload.draftId)
+        .run();
+
+      const publishWorkerUrl = env.PUBLISH_WORKER_URL?.trim();
+      if (!publishWorkerUrl) {
+        return Response.json(
+          {
+            ok: false,
+            error: 'PUBLISH_WORKER_URL is not configured.',
+          },
+          { status: 500 },
+        );
+      }
+
+      const publishResponse = await fetch(publishWorkerUrl, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          hostId: payload.hostId,
+        }),
+      });
+      const publishPayload = await publishResponse.json().catch(() => ({}));
+
+      return Response.json({
+        ok: publishResponse.ok,
+        draftId: payload.draftId,
+        hostId: payload.hostId,
+        publish: publishPayload,
       });
     }
 
