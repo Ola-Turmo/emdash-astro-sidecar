@@ -53,7 +53,7 @@ The app is fully wired for one active site/concept build at a time.
 That means:
 
 - `kurs-ing / guide` works today
-- `kurs-ing / kommune` now has its own collection and route scaffold, but still needs real kommune content and a richer municipality-specific layout
+- `kurs-ing / kommune` now has its own collection, route scaffold, and draft example content, but still needs real kommune content and a richer municipality-specific layout
 - unrelated sites can now be represented cleanly in config, but still need their own content, copy, and deployment settings
 
 ## Content Separation

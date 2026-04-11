@@ -9,7 +9,6 @@ import {
   PRIMARY_CTA,
   SECONDARY_CTA,
   SHELL_COPY,
-  SITE_NAME,
 } from '../consts';
 import { getPublishedMunicipalPages } from '../lib/published-content';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -32,6 +31,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 const { page } = Astro.props as { page: CollectionEntry<'municipalPages'> };
 const { municipality, county, title, description, pubDate, updatedDate } = page.data;
+const { Content } = await page.render();
 ---
 
 <BaseLayout title={title} description={description} pubDate={pubDate}>
@@ -58,18 +58,7 @@ const { municipality, county, title, description, pubDate, updatedDate } = page.
       <div class="mx-auto mt-10 grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr),18rem]">
         <div class="shell-card overflow-hidden p-6 md:p-10">
           <div class="article-prose prose prose-lg max-w-none prose-headings:scroll-mt-28">
-            <p>
-              Denne siden er klargjort for kommunespesifikt innhold under samme design som resten av {SITE_NAME}.
-            </p>
-            <p>
-              Når kommuneinnholdet er klart, kan denne malen fylles med lokale krav, viktige forskjeller, relevante kurslenker og praktiske spørsmål for {municipality}.
-            </p>
-            <h2>Planlagt innhold</h2>
-            <ul>
-              <li>hva kandidaten bør vite om kommunen</li>
-              <li>hvilke spørsmål som går igjen</li>
-              <li>relevante veier videre til kurs eller guidesider</li>
-            </ul>
+            <Content />
           </div>
         </div>
 
