@@ -153,6 +153,7 @@ If you want a review gate before publish, use the Cloudflare-side review endpoin
 - `GET /review/drafts`
 - `POST /review/approve`
 - `POST /review/reject`
+- `POST /review/approve-and-publish`
 
 ## Cloudflare-Only Publish Fallback
 
@@ -170,6 +171,7 @@ The current shape is:
 
 - Pages remains the primary source for static routes and normal article delivery
 - `guide-proxy` falls back to `publication_edge_artifacts` in D1 for published slugs that are not yet in the static build
+- those edge-served articles now use a richer Kurs.ing-styled shell, not just a bare HTML fallback
 
 This reduces the local operational dependency for new article availability.
 
