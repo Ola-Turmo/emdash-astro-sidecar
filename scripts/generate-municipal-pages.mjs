@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -41,6 +41,36 @@ const targetMunicipalities = [
   'Kongsberg',
 ];
 
+const alcoholKeywords = [
+  'alkohol',
+  'bevilling',
+  'skjenk',
+  'salg',
+  'servering',
+  'uteserver',
+  'gebyr',
+  'fornyelse',
+  'kontroll',
+  'arrangement',
+  'enkelt',
+  'prove',
+  'prøve',
+  'kunnskap',
+  'ansvarlig',
+  'vertskap',
+];
+
+const bannedMunicipalLinkKeywords = [
+  'gravplass',
+  'barnehage',
+  'skole',
+  'feiing',
+  'bal-og-grill',
+  'bygg',
+  'anlegg',
+  'rabattordning',
+];
+
 async function main() {
   const raw = await readFile(sourceCatalogPath, 'utf8');
   const catalog = JSON.parse(raw);
@@ -71,28 +101,30 @@ async function buildMunicipalPage(row) {
   const siteUrl = row.site_url || '';
   const formsUrl = row.forms_url || '';
   const publicRecordsUrl = row.innsyn_url || '';
+  const alcoholPolicyPlanUrl = row.alcohol_policy_plan_url || '';
   const publicRecordsPlatform = normalizeText(row.innsyn_platform || '');
   const sitePlatform = normalizeText(
     typeof row.site_platform === 'string' ? row.site_platform : row.site_platform?.name || '',
   );
   const sourceLastChecked = row.last_checked || '';
-  const title = `${municipality}: skjenking, innsyn og praktiske lenker i kommunen`;
-  const description = `${municipality} kommune samlet på ett sted: skjenking, servering, innsyn, skjema og lenker du kan bruke når du trenger oversikt over lokale sider og praktiske veier videre.`;
+  const title = `${municipality}: lokale regler for alkohol, skjenking og kommunale lenker`;
+  const description = `${municipality} kommune forklart med faktiske lokale tider, kommunale lenker og de viktigste sporene du må sjekke for salg, servering og skjenking.`;
 
   const serviceLinks = (row.alcohol_restaurant_urls || [])
-    .slice(0, 5)
-    .map((url, index) => ({
-      label: index === 0 ? 'Hovedside for salg, servering og skjenking' : `Relevant kommuneside ${index + 1}`,
+    .filter((url) => isAlcoholRelevantUrl(url))
+    .slice(0, 6)
+    .map((url) => ({
+      label: classifyMunicipalLink(url),
       url,
     }));
 
-  const regulationsLinks = (row.forskrifter_urls || []).slice(0, 5).map((url, index) => ({
-    label: `Forskrift ${index + 1}`,
+  const regulationsLinks = (row.forskrifter_urls || []).filter((url) => isAlcoholRelevantUrl(url)).slice(0, 3).map((url) => ({
+    label: classifyMunicipalLink(url, 'Lokale regler'),
     url,
   }));
 
-  const bylawLinks = (row.vedtekter_urls || []).slice(0, 5).map((url, index) => ({
-    label: `Vedtekt ${index + 1}`,
+  const bylawLinks = (row.vedtekter_urls || []).filter((url) => isAlcoholRelevantUrl(url)).slice(0, 3).map((url) => ({
+    label: classifyMunicipalLink(url, 'Lokale vilkår'),
     url,
   }));
 
@@ -419,6 +451,38 @@ function uniqueSources(sources) {
     seen.add(source.url);
     return true;
   });
+}
+
+function isAlcoholRelevantUrl(value) {
+  try {
+    const pathname = new URL(value).pathname.toLowerCase();
+    if (bannedMunicipalLinkKeywords.some((keyword) => pathname.includes(keyword))) {
+      return false;
+    }
+    return alcoholKeywords.some((keyword) => pathname.includes(keyword));
+  } catch {
+    return false;
+  }
+}
+
+function classifyMunicipalLink(value, fallbackLabel = 'Salg, servering og skjenking') {
+  try {
+    const pathname = new URL(value).pathname.toLowerCase();
+    if (/uteserver|offentlig-areal/.test(pathname)) return 'Uteservering';
+    if (/enkelt.?anledning|arrangement/.test(pathname)) return 'Enkeltanledning og arrangement';
+    if (/gebyr|satser/.test(pathname)) return 'Gebyr og satser';
+    if (/fornyelse|fornye/.test(pathname)) return 'Fornyelse av bevilling';
+    if (/kontroll/.test(pathname)) return 'Kontroll og tilsyn';
+    if (/prove|prøve|kunnskap|etablerer/.test(pathname)) return 'Prøver og kunnskapskrav';
+    if (/salgsbevilling|salg/.test(pathname)) return 'Salgsbevilling';
+    if (/serveringsbevilling|servering/.test(pathname)) return 'Serveringsbevilling';
+    if (/skjenkebevilling|skjenking|alkohol/.test(pathname)) return 'Skjenkebevilling';
+    if (/plan|retningslinje|skjenketider/.test(pathname)) return 'Lokale regler og tider';
+  } catch {
+    return fallbackLabel;
+  }
+
+  return fallbackLabel;
 }
 
 async function fetchOfficialSourceSummary(url) {

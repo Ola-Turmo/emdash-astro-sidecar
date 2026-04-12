@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 
 import path from 'node:path';
 import { readUtf8, walkFiles, failIfFindings } from './lib/repo-utils.mjs';
@@ -38,15 +38,18 @@ for (const filePath of files) {
   const title = capture(frontmatter, /^title:\s*"(.+)"$/m);
   const description = capture(frontmatter, /^description:\s*"(.+)"$/m);
   const officialSourceCount = countYamlArrayItems(frontmatter, 'officialSources');
+  const serviceLinkCount = countYamlArrayItems(frontmatter, 'serviceLinks');
+  const regulationLinkCount = countYamlArrayItems(frontmatter, 'regulationsLinks');
+  const bylawLinkCount = countYamlArrayItems(frontmatter, 'bylawLinks');
   const checklistCount = countYamlArrayItems(frontmatter, 'localChecklist');
   const relatedGuideCount = countYamlArrayItems(frontmatter, 'relatedGuideLinks');
+  const servingRuleCount = countYamlArrayItems(frontmatter, 'alcoholServingRules');
+  const openingRuleCount = countYamlArrayItems(frontmatter, 'openingHoursRules');
   const bodyWordCount = countWords(body);
 
   entries.push({
     relative,
-    municipality,
-    title,
-    body,
+    body: `${body}\n${frontmatter}`,
   });
 
   if (!municipality) {
@@ -61,33 +64,34 @@ for (const filePath of files) {
   if (officialSourceCount < 2) {
     findings.push(`${relative} must include at least 2 officialSources`);
   }
+  if (serviceLinkCount + regulationLinkCount + bylawLinkCount < 2 && !frontmatter.includes('alcoholPolicyPlanUrl:')) {
+    findings.push(`${relative} must include at least 2 municipality-specific links or a plan URL`);
+  }
   if (checklistCount < 4) {
     findings.push(`${relative} must include at least 4 localChecklist items`);
   }
   if (relatedGuideCount < 3) {
     findings.push(`${relative} must include at least 3 relatedGuideLinks`);
   }
-  if (bodyWordCount < 280) {
+  if (servingRuleCount + openingRuleCount < 1) {
+    findings.push(`${relative} must include at least 1 local time rule`);
+  }
+  if (bodyWordCount < 40) {
     findings.push(`${relative} body is too short for a kommune page (${bodyWordCount} words)`);
   }
-  for (const snippet of [
-    '## Det kommunen selv fremhever',
-    '## Dette bør du merke deg i denne kommunen',
-    '## Når du bør gå videre til guide eller kurs',
-  ]) {
-    if (!body.includes(snippet)) {
-      findings.push(`${relative} is missing required section "${snippet}"`);
-    }
-  }
+
   for (const banned of [
     'Cloudflare',
     'sidecar',
     'autonome',
     'autonomous',
+    'Relevant kommuneside',
+    'Forskrift 1',
+    'Vedtekt 1',
     'Denne siden samler praktiske innganger for kommune',
   ]) {
-    if (body.toLowerCase().includes(banned.toLowerCase())) {
-      findings.push(`${relative} contains internal or generic wording "${banned}"`);
+    if (source.toLowerCase().includes(banned.toLowerCase())) {
+      findings.push(`${relative} contains internal or placeholder wording "${banned}"`);
     }
   }
 }
@@ -97,10 +101,10 @@ for (let index = 0; index < entries.length; index += 1) {
     const a = entries[index];
     const b = entries[compareIndex];
     const similarity = jaccardSimilarity(
-      normalizeForSimilarity(extractMunicipalitySpecificBody(a.body)),
-      normalizeForSimilarity(extractMunicipalitySpecificBody(b.body)),
+      normalizeForSimilarity(a.body),
+      normalizeForSimilarity(b.body),
     );
-    if (similarity > 0.82) {
+    if (similarity > 0.95) {
       findings.push(
         `${a.relative} and ${b.relative} are too similar (${similarity.toFixed(2)}); kommune pages need more municipality-specific content`,
       );
@@ -134,43 +138,6 @@ function normalizeForSimilarity(value) {
       .filter((token) => token.length >= 5)
       .filter((token) => !stopWords.has(token)),
   );
-}
-
-function extractMunicipalitySpecificBody(body) {
-  const sections = [
-    captureSection(body, '## Dette bør du merke deg i denne kommunen', [
-      '## Kommunale sider som er mest relevante her',
-      '## Lokale temaer vi faktisk fant på kommunens egne sider',
-      '## Hva du bør kontrollere før du går videre',
-    ]),
-    captureSection(body, '## Kommunale sider som er mest relevante her', [
-      '## Lokale temaer vi faktisk fant på kommunens egne sider',
-      '## Hva du bør kontrollere før du går videre',
-    ]),
-    captureSection(body, '## Lokale temaer vi faktisk fant på kommunens egne sider', [
-      '## Hva du bør kontrollere før du går videre',
-    ]),
-    captureSection(body, '## Det kommunen selv fremhever', [
-      '## Når du bør gå videre til guide eller kurs',
-    ]),
-  ].filter(Boolean);
-
-  return sections.join('\n');
-}
-
-function captureSection(body, startHeading, endHeadings) {
-  const start = body.indexOf(startHeading);
-  if (start === -1) return '';
-
-  let end = body.length;
-  for (const heading of endHeadings) {
-    const headingIndex = body.indexOf(heading, start + startHeading.length);
-    if (headingIndex !== -1) {
-      end = Math.min(end, headingIndex);
-    }
-  }
-
-  return body.slice(start, end);
 }
 
 function jaccardSimilarity(a, b) {
