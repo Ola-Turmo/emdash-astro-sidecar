@@ -116,6 +116,22 @@ Current generated municipality pages:
 - Lillestrøm
 - Sandefjord
 - Alta
+- Bodø
+- Ålesund
+- Tønsberg
+- Porsgrunn
+- Skien
+- Arendal
+- Haugesund
+- Moss
+- Sarpsborg
+- Hamar
+- Lillehammer
+- Harstad
+- Narvik
+- Gjøvik
+- Larvik
+- Kongsberg
 
 The generated pages are now richer than the raw municipality dataset. The generator also tries to pull:
 

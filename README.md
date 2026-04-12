@@ -149,6 +149,8 @@ The repo can now generate kommune concept pages from the structured municipality
 
 The kommune generator now also enriches those pages with summaries from official municipality URLs when available, plus municipality-specific checklists and direct guide handoffs into the main `kurs.ing/guide` concept.
 
+The starter rollout now covers a broader municipality set, not just a few examples, so the legal/municipality source can drive a substantial `kommune` section from the same pipeline.
+
 Run:
 
 ```bash

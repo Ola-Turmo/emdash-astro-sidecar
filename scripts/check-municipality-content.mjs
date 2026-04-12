@@ -96,7 +96,10 @@ for (let index = 0; index < entries.length; index += 1) {
   for (let compareIndex = index + 1; compareIndex < entries.length; compareIndex += 1) {
     const a = entries[index];
     const b = entries[compareIndex];
-    const similarity = jaccardSimilarity(normalizeForSimilarity(a.body), normalizeForSimilarity(b.body));
+    const similarity = jaccardSimilarity(
+      normalizeForSimilarity(extractMunicipalitySpecificBody(a.body)),
+      normalizeForSimilarity(extractMunicipalitySpecificBody(b.body)),
+    );
     if (similarity > 0.82) {
       findings.push(
         `${a.relative} and ${b.relative} are too similar (${similarity.toFixed(2)}); kommune pages need more municipality-specific content`,
@@ -131,6 +134,43 @@ function normalizeForSimilarity(value) {
       .filter((token) => token.length >= 5)
       .filter((token) => !stopWords.has(token)),
   );
+}
+
+function extractMunicipalitySpecificBody(body) {
+  const sections = [
+    captureSection(body, '## Dette bør du merke deg i denne kommunen', [
+      '## Kommunale sider som er mest relevante her',
+      '## Lokale temaer vi faktisk fant på kommunens egne sider',
+      '## Hva du bør kontrollere før du går videre',
+    ]),
+    captureSection(body, '## Kommunale sider som er mest relevante her', [
+      '## Lokale temaer vi faktisk fant på kommunens egne sider',
+      '## Hva du bør kontrollere før du går videre',
+    ]),
+    captureSection(body, '## Lokale temaer vi faktisk fant på kommunens egne sider', [
+      '## Hva du bør kontrollere før du går videre',
+    ]),
+    captureSection(body, '## Det kommunen selv fremhever', [
+      '## Når du bør gå videre til guide eller kurs',
+    ]),
+  ].filter(Boolean);
+
+  return sections.join('\n');
+}
+
+function captureSection(body, startHeading, endHeadings) {
+  const start = body.indexOf(startHeading);
+  if (start === -1) return '';
+
+  let end = body.length;
+  for (const heading of endHeadings) {
+    const headingIndex = body.indexOf(heading, start + startHeading.length);
+    if (headingIndex !== -1) {
+      end = Math.min(end, headingIndex);
+    }
+  }
+
+  return body.slice(start, end);
 }
 
 function jaccardSimilarity(a, b) {

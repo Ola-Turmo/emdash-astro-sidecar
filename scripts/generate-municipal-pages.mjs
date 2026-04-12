@@ -23,6 +23,22 @@ const targetMunicipalities = [
   'Lillestrøm',
   'Sandefjord',
   'Alta',
+  'Bodø',
+  'Ålesund',
+  'Tønsberg',
+  'Porsgrunn',
+  'Skien',
+  'Arendal',
+  'Haugesund',
+  'Moss',
+  'Sarpsborg',
+  'Hamar',
+  'Lillehammer',
+  'Harstad',
+  'Narvik',
+  'Gjøvik',
+  'Larvik',
+  'Kongsberg',
 ];
 
 async function main() {
@@ -213,6 +229,27 @@ async function buildMunicipalPage(row) {
       formsUrl,
     }),
     '',
+    '## Kommunale sider som er mest relevante her',
+    '',
+    ...buildBodySourceBullets({
+      municipality,
+      officialSources,
+      serviceLinks,
+      regulationsLinks,
+      bylawLinks,
+      publicRecordsPlatform,
+      sitePlatform,
+    }),
+    '',
+    '## Lokale temaer vi faktisk fant på kommunens egne sider',
+    '',
+    ...buildLocalTopicBullets({
+      municipality,
+      serviceLinks,
+      regulationsLinks,
+      bylawLinks,
+    }),
+    '',
     '## Hva du bør kontrollere før du går videre',
     '',
     ...localChecklist.map((item) => `- ${item}`),
@@ -308,6 +345,71 @@ function buildMunicipalitySpecifics({
   }
 
   return details.join(' ');
+}
+
+function buildBodySourceBullets({
+  municipality,
+  officialSources,
+  serviceLinks,
+  regulationsLinks,
+  bylawLinks,
+  publicRecordsPlatform,
+  sitePlatform,
+}) {
+  const bullets = [];
+
+  for (const source of officialSources.slice(0, 4)) {
+    const summary = source.summary ? ` ${source.summary}` : '';
+    const title = source.title && source.title !== source.label ? ` (${source.title})` : '';
+    bullets.push(`[${source.label}](${source.url})${title}.${summary}`.trim());
+  }
+
+  if (serviceLinks[1]?.url) {
+    bullets.push(`I ${municipality} ligger det også flere undersider under bevillingsområdet, for eksempel [${serviceLinks[1].label}](${serviceLinks[1].url}).`);
+  }
+
+  if (regulationsLinks[0]?.url) {
+    bullets.push(`Det finnes også lokal eller registrert forskriftsinformasjon å følge opp, blant annet [${regulationsLinks[0].label}](${regulationsLinks[0].url}).`);
+  }
+
+  if (bylawLinks[0]?.url) {
+    bullets.push(`Kommunen publiserer også lokale vedtekter eller lignende dokumenter, som [${bylawLinks[0].label}](${bylawLinks[0].url}).`);
+  }
+
+  if (publicRecordsPlatform) {
+    bullets.push(`Hvis du vil sammenligne disse sidene med tidligere saker eller vedtak, er ${publicRecordsPlatform} den mest relevante innsynsinngangen akkurat her.`);
+  }
+
+  if (sitePlatform) {
+    bullets.push(`Siden kommunen bruker ${sitePlatform}, er det ofte nyttig å følge interne temasider og ikke bare fritekstsøk.`);
+  }
+
+  return bullets.slice(0, 8).map((item) => `- ${item}`);
+}
+
+function buildLocalTopicBullets({
+  municipality,
+  serviceLinks,
+  regulationsLinks,
+  bylawLinks,
+}) {
+  const topics = new Set();
+
+  for (const link of [...serviceLinks, ...regulationsLinks, ...bylawLinks]) {
+    const topic = describeUrlPath(link.url);
+    if (topic) {
+      topics.add(topic);
+    }
+    if (topics.size >= 6) break;
+  }
+
+  if (!topics.size) {
+    return [
+      `- Vi fant foreløpig få tydelige undersider for ${municipality}, så denne siden bør senere utvides med mer redaksjonelt lokalt innhold.`,
+    ];
+  }
+
+  return [...topics].map((topic) => `- ${municipality} har en tydelig kommunal inngang knyttet til ${topic}.`);
 }
 
 function uniqueSources(sources) {
@@ -490,9 +592,40 @@ function decodeCommonMojibake(value) {
 
 function cleanText(value) {
   return String(value ?? '')
+    .replace(/\{\{[\s\S]*?\}\}/g, ' ')
+    .replace(/\{[\s\S]*?\}/g, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function describeUrlPath(value) {
+  try {
+    const url = new URL(value);
+    const tokens = url.pathname
+      .split('/')
+      .flatMap((segment) => segment.split('-'))
+      .map((token) => normalizeText(token))
+      .map((token) => token.toLowerCase())
+      .filter((token) => token.length >= 4)
+      .filter((token) => !pathStopWords.has(token));
+
+    const unique = [];
+    for (const token of tokens) {
+      if (!unique.includes(token)) {
+        unique.push(token);
+      }
+      if (unique.length >= 4) break;
+    }
+
+    if (!unique.length) {
+      return '';
+    }
+
+    return unique.join(', ');
+  } catch {
+    return '';
+  }
 }
 
 function decodeHtmlEntities(value) {
@@ -559,6 +692,23 @@ function normalizeObjectKeys(input) {
     Object.entries(input).map(([key, value]) => [decodeCommonMojibake(key), value]),
   );
 }
+
+const pathStopWords = new Set([
+  'https',
+  'www',
+  'kommune',
+  'tjenester',
+  'politikk',
+  'administrasjon',
+  'naring',
+  'landbruk',
+  'organisasjon',
+  'barnehage',
+  'skole',
+  'innsyn',
+  'dokumenter',
+  'vedtak',
+]);
 
 function slugify(value) {
   return normalizeText(value)
