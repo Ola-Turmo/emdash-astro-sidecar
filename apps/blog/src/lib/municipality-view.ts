@@ -158,8 +158,12 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
   const highlights = buildHighlights(data, curatedLinks, timeline);
   const usefulSources = data.officialSources
     .filter((entry) => entry.url)
-    .filter((entry) => !looksGenericSourceSummary(entry.summary))
+    .map((entry) => ({
+      ...entry,
+      summary: hasValuableMunicipalitySummary(entry.summary) ? normalizeText(entry.summary || '') : undefined,
+    }))
     .filter((entry) => hasPermitSignal(`${entry.label} ${entry.title || ''} ${entry.summary || ''}`))
+    .filter((entry) => entry.summary || entry.title)
     .slice(0, 4);
   const checklist = uniqueValues([
     ...data.localChecklist.map((entry) => normalizeText(entry)),
@@ -268,15 +272,6 @@ function buildHighlights(
   const planSource = data.officialSources.find((entry) => /plan|skjenketider|alkohol/i.test(`${entry.label} ${entry.title || ''}`));
   if (planSource?.title && !/kommune$/i.test(planSource.title) && !looksGenericSourceSummary(planSource.summary)) {
     highlights.push(`${normalizeText(planSource.title)}.`);
-  }
-
-  const serviceSource = data.officialSources.find(
-    (entry) =>
-      /salg|skjenk|servering/i.test(`${entry.label} ${entry.title || ''}`) &&
-      hasPermitSignal(`${entry.label} ${entry.title || ''} ${entry.summary || ''}`),
-  );
-  if (serviceSource?.summary && !looksGenericSourceSummary(serviceSource.summary)) {
-    highlights.push(normalizeText(serviceSource.summary));
   }
 
   const outdoorEntry = timeline.find((entry) => /ute/i.test(entry.label) || /ute/i.test(entry.note));
@@ -400,6 +395,13 @@ function looksGenericSourceSummary(summary?: string) {
   return /legevakt|barnevern|vann- og avløp|overgrepsmottak|stedet for å finne tjenester|postboks|telefon|talende web|fingeren på|organisasjonsnummer|bankkontonummer|faktura til kommunen|for leverandører|skriv til oss|send sikker digital post|meld feil|sifra/i.test(
     text,
   );
+}
+
+function hasValuableMunicipalitySummary(summary?: string) {
+  const text = normalizeText(summary || '');
+  if (!text || looksGenericSourceSummary(text)) return false;
+  if (!hasPermitSignal(text)) return false;
+  return text.length >= 50;
 }
 
 function hasPermitSignal(value: string) {

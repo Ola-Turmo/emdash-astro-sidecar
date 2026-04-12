@@ -49,9 +49,13 @@ for (const filePath of files) {
   const servingRuleCount = countYamlArrayItems(frontmatter, 'alcoholServingRules');
   const openingRuleCount = countYamlArrayItems(frontmatter, 'openingHoursRules');
   const bodyWordCount = countWords(body);
+  const draft = capture(frontmatter, /^draft:\s*(true|false)$/m) === 'true';
+  const qualityScore = Number(capture(frontmatter, /^  score:\s*([0-9]+)$/m) || '0');
+  const publishable = capture(frontmatter, /^  publishable:\s*(true|false)$/m) === 'true';
 
   entries.push({
     relative,
+    draft,
     body: `${body}\n${frontmatter}`,
   });
 
@@ -63,6 +67,12 @@ for (const filePath of files) {
   }
   if (!description || description.length < 110) {
     findings.push(`${relative} needs a more informative description`);
+  }
+  if (!frontmatter.includes('municipalityQuality:')) {
+    findings.push(`${relative} is missing municipalityQuality frontmatter`);
+  }
+  if (!draft && (!publishable || qualityScore < 8)) {
+    findings.push(`${relative} is published without clearing the municipality quality threshold`);
   }
   if (officialSourceCount < 2) {
     findings.push(`${relative} must include at least 2 officialSources`);
@@ -92,8 +102,12 @@ for (const filePath of files) {
     'Forskrift 1',
     'Vedtekt 1',
     'Denne siden samler praktiske innganger for kommune',
+    'Organisasjonsnummer:',
+    'Bankkontonummer:',
+    'Skriv til oss',
+    'Faktura til kommunen',
   ]) {
-    if (source.toLowerCase().includes(banned.toLowerCase())) {
+    if (!draft && source.toLowerCase().includes(banned.toLowerCase())) {
       findings.push(`${relative} contains internal or placeholder wording "${banned}"`);
     }
   }
@@ -103,6 +117,9 @@ for (let index = 0; index < entries.length; index += 1) {
   for (let compareIndex = index + 1; compareIndex < entries.length; compareIndex += 1) {
     const a = entries[index];
     const b = entries[compareIndex];
+    if (a.draft || b.draft) {
+      continue;
+    }
     const similarity = jaccardSimilarity(
       normalizeForSimilarity(a.body),
       normalizeForSimilarity(b.body),

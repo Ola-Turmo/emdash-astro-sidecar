@@ -42,6 +42,28 @@ The system must not publish municipality pages that:
 - link to unrelated municipal material such as school, graveyard, or random regulation pages
 - use placeholder labels like `Relevant kommuneside 2`, `Forskrift 1`, or `Vedtekt 1`
 - summarize a municipality using generic home-page text with no alcohol or permit relevance
+- stay live when the municipality data is too weak to support a trustworthy local page
+
+## Drop Weak Municipalities
+
+If the municipality source quality is weak, the correct outcome is to draft or drop the page.
+
+Do not publish a municipality page just because the system found:
+
+- one or two links
+- a generic front-page summary
+- contact or supplier metadata
+- a weak source title with no real local insight
+
+For `/kommune`, weak data should fail closed.
+
+That means the page should stay out of the published set until it has:
+
+- enough confirmed local time rules
+- a clear plan or local alcohol-policy source
+- a real application path
+- a real innsyn path
+- at least one useful local source summary or takeaway
 
 ## Content Model Rules
 

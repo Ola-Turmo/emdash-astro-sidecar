@@ -11,6 +11,7 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 - [x] Add Cloudflare-native screenshot auditing so visual checks do not depend primarily on local Playwright runs.
 - [ ] Tighten unattended publish policy with hard budgets, rollback rules, cooldowns, and review gates for net-new articles.
 - [ ] Reach full parity between Astro-served articles and Cloudflare edge-served articles for metadata, shell, and navigation.
+- [ ] Fail weak kommune pages closed by default so municipalities with low-quality local data are drafted instead of published.
 
 ## P1
 

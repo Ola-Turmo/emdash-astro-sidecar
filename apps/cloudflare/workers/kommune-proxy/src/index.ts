@@ -5,6 +5,11 @@ interface Env {
 }
 
 const PREFIX = '/kommune';
+const ALLOWED_PATHS = new Set(
+  [...conceptSitemapXml.matchAll(/<loc>https:\/\/www\.kurs\.ing(\/kommune(?:\/[^<]*)?)<\/loc>/g)].map((match) =>
+    normalizeConceptPath(match[1] || PREFIX),
+  ),
+);
 
 function withSecurityHeaders(headers: Headers): Headers {
   const next = new Headers(headers);
@@ -21,6 +26,11 @@ function toOriginPath(pathname: string): string {
     return stripped || '/';
   }
   return pathname;
+}
+
+function normalizeConceptPath(pathname: string): string {
+  const stripped = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  return stripped || PREFIX;
 }
 
 function buildUpstreamHeaders(request: Request): Headers {
@@ -69,6 +79,23 @@ export default {
 
     if (incomingUrl.pathname === `${PREFIX}/robots.txt`) {
       return responseWithBody(conceptRobotsTxt, 'text/plain');
+    }
+
+    const normalizedIncomingPath = normalizeConceptPath(incomingUrl.pathname);
+    if (
+      normalizedIncomingPath.startsWith(`${PREFIX}/`) &&
+      normalizedIncomingPath !== PREFIX &&
+      !ALLOWED_PATHS.has(normalizedIncomingPath)
+    ) {
+      return new Response('Not found', {
+        status: 404,
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          'cache-control': 'no-store',
+          'x-content-type-options': 'nosniff',
+          'x-robots-tag': 'noindex, nofollow',
+        },
+      });
     }
 
     const originPath = toOriginPath(incomingUrl.pathname);

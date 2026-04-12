@@ -139,6 +139,11 @@ const municipalPages = defineCollection({
     })).default([]),
     sourceRepo: z.string().optional(),
     sourceLastChecked: z.string().optional(),
+    municipalityQuality: z.object({
+      score: z.number(),
+      publishable: z.boolean(),
+      reasons: z.array(z.string()).default([]),
+    }).optional(),
     title: z.string(),
     description: z.string(),
     pubDate: z.coerce.date(),
