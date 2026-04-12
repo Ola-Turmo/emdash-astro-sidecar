@@ -46,6 +46,9 @@ const {
   serviceLinks,
   regulationsLinks,
   bylawLinks,
+  officialSources,
+  localChecklist,
+  relatedGuideLinks,
   openingHoursRules,
   alcoholServingRules,
   sourceRepo,
@@ -73,9 +76,13 @@ const { Content } = await page.render();
           <span>{municipality}</span>
           {county && <span>{county}</span>}
           {municipalityNumber && <span>Kommune {municipalityNumber}</span>}
-          <time datetime={pubDate.toISOString()}>{pubDate.toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+          <time datetime={pubDate.toISOString()}>
+            {pubDate.toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </time>
           {updatedDate && (
-            <span>Oppdatert <time datetime={updatedDate.toISOString()}>{updatedDate.toLocaleDateString('nb-NO')}</time></span>
+            <span>
+              Oppdatert <time datetime={updatedDate.toISOString()}>{updatedDate.toLocaleDateString('nb-NO')}</time>
+            </span>
           )}
         </div>
       </div>
@@ -92,9 +99,21 @@ const { Content } = await page.render();
             <section class="shell-card p-5">
               <p class="eyebrow">Kontaktpunkter</p>
               <div class="mt-4 space-y-4 text-sm leading-7 text-slate-600">
-                {municipalitySiteUrl && <p><strong>Kommunenettsted:</strong> <a href={municipalitySiteUrl}>{municipalitySiteUrl}</a></p>}
-                {formsUrl && <p><strong>Skjema:</strong> <a href={formsUrl}>{formsUrl}</a></p>}
-                {publicRecordsUrl && <p><strong>Innsyn:</strong> <a href={publicRecordsUrl}>{publicRecordsUrl}</a></p>}
+                {municipalitySiteUrl && (
+                  <p>
+                    <strong>Kommunenettsted:</strong> <a href={municipalitySiteUrl}>{municipalitySiteUrl}</a>
+                  </p>
+                )}
+                {formsUrl && (
+                  <p>
+                    <strong>Skjema:</strong> <a href={formsUrl}>{formsUrl}</a>
+                  </p>
+                )}
+                {publicRecordsUrl && (
+                  <p>
+                    <strong>Innsyn:</strong> <a href={publicRecordsUrl}>{publicRecordsUrl}</a>
+                  </p>
+                )}
                 {publicRecordsPlatform && <p><strong>Innsynsløsning:</strong> {publicRecordsPlatform}</p>}
                 {municipalitySitePlatform && <p><strong>Nettstedsplattform:</strong> {municipalitySitePlatform}</p>}
                 {domain && <p><strong>Domene:</strong> {domain}</p>}
@@ -106,7 +125,10 @@ const { Content } = await page.render();
               <p class="eyebrow">Skjenking og servering</p>
               <div class="mt-4 space-y-4 text-sm leading-7 text-slate-600">
                 {alcoholPolicyPlanUrl && (
-                  <p><strong>Plan eller retningslinjer:</strong> <a href={alcoholPolicyPlanUrl}>{alcoholPolicyPlanUrl}</a></p>
+                  <p>
+                    <strong>Plan eller retningslinjer:</strong>{' '}
+                    <a href={alcoholPolicyPlanUrl}>{alcoholPolicyPlanUrl}</a>
+                  </p>
                 )}
                 {alcoholServingRules.length > 0 ? (
                   <ul class="space-y-3">
@@ -114,7 +136,13 @@ const { Content } = await page.render();
                       <li>
                         <strong>{rule.groups.length ? `Gruppe ${rule.groups.join(', ')}` : 'Regel'}:</strong> {rule.note}
                         {(rule.days || rule.endTime || rule.startTime) && (
-                          <span> {rule.days ? `${rule.days}. ` : ''}{rule.startTime || rule.endTime ? `${rule.startTime ?? 'Fra ukjent tid'} - ${rule.endTime ?? 'ukjent sluttid'}` : ''}</span>
+                          <span>
+                            {' '}
+                            {rule.days ? `${rule.days}. ` : ''}
+                            {rule.startTime || rule.endTime
+                              ? `${rule.startTime ?? 'Fra ukjent tid'} - ${rule.endTime ?? 'ukjent sluttid'}`
+                              : ''}
+                          </span>
                         )}
                       </li>
                     ))}
@@ -126,23 +154,66 @@ const { Content } = await page.render();
             </section>
           </div>
 
+          {officialSources.length > 0 && (
+            <section class="shell-card p-5 sm:p-6">
+              <p class="eyebrow">Det kommunen selv peker på</p>
+              <div class="mt-4 grid gap-4 md:grid-cols-2">
+                {officialSources.map((source: (typeof officialSources)[number]) => (
+                  <article class="rounded-3xl border border-slate-200/80 bg-white/80 p-4">
+                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{source.label}</p>
+                    {source.title && <h2 class="mt-2 text-lg font-bold text-slate-950">{source.title}</h2>}
+                    {source.summary && <p class="mt-2 text-sm leading-7 text-slate-600">{source.summary}</p>}
+                    <p class="mt-3 text-sm font-semibold text-teal-700">
+                      <a href={source.url}>Åpne kilden</a>
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {localChecklist.length > 0 && (
+            <section class="shell-card p-5 sm:p-6">
+              <p class="eyebrow">Slik kommer du raskere frem</p>
+              <ul class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                {localChecklist.map((item: string) => (
+                  <li class="flex gap-3">
+                    <span class="mt-2 h-2 w-2 rounded-full bg-teal-600"></span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {(openingHoursRules.length > 0 || serviceLinks.length > 0 || regulationsLinks.length > 0 || bylawLinks.length > 0) && (
             <div class="grid gap-6 lg:grid-cols-3">
               <section class="shell-card p-5">
                 <p class="eyebrow">Åpningstider</p>
                 <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-                  {openingHoursRules.length > 0 ? openingHoursRules.map((rule: (typeof openingHoursRules)[number]) => (
-                    <p><strong>{rule.appliesTo || 'Serveringssted'}:</strong> {rule.note}</p>
-                  )) : <p>Ingen åpningstidsregler er lagt inn ennå.</p>}
+                  {openingHoursRules.length > 0 ? (
+                    openingHoursRules.map((rule: (typeof openingHoursRules)[number]) => (
+                      <p><strong>{rule.appliesTo || 'Serveringssted'}:</strong> {rule.note}</p>
+                    ))
+                  ) : (
+                    <p>Ingen åpningstidsregler er lagt inn ennå.</p>
+                  )}
                 </div>
               </section>
 
               <section class="shell-card p-5">
                 <p class="eyebrow">Relevante sider</p>
                 <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-                  {serviceLinks.length > 0 ? serviceLinks.map((link: (typeof serviceLinks)[number]) => (
-                    <p><a href={link.url}>{link.label}</a>{link.note ? ` – ${link.note}` : ''}</p>
-                  )) : <p>Ingen tjenestelenker er lagt inn ennå.</p>}
+                  {serviceLinks.length > 0 ? (
+                    serviceLinks.map((link: (typeof serviceLinks)[number]) => (
+                      <p>
+                        <a href={link.url}>{link.label}</a>
+                        {link.note ? ` - ${link.note}` : ''}
+                      </p>
+                    ))
+                  ) : (
+                    <p>Ingen tjenestelenker er lagt inn ennå.</p>
+                  )}
                 </div>
               </section>
 
@@ -150,12 +221,20 @@ const { Content } = await page.render();
                 <p class="eyebrow">Forskrifter og vedtekter</p>
                 <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
                   {regulationsLinks.map((link: (typeof regulationsLinks)[number]) => (
-                    <p><a href={link.url}>{link.label}</a>{link.note ? ` – ${link.note}` : ''}</p>
+                    <p>
+                      <a href={link.url}>{link.label}</a>
+                      {link.note ? ` - ${link.note}` : ''}
+                    </p>
                   ))}
                   {bylawLinks.map((link: (typeof bylawLinks)[number]) => (
-                    <p><a href={link.url}>{link.label}</a>{link.note ? ` – ${link.note}` : ''}</p>
+                    <p>
+                      <a href={link.url}>{link.label}</a>
+                      {link.note ? ` - ${link.note}` : ''}
+                    </p>
                   ))}
-                  {regulationsLinks.length === 0 && bylawLinks.length === 0 && <p>Ingen lokale regel-lenker er lagt inn ennå.</p>}
+                  {regulationsLinks.length === 0 && bylawLinks.length === 0 && (
+                    <p>Ingen lokale regel-lenker er lagt inn ennå.</p>
+                  )}
                 </div>
               </section>
             </div>
@@ -165,9 +244,7 @@ const { Content } = await page.render();
         <aside class="space-y-5">
           <div class="shell-card p-5">
             <p class="eyebrow">{SHELL_COPY.articleNextStepEyebrow}</p>
-            <p class="mt-3 text-sm leading-7 text-slate-600">
-              {SHELL_COPY.articleNextStepText}
-            </p>
+            <p class="mt-3 text-sm leading-7 text-slate-600">{SHELL_COPY.articleNextStepText}</p>
             <div class="mt-4 flex flex-col gap-3">
               <a href={PRIMARY_CTA.href} class="cta-primary text-sm">{PRIMARY_CTA.label}</a>
               <a href={SECONDARY_CTA.href} class="cta-secondary text-sm">{SECONDARY_CTA.label}</a>
@@ -202,12 +279,23 @@ const { Content } = await page.render();
             </dl>
           </div>
 
+          {relatedGuideLinks.length > 0 && (
+            <div class="shell-card p-5">
+              <p class="eyebrow">Gå videre til forklarte guider</p>
+              <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                {relatedGuideLinks.map((link: (typeof relatedGuideLinks)[number]) => (
+                  <p><a href={link.url}>{link.label}</a></p>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div class="shell-card p-5">
             <p class="eyebrow">Datagrunnlag</p>
             <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
               {sourceRepo && <p><strong>Kilde:</strong> {sourceRepo}</p>}
               {sourceLastChecked && <p><strong>Sist kontrollert:</strong> {sourceLastChecked}</p>}
-              <p>Denne siden er bygd på strukturert kommuneinformasjon og kan senere utvides med mer redaksjonelt innhold.</p>
+              <p>Denne siden er bygget på strukturert kommuneinformasjon og offisielle kommunesider.</p>
             </div>
           </div>
         </aside>

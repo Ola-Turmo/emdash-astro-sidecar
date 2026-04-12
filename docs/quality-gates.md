@@ -32,10 +32,25 @@ Checks:
 - placeholder text
 - likely mojibake
 - published post metadata length limits
+- banned reader-facing operator phrases in the edge publish template
 
 Script:
 
 - `scripts/check-copy-quality.mjs`
+
+### `pnpm qa:municipality`
+
+Checks:
+
+- every kommune page has multiple official municipal sources
+- every kommune page has a municipality-specific checklist
+- every kommune page links back into the main guide cluster
+- body copy is long enough and structurally complete
+- kommune pages are not near-duplicates of each other
+
+Script:
+
+- `scripts/check-municipality-content.mjs`
 
 ### `pnpm qa:config`
 
@@ -94,6 +109,7 @@ What the repo can do is:
 - block known regressions
 - keep XML/SEO files correct
 - enforce reader-first copy
+- block municipality pages that look generic, thin, or too similar
 - make verification mandatory
 
 ## Related Skill

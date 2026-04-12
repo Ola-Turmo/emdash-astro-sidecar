@@ -1,6 +1,6 @@
 # Active TODO
 
-Last updated: 2026-04-11
+Last updated: 2026-04-12
 
 This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when meaningful work lands.
 
@@ -79,3 +79,4 @@ These are only required when moving from generic infrastructure work into a real
 
 - [x] Added concept-aware build verification for `kurs-ing/guide`, `kurs-ing/kommune`, and `gatareba-ge/guide`.
 - [x] Expanded the first generated kommune content set to cover multiple large municipalities from `Ola-Turmo/kommune.no.apimcp.site`.
+- [x] Enriched generated kommune pages with municipality-specific official-source summaries, checklists, and related guide handoffs.

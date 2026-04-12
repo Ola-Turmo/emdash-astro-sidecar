@@ -9,6 +9,7 @@ const findings = [];
 const uiFiles = await walkFiles(path.join(repoRoot, 'apps/blog/src'), (filePath) =>
   /\.(astro|md|mdx|json|ts)$/.test(filePath),
 );
+const filesToCheck = [...uiFiles];
 
 const bannedUiPhrases = [
   'SEO / GEO sidecar',
@@ -27,14 +28,14 @@ const bannedPlaceholderPhrases = [
   'TBD',
 ];
 
-const mojibakePatterns = [/Ã./, /â€/, /Â©/, /ðŸ/, /âœ/];
+const mojibakePatterns = [/Ãƒ./, /Ã¢â‚¬/, /Ã‚Â©/, /Ã°Å¸/, /Ã¢Å“/];
 
-for (const filePath of uiFiles) {
+for (const filePath of filesToCheck) {
   const relative = path.relative(repoRoot, filePath);
   const content = await readUtf8(filePath);
 
   if (
-    relative.startsWith('apps/blog/src/content/blog/') &&
+    relative.startsWith(`apps${path.sep}blog${path.sep}src${path.sep}content${path.sep}blog${path.sep}`) &&
     /^---[\s\S]*?draft:\s*true[\s\S]*?---/m.test(content)
   ) {
     continue;

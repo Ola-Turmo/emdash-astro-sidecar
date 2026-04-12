@@ -117,6 +117,17 @@ Current generated municipality pages:
 - Sandefjord
 - Alta
 
+The generated pages are now richer than the raw municipality dataset. The generator also tries to pull:
+
+- official page titles
+- official meta descriptions or first-paragraph summaries
+- municipality-specific checklists
+- direct handoffs into the existing Kurs.ing guide cluster
+
+The repo now blocks weak kommune pages with a dedicated gate:
+
+- `pnpm qa:municipality`
+
 ## Concept Verification
 
 The repo now verifies multiple site/concept combinations as part of the normal verification path:

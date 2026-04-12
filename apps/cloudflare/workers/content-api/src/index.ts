@@ -1,4 +1,4 @@
-import { buildPublicationArtifact } from '../../../../../packages/publish-engine/src/index';
+import { buildPublicationArtifact, validatePublicationArtifact } from '../../../../../packages/publish-engine/src/index';
 
 interface Env {
   AUTONOMOUS_DB: D1Database;
@@ -400,6 +400,10 @@ async function publishApprovedDraft(
       sections: sectionsResult.results,
     },
   );
+  const validation = validatePublicationArtifact(artifact);
+  if (!validation.valid) {
+    throw new Error(`Publication artifact failed validation: ${validation.reasons.join(' ')}`);
+  }
 
   const artifactId = crypto.randomUUID();
   const now = new Date().toISOString();

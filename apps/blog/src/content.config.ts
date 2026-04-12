@@ -111,6 +111,17 @@ const municipalPages = defineCollection({
       url: z.string().url(),
       note: z.string().optional(),
     })).default([]),
+    officialSources: z.array(z.object({
+      label: z.string(),
+      url: z.string().url(),
+      title: z.string().optional(),
+      summary: z.string().optional(),
+    })).default([]),
+    localChecklist: z.array(z.string()).default([]),
+    relatedGuideLinks: z.array(z.object({
+      label: z.string(),
+      url: z.string().url(),
+    })).default([]),
     openingHoursRules: z.array(z.object({
       appliesTo: z.string().optional(),
       days: z.string().optional(),

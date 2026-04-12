@@ -32,6 +32,11 @@ export interface PublicationArtifact {
   tags: string[];
 }
 
+export interface PublicationArtifactValidation {
+  valid: boolean;
+  reasons: string[];
+}
+
 export function buildPublicationArtifact(
   host: PublicationHostContext,
   draft: PublicationDraftContext,
@@ -86,6 +91,49 @@ export function buildPublicationArtifact(
     category,
     tags,
     mdx: `${frontmatterLines.join('\n')}\n\n${body}\n`,
+  };
+}
+
+export function validatePublicationArtifact(artifact: PublicationArtifact): PublicationArtifactValidation {
+  const reasons: string[] = [];
+  const bodyWordCount = countWords(artifact.mdx);
+  const bannedPhrases = [
+    'Cloudflare edge-artikkel',
+    'Publisert fra Cloudflare',
+    'autonome innholdsløypen',
+    'Edge-publisert innhold',
+    'SEO / GEO sidecar',
+    'GEO sidecar',
+    'Kurs.ing sidecar',
+  ];
+
+  if (!artifact.title || artifact.title.trim().length < 20) {
+    reasons.push('Publication artifact title is too weak.');
+  }
+  if (!artifact.description || artifact.description.trim().length < 90 || artifact.description.trim().length > 170) {
+    reasons.push('Publication artifact description is outside the safe range.');
+  }
+  if (!artifact.excerpt || artifact.excerpt.trim().length < 120 || artifact.excerpt.trim().length > 230) {
+    reasons.push('Publication artifact excerpt is outside the safe range.');
+  }
+  if (artifact.tags.length < 3) {
+    reasons.push('Publication artifact needs at least three semantic tags.');
+  }
+  if (bodyWordCount < 320) {
+    reasons.push('Publication artifact body is too short.');
+  }
+  if (!artifact.html.includes('brand-mark') || !artifact.html.includes('footer-display')) {
+    reasons.push('Publication artifact HTML is missing the shared design shell.');
+  }
+  for (const phrase of bannedPhrases) {
+    if (artifact.html.includes(phrase) || artifact.mdx.includes(phrase)) {
+      reasons.push(`Publication artifact contains banned reader-facing phrase "${phrase}".`);
+    }
+  }
+
+  return {
+    valid: reasons.length === 0,
+    reasons,
   };
 }
 
@@ -401,14 +449,14 @@ function buildEdgeHtml(input: {
         <p class="lead">${escapeHtml(input.excerpt)}</p>
         <div class="meta">
           <span>${new Date().toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          <span>Publisert fra Cloudflare</span>
+          <span>Publisert i guideseksjonen</span>
         </div>
       </div>
       <div class="main-grid">
         <article class="shell-card article-card">
           ${articleHtml}
           <ul class="tags">${tags}</ul>
-          <p class="footer-note">Denne artikkelen er publisert direkte fra den autonome innholdsløypen i Cloudflare. Den kan senere materialiseres inn i den statiske Astro-siden uten å endre URL.</p>
+          <p class="footer-note">Denne artikkelen følger samme URL-struktur og uttrykk som resten av guideseksjonen, og kan senere flyttes inn i den statiske siden uten å endre adressen.</p>
         </article>
         <aside class="aside">
           <div class="shell-card aside-card">
@@ -426,8 +474,8 @@ function buildEdgeHtml(input: {
               <dd>${escapeHtml(input.category)}</dd>
               <dt>Formål</dt>
               <dd>Forklare spørsmålet tydelig og lede leseren videre til et trygt neste steg.</dd>
-              <dt>Publisering</dt>
-              <dd>Cloudflare edge-artikkel</dd>
+              <dt>Format</dt>
+              <dd>Guideartikkel</dd>
             </dl>
           </div>
         </aside>
@@ -438,7 +486,7 @@ function buildEdgeHtml(input: {
         <div>
           <p class="eyebrow" style="color:#6ee7b7">${escapeHtml(input.brand.brandName)}</p>
           <p class="footer-display">Forklaringer og artikler som hjelper leseren videre uten å bryte med vertssidens opplevelse.</p>
-          <p class="footer-copy">Denne edge-siden følger den samme publiseringslinjen som resten av sidecar-oppsettet, men kan gå live uten at en ny statisk Pages-build må være ferdig først.</p>
+          <p class="footer-copy">Denne siden følger samme designretning og URL-struktur som resten av guideseksjonen, slik at leseren møter en stabil opplevelse også når nytt innhold publiseres raskt.</p>
           <div class="footer-cta">
             <a href="${escapeHtml(input.brand.primaryCtaUrl)}" class="cta-primary">${escapeHtml(input.brand.primaryCtaLabel)}</a>
             <a href="mailto:${escapeHtml(input.brand.supportEmail)}" class="cta-secondary" style="background:#0f172a;color:white;border-color:#334155">Kontakt</a>
@@ -463,7 +511,7 @@ function buildEdgeHtml(input: {
       </div>
       <div class="footer-bar">
         <span>&copy; ${new Date().getFullYear()} ${escapeHtml(input.brand.brandName)}.</span>
-        <span>Edge-publisert innhold med samme URL-struktur som den statiske siden.</span>
+        <span>Innholdet følger samme URL-struktur som resten av guideseksjonen.</span>
       </div>
     </footer>
   </body>
@@ -504,4 +552,8 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function countWords(value: string): number {
+  return value.trim().split(/\s+/).filter(Boolean).length;
 }

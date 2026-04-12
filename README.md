@@ -147,6 +147,8 @@ For repeatable future rollouts, start from:
 
 The repo can now generate kommune concept pages from the structured municipality dataset in `Ola-Turmo/kommune.no.apimcp.site`.
 
+The kommune generator now also enriches those pages with summaries from official municipality URLs when available, plus municipality-specific checklists and direct guide handoffs into the main `kurs.ing/guide` concept.
+
 Run:
 
 ```bash
