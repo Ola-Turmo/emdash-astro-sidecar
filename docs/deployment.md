@@ -73,6 +73,8 @@ Current route workers:
 
 - `apps/cloudflare/workers/guide-proxy/src/index.ts`
 - `apps/cloudflare/workers/kommune-proxy/src/index.ts`
+- `apps/cloudflare/workers/router-worker/src/index.ts`
+- `apps/cloudflare/workers/apex-site-proxy/src/index.ts`
 
 Key rule:
 
@@ -80,6 +82,20 @@ Key rule:
 - serve concept-local `rss.xml`, `sitemap.xml`, and `robots.txt` from synced artifacts so feed correctness does not depend on stale Pages XML behavior
 - redirect legacy top-level content paths such as `/blog/*` to the mounted sidecar path when old host pages still exist
 - block `/guide/preview/*` from public access
+- keep the root host worker isolated from `/guide` and `/kommune` so concept deploys cannot take over the real landing page again
+
+The root host is now protected by two dedicated workers:
+
+- `router-worker` for `www.kurs.ing/*`
+- `kurs-ing-apex-site-proxy` for `kurs.ing/*`
+
+Both proxy the landing-page host to `https://new.kurs.ing` and explicitly bypass:
+
+- `/guide`
+- `/kommune`
+- `/robots.txt`
+- `/sitemap.xml`
+- `/sitemap-index.xml`
 
 Example:
 

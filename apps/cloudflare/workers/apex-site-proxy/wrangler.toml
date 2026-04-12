@@ -1,0 +1,10 @@
+name = "kurs-ing-apex-site-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+routes = [
+  { pattern = "kurs.ing/*", zone_name = "kurs.ing" },
+]
+
+[vars]
+ROOT_SITE_ORIGIN = "https://new.kurs.ing"

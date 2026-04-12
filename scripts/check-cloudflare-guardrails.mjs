@@ -24,6 +24,8 @@ const requiredFiles = [
   'apps/cloudflare/workers/orchestrator/wrangler.toml',
   'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',
   'apps/cloudflare/workers/content-api/wrangler.toml',
+  'apps/cloudflare/workers/router-worker/wrangler.toml',
+  'apps/cloudflare/workers/apex-site-proxy/wrangler.toml',
   'apps/cloudflare/workers/research-worker/wrangler.toml',
   'apps/cloudflare/workers/draft-worker/wrangler.toml',
   'apps/cloudflare/workers/eval-worker/wrangler.toml',
@@ -74,6 +76,14 @@ const workerExpectations = [
   {
     path: 'apps/cloudflare/workers/metrics-worker/wrangler.toml',
     checks: ['[limits]', 'cpu_ms', 'AUTONOMOUS_DB', 'JOB_LEASE_SECONDS', 'METRICS_MAX_SOURCES_PER_RUN'],
+  },
+  {
+    path: 'apps/cloudflare/workers/router-worker/wrangler.toml',
+    checks: ['ROOT_SITE_ORIGIN', 'https://new.kurs.ing'],
+  },
+  {
+    path: 'apps/cloudflare/workers/apex-site-proxy/wrangler.toml',
+    checks: ['ROOT_SITE_ORIGIN', 'kurs.ing/*', 'https://new.kurs.ing'],
   },
   {
     path: 'apps/cloudflare/workers/browser-audit-worker/wrangler.toml',

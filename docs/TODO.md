@@ -78,6 +78,7 @@ These are only required when moving from generic infrastructure work into a real
 ## Recently Completed
 
 - [x] Add Cloudflare Browser Rendering screenshot audits and live JPEG capture through `browser-audit-worker`.
+- [x] Re-establish and protect the real `kurs.ing` landing page with dedicated root proxy workers that bypass `/guide` and `/kommune`.
 - [x] Expand observability with provider summaries, prompt-run summaries, and richer audit links in the Cloudflare dashboards.
 - [x] Add a first refresh-draft loop so existing published articles can re-enter generation and evaluation when there are no net-new topic candidates.
 - [x] Add a controlled slug-repair and taxonomy layer so Cloudflare-only publishing cannot emit malformed slugs and generic tags.

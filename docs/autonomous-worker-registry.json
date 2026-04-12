@@ -19,6 +19,18 @@
       "requiredSecrets": []
     },
     {
+      "name": "router-worker",
+      "wranglerConfig": "apps/cloudflare/workers/router-worker/wrangler.toml",
+      "kind": "route",
+      "requiredSecrets": []
+    },
+    {
+      "name": "kurs-ing-apex-site-proxy",
+      "wranglerConfig": "apps/cloudflare/workers/apex-site-proxy/wrangler.toml",
+      "kind": "route",
+      "requiredSecrets": []
+    },
+    {
       "name": "scheduler",
       "wranglerConfig": "apps/cloudflare/workers/scheduler/wrangler.toml",
       "kind": "control-plane",
