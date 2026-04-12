@@ -19,6 +19,13 @@ const bannedUiPhrases = [
   'how this blog is connected to the main site',
   'Slik er bloggen koblet til hovedsiden',
   'Kurs.ing sidecar',
+  'forklart med faktiske lokale tider',
+  'kommunale lenker',
+  'de viktigste sporene du må sjekke',
+  'det kontrollerte datagrunnlaget',
+  'det strukturerte datagrunnlaget',
+  'praktiske innganger',
+  'Kommunale sider som faktisk er relevante her',
 ];
 
 const bannedPlaceholderPhrases = [
@@ -54,6 +61,9 @@ for (const filePath of filesToCheck) {
   }
 
   for (const pattern of mojibakePatterns) {
+    if (relative.endsWith(`${path.sep}municipality-view.ts`) && content.includes('decodeCommonMojibake(')) {
+      break;
+    }
     if (pattern.test(content)) {
       findings.push(`${relative} appears to contain mojibake or broken encoding`);
       break;

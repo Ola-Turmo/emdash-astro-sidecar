@@ -77,6 +77,7 @@ These are only required when moving from generic infrastructure work into a real
 
 ## Recently Completed
 
+- [x] Tighten Norwegian kommune writing by removing internal/generic phrases from generated descriptions, municipality leads, and section labels, and codify those bans in the copy gate.
 - [x] Add Cloudflare Browser Rendering screenshot audits and live JPEG capture through `browser-audit-worker`.
 - [x] Re-establish and protect the real `kurs.ing` landing page with dedicated root proxy workers that bypass `/guide` and `/kommune`.
 - [x] Add a root-routing guard that statically validates the root worker configs and live-checks that `kurs.ing` and `www.kurs.ing` never render kommune content.

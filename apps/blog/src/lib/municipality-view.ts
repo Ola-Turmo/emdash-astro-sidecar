@@ -70,67 +70,67 @@ export type MunicipalityViewModel = {
 const linkKinds: Record<string, { label: string; note: string }> = {
   plan: {
     label: 'Alkoholpolitisk plan',
-    note: 'Her ligger kommunens egne retningslinjer eller lokale tider for alkohol.',
+    note: 'Åpne denne for å se hvordan kommunen beskriver skjenketider og lokale prioriteringer.',
   },
   forms: {
     label: 'Skjema og selvbetjening',
-    note: 'Her ligger skjemaene kommunen faktisk ber deg bruke.',
+    note: 'Bruk denne når du skal sende inn søknad eller finne skjemaene kommunen viser til.',
   },
   publicRecords: {
     label: 'Innsyn og offentlig journal',
-    note: 'Her kan du følge saker, postlister og tidligere behandling.',
+    note: 'Her kan du se postlister, saker og tidligere behandling i kommunen.',
   },
   serviceHub: {
     label: 'Salg, servering og skjenking',
-    note: 'Dette er kommunens hovedside for salg, servering og skjenking.',
+    note: 'Dette er hovedsiden kommunen bruker for regler, krav og videre lenker.',
   },
   application: {
     label: 'Søke bevilling eller gjøre endringer',
-    note: 'Her starter den praktiske søknadsprosessen eller endringer i en eksisterende bevilling.',
+    note: 'Åpne denne hvis du skal søke, melde endringer eller følge kommunens søknadsprosess.',
   },
   rules: {
     label: 'Regler og lokale vilkår',
-    note: 'Denne siden samler de lokale reglene kommunen peker til for salg eller skjenking.',
+    note: 'Denne siden er nyttig når du vil lese lokale vilkår før du søker eller planlegger drift.',
   },
   sales: {
     label: 'Salgsbevilling',
-    note: 'Kommunen har en egen side for salg av alkohol.',
+    note: 'Åpne denne hvis du skal selge alkohol fra butikk eller utsalgssted.',
   },
   serving: {
     label: 'Skjenkebevilling',
-    note: 'Kommunen har en egen side for skjenking og skjenketider.',
+    note: 'Åpne denne hvis du skal servere alkohol og vil se kommunens egne regler.',
   },
   servering: {
     label: 'Serveringsbevilling',
-    note: 'Kommunen har en egen side for serveringsbevilling.',
+    note: 'Denne forklarer serveringsbevilling og hva kommunen krever før oppstart.',
   },
   fees: {
     label: 'Gebyr og satser',
-    note: 'Kommunen publiserer egne gebyrer eller satser for bevillinger.',
+    note: 'Her finner du gebyrer eller satser som er relevante før du søker eller fornyer.',
   },
   renewal: {
     label: 'Fornyelse av bevilling',
-    note: 'Kommunen har et eget spor for fornyelse av bevillingsperioden.',
+    note: 'Åpne denne når bevillingen skal fornyes eller perioden nærmer seg slutten.',
   },
   controls: {
     label: 'Kontroll og tilsyn',
-    note: 'Kommunen beskriver kontroll eller tilsyn etter at bevilling er gitt.',
+    note: 'Denne viser hva kommunen følger opp etter at bevillingen er gitt.',
   },
   outdoor: {
     label: 'Uteservering',
-    note: 'Kommunen har en egen side for uteservering eller bruk av uteareal.',
+    note: 'Åpne denne hvis du skal bruke uteareal eller søke om uteservering.',
   },
   singleEvent: {
     label: 'Enkeltanledning og arrangement',
-    note: 'Kommunen skiller mellom faste bevillinger og enkeltarrangement.',
+    note: 'Denne er relevant for arrangement, enkeltanledninger og midlertidige behov.',
   },
   exam: {
     label: 'Prøver og kunnskapskrav',
-    note: 'Kommunen peker på prøver, kurs eller kunnskapskrav.',
+    note: 'Her ser du om kommunen viser til prøver, kunnskapskrav eller kurs.',
   },
   general: {
     label: 'Relevant kommuneside',
-    note: 'Dette er en lokal side for bevillinger eller praktisk oppfølging.',
+    note: 'Dette er en lokal side som er relevant for bevilling eller oppfølging.',
   },
 };
 
@@ -159,10 +159,11 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
   const usefulSources = data.officialSources
     .filter((entry) => entry.url)
     .filter((entry) => !looksGenericSourceSummary(entry.summary))
+    .filter((entry) => hasPermitSignal(`${entry.label} ${entry.title || ''} ${entry.summary || ''}`))
     .slice(0, 4);
   const checklist = uniqueValues([
     ...data.localChecklist.map((entry) => normalizeText(entry)),
-    salesNote ? 'Kontroller salgstid direkte på plan- eller salgsbevillingssiden hvis kommunen ikke oppgir et tydelig klokkeslett i datagrunnlaget.' : '',
+    salesNote ? 'Kontroller salgstid direkte på plan- eller salgsbevillingssiden hvis kommunen ikke oppgir et tydelig klokkeslett.' : '',
   ]).slice(0, 6);
 
   return {
@@ -172,8 +173,8 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
     curatedLinks,
     usefulSources,
     checklist,
-    lead: facts.slice(0, 2).join(' '),
-    cardSummary: facts[0] || highlights[0] || `Se lokale regler og lenker for ${data.municipality}.`,
+    lead: buildLead(data, timeline, curatedLinks, salesNote),
+    cardSummary: facts[0] || highlights[0] || `Se lokale regler og nyttige kommunesider for ${data.municipality}.`,
     salesNote,
   };
 }
@@ -219,21 +220,21 @@ function buildFacts(
   const facts: string[] = [];
 
   if (data.county) {
-    facts.push(`${data.municipality} følger sine egne kommunale alkoholregler, selv om kommunen ligger i ${normalizeText(data.county)}.`);
+    facts.push(`I ${data.municipality} er det kommunen selv som avgjør skjenketider, praksis og oppfølging.`);
   }
 
   const servingEntries = timeline.filter((entry) => entry.kind === 'serving').slice(0, 2);
   for (const entry of servingEntries) {
     const window = formatWindow(entry);
     if (window) {
-      facts.push(`${capitalize(entry.label)} gjelder ${window}.`);
+      facts.push(`${capitalize(entry.label)} er satt til ${window}.`);
     }
   }
 
   const openingEntry = timeline.find((entry) => entry.kind === 'opening');
   if (openingEntry) {
     const window = formatWindow(openingEntry);
-    facts.push(`${capitalize(openingEntry.label)} er lagt opp ${window}.`.replace(/\s+\./g, '.'));
+    facts.push(`${capitalize(openingEntry.label)} er satt til ${window}.`.replace(/\s+\./g, '.'));
   }
 
   const specialKinds = uniqueValues(
@@ -243,15 +244,15 @@ function buildFacts(
       .map((kind) => linkKinds[kind].label.toLowerCase()),
   );
   if (specialKinds.length) {
-    facts.push(`${data.municipality} har egne sider for ${joinHumanList(specialKinds)}.`);
+    facts.push(`Du finner egne kommunesider for ${joinHumanList(specialKinds)}.`);
   }
 
   if (data.publicRecordsPlatform) {
-    facts.push(`Innsyn går via ${normalizeText(data.publicRecordsPlatform)}, så du kan følge lokale saker og vedtak der.`);
+    facts.push(`Innsyn går via ${normalizeText(data.publicRecordsPlatform)}, så du kan se saker og vedtak der.`);
   }
 
   if (data.municipalitySitePlatform) {
-    facts.push(`Kommunen publiserer innholdet sitt på ${normalizeText(data.municipalitySitePlatform)}, så det lønner seg å følge temasidene direkte.`);
+    facts.push('Det lønner seg å følge kommunens egne temasider når du trenger oppdatert lokal informasjon.');
   }
 
   return uniqueValues(facts).slice(0, 4);
@@ -269,7 +270,11 @@ function buildHighlights(
     highlights.push(`${normalizeText(planSource.title)}.`);
   }
 
-  const serviceSource = data.officialSources.find((entry) => /salg|skjenk|servering/i.test(`${entry.label} ${entry.title || ''}`));
+  const serviceSource = data.officialSources.find(
+    (entry) =>
+      /salg|skjenk|servering/i.test(`${entry.label} ${entry.title || ''}`) &&
+      hasPermitSignal(`${entry.label} ${entry.title || ''} ${entry.summary || ''}`),
+  );
   if (serviceSource?.summary && !looksGenericSourceSummary(serviceSource.summary)) {
     highlights.push(normalizeText(serviceSource.summary));
   }
@@ -304,6 +309,41 @@ function decorateLink(entry: LinkEntry) {
     displayLabel: forceKindLabel || needsDerivedLabel(entry.label) ? definition.label : normalizeText(entry.label),
     displayNote: normalizeText(entry.note || definition.note),
   };
+}
+
+function buildLead(
+  data: MunicipalityData,
+  timeline: MunicipalityTimelineEntry[],
+  curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>,
+  salesNote: string,
+) {
+  const servingEntry = timeline.find((entry) => entry.kind === 'serving');
+  const planLink = curatedLinks.find((entry) => entry.kind === 'plan');
+  const applicationLink = curatedLinks.find((entry) => entry.kind === 'application' || entry.kind === 'forms');
+  const parts: string[] = [];
+
+  if (servingEntry) {
+    const window = formatWindow(servingEntry);
+    if (window) {
+      parts.push(`Her ser du hva ${data.municipality} oppgir om skjenking ${window}.`);
+    }
+  } else {
+    parts.push(`Her får du en rask oversikt over lokale regler og nyttige kommunesider i ${data.municipality}.`);
+  }
+
+  if (planLink && applicationLink) {
+    parts.push(`Vi peker deg videre til både ${planLink.displayLabel.toLowerCase()} og siden for søknad eller endringer.`);
+  } else if (planLink) {
+    parts.push(`Vi peker deg videre til ${planLink.displayLabel.toLowerCase()} når du trenger originalkilden.`);
+  } else if (applicationLink) {
+    parts.push('Vi peker deg videre til siden for søknad eller endringer når du skal gjøre noe konkret.');
+  }
+
+  if (salesNote) {
+    parts.push('Salgstid må fortsatt dobbeltsjekkes mot kommunens egne sider hvis den ikke er tydelig oppgitt.');
+  }
+
+  return parts.join(' ');
 }
 
 function classifyLinkKind(url: string, label: string) {
@@ -357,7 +397,15 @@ function formatWindow(entry: MunicipalityTimelineEntry) {
 function looksGenericSourceSummary(summary?: string) {
   const text = normalizeText(summary || '');
   if (!text) return true;
-  return /legevakt|barnevern|vann- og avløp|overgrepsmottak|stedet for å finne tjenester|postboks|telefon|talende web|fingeren på/i.test(text);
+  return /legevakt|barnevern|vann- og avløp|overgrepsmottak|stedet for å finne tjenester|postboks|telefon|talende web|fingeren på|organisasjonsnummer|bankkontonummer|faktura til kommunen|for leverandører|skriv til oss|send sikker digital post|meld feil|sifra/i.test(
+    text,
+  );
+}
+
+function hasPermitSignal(value: string) {
+  return /(bevilling|skjenk|salg|servering|innsyn|journal|skjema|søknad|kontroll|gebyr|uteserver|arrangement|prøve|prove|kunnskap)/iu.test(
+    normalizeText(value),
+  );
 }
 
 function buildSalesNote(
@@ -367,7 +415,7 @@ function buildSalesNote(
   if (timeline.some((entry) => entry.kind === 'sales')) return '';
   const salesLink = curatedLinks.find((entry) => ['sales', 'rules', 'serviceHub'].includes(entry.kind));
   if (!salesLink) return '';
-  return `Salgstid er ikke eksplisitt oppgitt i det kontrollerte datagrunnlaget. Åpne ${salesLink.displayLabel.toLowerCase()} før du fastsetter lokale salgstider.`;
+  return `Vi fant ikke en tydelig salgstid i kildene vi har kontrollert. Åpne ${salesLink.displayLabel.toLowerCase()} før du fastsetter lokale salgstider.`;
 }
 
 function normalizeTime(value: string) {

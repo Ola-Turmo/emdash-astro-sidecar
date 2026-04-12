@@ -145,7 +145,7 @@ const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind
 
           {municipalityView.curatedLinks.length > 0 && (
             <section class="shell-card p-5 sm:p-6">
-              <p class="eyebrow">Kommunale sider som faktisk er relevante her</p>
+              <p class="eyebrow">Sider i kommunen du bør åpne</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.curatedLinks.map((link) => (
                   <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
@@ -239,7 +239,7 @@ const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind
 
           {relatedGuideLinks.length > 0 && (
             <div class="shell-card p-5">
-              <p class="eyebrow">Gå videre til forklarte guider</p>
+              <p class="eyebrow">Les mer på kurs.ing</p>
               <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
                 {relatedGuideLinks.map((link: (typeof relatedGuideLinks)[number]) => (
                   <p><a href={link.url}>{link.label}</a></p>
@@ -249,7 +249,7 @@ const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind
           )}
 
           <div class="shell-card p-5">
-            <p class="eyebrow">Datagrunnlag</p>
+            <p class="eyebrow">Kilder og kontrollpunkter</p>
             <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
               {sourceRepo && <p><strong>Kilde:</strong> {sourceRepo}</p>}
               {sourceLastChecked && <p><strong>Sist kontrollert:</strong> {sourceLastChecked}</p>}

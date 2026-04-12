@@ -58,6 +58,28 @@ Examples:
 - generated drafts should include at least two useful first-party links when the page is meant to guide the reader forward
 - generated drafts should end with a clear and safe next step for the reader
 
+## Norwegian Quality Rules For Local Pages
+
+For jurisdiction-specific pages like `/kommune`, the language should sound like a practical guide for a person who is about to open, apply, or verify something.
+
+Prefer:
+
+- `Her ser du hva kommunen oppgir om skjenketider`
+- `Sider i kommunen du bør åpne`
+- `Se lokale regler og sidene i kommunen det er verdt å åpne før du søker`
+- `Vi fant ikke en tydelig salgstid, så denne må dobbeltsjekkes i originalkilden`
+
+Avoid:
+
+- `forklart med faktiske lokale tider`
+- `kommunale lenker`
+- `de viktigste sporene du må sjekke`
+- `det strukturerte datagrunnlaget`
+- `det kontrollerte datagrunnlaget`
+- `praktiske innganger`
+
+These phrases sound internal, synthetic, or translated. They are not how a Norwegian reader would naturally describe the task in front of them.
+
 ## Review Question
 
 Before shipping a page or article, ask:

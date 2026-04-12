@@ -107,8 +107,8 @@ async function buildMunicipalPage(row) {
     typeof row.site_platform === 'string' ? row.site_platform : row.site_platform?.name || '',
   );
   const sourceLastChecked = row.last_checked || '';
-  const title = `${municipality}: lokale regler for alkohol, skjenking og kommunale lenker`;
-  const description = `${municipality} kommune forklart med faktiske lokale tider, kommunale lenker og de viktigste sporene du må sjekke for salg, servering og skjenking.`;
+  const title = `${municipality}: skjenketider, bevilling og nyttige kommunesider`;
+  const description = `Se skjenketider, lokale regler og sidene i ${municipality} kommune det er verdt å åpne før du søker eller planlegger drift.`;
 
   const serviceLinks = (row.alcohol_restaurant_urls || [])
     .filter((url) => isAlcoholRelevantUrl(url))
@@ -162,6 +162,7 @@ async function buildMunicipalPage(row) {
   ).map((source) => ({
     ...source,
     title: source.title || source.label,
+    summary: sanitizeOfficialSourceSummary(source.label, source.summary),
   }));
 
   const localChecklist = buildLocalChecklist({
@@ -229,7 +230,7 @@ async function buildMunicipalPage(row) {
   ].filter(Boolean);
 
   const body = [
-    `Denne siden samler praktiske innganger for ${municipality} kommune når du trenger oversikt over salg, servering, skjenking, innsyn og relevante kommunesider.`,
+    `Her finner du skjenketider, nyttige kommunesider og kontrollpunkter for ${municipality} når du skal jobbe med salg, servering eller skjenking.`,
     '',
     buildMunicipalityOverview({
       municipality,
@@ -261,7 +262,7 @@ async function buildMunicipalPage(row) {
       formsUrl,
     }),
     '',
-    '## Kommunale sider som er mest relevante her',
+    '## Sider i kommunen det er verdt å åpne',
     '',
     ...buildBodySourceBullets({
       municipality,
@@ -273,7 +274,7 @@ async function buildMunicipalPage(row) {
       sitePlatform,
     }),
     '',
-    '## Lokale temaer vi faktisk fant på kommunens egne sider',
+    '## Lokale temaer kommunen faktisk omtaler',
     '',
     ...buildLocalTopicBullets({
       municipality,
@@ -296,13 +297,13 @@ async function buildMunicipalPage(row) {
     '',
     '## Når du bør gå videre til guide eller kurs',
     '',
-    `Kommunesiden hjelper deg med lokale lenker. Når du trenger forklaring på kravene bak salgsbevilling, skjenkebevilling eller etablererprøven, bør du gå videre til innhold som forklarer regelverket enklere og mer samlet.`,
+    `Denne siden hjelper deg med lokale regler og kommunale kilder. Når du vil forstå kravene bak salgsbevilling, skjenkebevilling eller etablererprøven bedre, finner du forklarte guider videre på kurs.ing.`,
     '',
     ...relatedGuideLinks.map((link) => `- [${link.label}](${link.url})`),
     '',
     '## Kort oppsummert',
     '',
-    `Bruk ${municipality}-siden som lokal inngang. Bruk guideseksjonen når du vil forstå kravene bedre. Bruk kurspakken når du er klar for pensum, oppgaver og eksamentrening.`,
+    `Bruk ${municipality}-siden når du trenger lokale regler og riktige kommunesider. Gå videre til guidene når du vil forstå kravene bedre. Bruk kurspakken når du er klar for pensum, oppgaver og eksamentrening.`,
   ].filter(Boolean);
 
   return `${frontmatter.join('\n')}\n\n${body.join('\n')}\n`;
@@ -320,26 +321,28 @@ function buildMunicipalityOverview({
   const parts = [];
 
   if (county) {
-    parts.push(`${municipality} ligger i ${county}, og kommunen har sine egne innganger for bevillinger, skjema og innsyn.`);
+    parts.push(`${municipality} ligger i ${county}, men det er kommunen selv som setter de praktiske rammene for bevilling, skjema og innsyn.`);
   } else {
-    parts.push(`${municipality} har egne kommunale innganger for bevillinger, skjema og innsyn.`);
+    parts.push(`${municipality} har egne kommunale sider for bevilling, skjema og innsyn.`);
   }
 
   if (publicRecordsPlatform) {
-    parts.push(`Innsyn håndteres gjennom ${publicRecordsPlatform}, noe som gjør det lettere å se hvordan kommunen publiserer saker og dokumenter.`);
+    parts.push(`Innsyn går via ${publicRecordsPlatform}, så du kan følge saker, vedtak og tidligere behandling på samme sted.`);
   }
 
   if (sitePlatform) {
-    parts.push(`Det offentlige innholdet ligger på en ${sitePlatform}-basert kommuneside, så det er ofte verdt å følge kommunens egne temalenker i stedet for bare søk.`);
+    parts.push(`Kommunen publiserer stoffet sitt på ${sitePlatform}, så det lønner seg å følge temasidene direkte i stedet for å stole på gamle søkeresultater.`);
   }
 
-  const officialSummary = officialSources.find((entry) => entry.summary)?.summary;
+  const officialSummary = officialSources.find(
+    (entry) => hasUsefulSummary(entry.summary) && hasPermitSignal(`${entry.label} ${entry.summary || ''}`),
+  )?.summary;
   if (officialSummary) {
-    parts.push(`Kommunens egne sider peker særlig på dette: ${officialSummary}`);
+    parts.push(`På kommunens egne sider løftes særlig dette fram: ${officialSummary}`);
   }
 
   if (alcoholServingRules.length > 0 || openingHoursRules.length > 0) {
-    parts.push(`Datagrunnlaget inneholder også lokale opplysninger om skjenketider eller åpningstider som kan gi deg en raskere start.`);
+    parts.push('Vi fant også konkrete lokale tider eller driftsrammer som gir deg et bedre utgangspunkt før du åpner originalkilden.');
   }
 
   return parts.join(' ');
@@ -355,17 +358,22 @@ function buildMunicipalitySpecifics({
 }) {
   const details = [];
 
-  const serviceSummary = officialSources.find((entry) => entry.label === 'Salg, servering og skjenking')?.summary;
+  const serviceSummary = officialSources.find(
+    (entry) =>
+      entry.label === 'Salg, servering og skjenking' &&
+      hasUsefulSummary(entry.summary) &&
+      hasPermitSignal(`${entry.label} ${entry.summary || ''}`),
+  )?.summary;
   if (serviceSummary) {
-    details.push(`${municipality} fremhever selv følgende på bevillingssiden: ${serviceSummary}`);
+    details.push(`På bevillingssiden trekker ${municipality} særlig fram dette: ${serviceSummary}`);
   }
 
   if (alcoholServingRules[0]?.note) {
-    details.push(`I det strukturerte datagrunnlaget ligger det en konkret opplysning om skjenking: ${alcoholServingRules[0].note}`);
+    details.push(`Kommunen oppgir også dette om skjenking: ${alcoholServingRules[0].note}`);
   }
 
   if (openingHoursRules[0]?.note) {
-    details.push(`For åpningstid eller driftsrammer peker datagrunnlaget blant annet på dette: ${openingHoursRules[0].note}`);
+    details.push(`For åpningstid eller drift peker kommunen blant annet på dette: ${openingHoursRules[0].note}`);
   }
 
   if (publicRecordsPlatform) {
@@ -391,13 +399,15 @@ function buildBodySourceBullets({
   const bullets = [];
 
   for (const source of officialSources.slice(0, 4)) {
-    const summary = source.summary ? ` ${source.summary}` : '';
+    const summary = hasUsefulSummary(source.summary) && hasPermitSignal(`${source.label} ${source.summary || ''}`)
+      ? ` ${source.summary}`
+      : '';
     const title = source.title && source.title !== source.label ? ` (${source.title})` : '';
     bullets.push(`[${source.label}](${source.url})${title}.${summary}`.trim());
   }
 
   if (serviceLinks[1]?.url) {
-    bullets.push(`I ${municipality} ligger det også flere undersider under bevillingsområdet, for eksempel [${serviceLinks[1].label}](${serviceLinks[1].url}).`);
+    bullets.push(`Det finnes også flere undersider under bevillingsområdet, for eksempel [${serviceLinks[1].label}](${serviceLinks[1].url}).`);
   }
 
   if (regulationsLinks[0]?.url) {
@@ -413,7 +423,7 @@ function buildBodySourceBullets({
   }
 
   if (sitePlatform) {
-    bullets.push(`Siden kommunen bruker ${sitePlatform}, er det ofte nyttig å følge interne temasider og ikke bare fritekstsøk.`);
+    bullets.push(`Siden kommunen bruker ${sitePlatform}, er det lurt å følge temasidene direkte og ikke bare fritekstsøk.`);
   }
 
   return bullets.slice(0, 8).map((item) => `- ${item}`);
@@ -437,11 +447,11 @@ function buildLocalTopicBullets({
 
   if (!topics.size) {
     return [
-      `- Vi fant foreløpig få tydelige undersider for ${municipality}, så denne siden bør senere utvides med mer redaksjonelt lokalt innhold.`,
+      `- Vi fant foreløpig få tydelige undersider om bevilling i ${municipality}, så du bør starte med hovedsiden og innsyn før du går videre.`,
     ];
   }
 
-  return [...topics].map((topic) => `- ${municipality} har en tydelig kommunal inngang knyttet til ${topic}.`);
+  return [...topics].map((topic) => `- ${municipality} har en egen side eller underside knyttet til ${topic}.`);
 }
 
 function uniqueSources(sources) {
@@ -526,7 +536,7 @@ async function fetchOfficialSourceSummary(url) {
 
     return {
       title: normalizeText(title).slice(0, 180),
-      summary,
+      summary: hasUsefulSummary(summary) ? summary : '',
     };
   } catch {
     return {};
@@ -559,7 +569,7 @@ function buildLocalChecklist({
   }
 
   if (alcoholServingRules.length > 0 || openingHoursRules.length > 0) {
-    checklist.push('Sammenlign de strukturerte tidsreglene her med kommunens egne sider før du sender søknad eller planlegger åpningstid.');
+    checklist.push('Sammenlign tidene oppsummert her med kommunens egne sider før du sender søknad eller planlegger åpningstid.');
   }
 
   if (officialSources.length > 0) {
@@ -725,6 +735,10 @@ function isLowQualitySummary(value) {
   const commaCount = (text.match(/,/g) || []).length;
   if (commaCount >= 3 && !/[.!?]/.test(text)) return true;
   if (/\bskjenking\s+\w+,\s+\w+\s+\w+/iu.test(text)) return true;
+  if (/stedet for å finne tjenester og informasjon/iu.test(text)) return true;
+  if (/postboks|telefon|e-post|epost|postmottak@/iu.test(text)) return true;
+  if (/innsyn i offentlig saksbehandling\. søk i offentlig journal/iu.test(text)) return true;
+  if (/skriv til oss|send sikker digital post|meld feil|sifra/iu.test(text)) return true;
   return false;
 }
 
@@ -734,7 +748,29 @@ function isBoilerplateParagraph(value) {
   if (/hold (ctrl|cmd)-?tasten/iu.test(text)) return true;
   if (/forstørre|forminske/iu.test(text)) return true;
   if (/cookie|personvern|tilgjengelighet/iu.test(text)) return true;
+  if (/stedet for å finne tjenester og informasjon/iu.test(text)) return true;
+  if (/postboks|telefon|e-post|epost|postmottak@/iu.test(text)) return true;
+  if (/skriv til oss|send sikker digital post|meld feil|sifra/iu.test(text)) return true;
   return text.length < 40;
+}
+
+function hasUsefulSummary(value) {
+  const text = cleanText(value);
+  return Boolean(text) && !isLowQualitySummary(text) && !isBoilerplateParagraph(text);
+}
+
+function hasPermitSignal(value) {
+  return /(bevilling|skjenk|salg|servering|innsyn|journal|skjema|søknad|soke|søke|kontroll|gebyr|uteserver|arrangement|kunnskap|prøve|prove)/iu.test(
+    cleanText(value),
+  );
+}
+
+function sanitizeOfficialSourceSummary(label, summary) {
+  const text = cleanText(summary);
+  if (!text) return '';
+  if (!hasUsefulSummary(text)) return '';
+  if (!hasPermitSignal(`${label} ${text}`)) return '';
+  return normalizeText(text);
 }
 
 function looksMojibake(value) {

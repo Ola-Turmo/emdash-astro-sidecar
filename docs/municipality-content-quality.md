@@ -134,6 +134,27 @@ For `/kommune`, this means:
   - official sources
   - next step
 
+## Norwegian Writing Rules
+
+The language on municipality pages should read like local guidance, not like AI-generated content operations.
+
+Good direction:
+
+- short lead paragraphs that explain what the reader gets on the page
+- clear wording around what is confirmed and what still must be checked
+- labels that name the action or source plainly
+- interpretation that helps the reader decide what to open first
+
+Bad direction:
+
+- synthetic phrases like `forklart med faktiske lokale tider`
+- generic wording like `kommunale lenker`
+- system-language like `det strukturerte datagrunnlaget`
+- detective-language like `de viktigste sporene du må sjekke`
+- meta phrasing like `praktiske innganger`
+
+If a sentence sounds like internal prompt output instead of a municipal guide written for a Norwegian reader, rewrite it before shipping.
+
 ## Required Gates
 
 Before publishing municipality content, the repo should at minimum pass:
