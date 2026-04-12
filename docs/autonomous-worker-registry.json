@@ -7,6 +7,12 @@
       "requiredSecrets": []
     },
     {
+      "name": "kommune-proxy",
+      "wranglerConfig": "apps/cloudflare/workers/kommune-proxy/wrangler.toml",
+      "kind": "route",
+      "requiredSecrets": []
+    },
+    {
       "name": "seo-files",
       "wranglerConfig": "apps/cloudflare/workers/seo-files/wrangler.toml",
       "kind": "route",

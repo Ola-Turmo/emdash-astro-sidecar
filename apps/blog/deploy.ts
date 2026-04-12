@@ -18,7 +18,7 @@ import { resolveActiveSiteRuntime } from './site-profiles.mjs';
 const BLOG_DIR = join(process.cwd(), 'apps/blog');
 const OUTPUT_DIR = join(BLOG_DIR, 'dist');
 const { site, concept } = resolveActiveSiteRuntime(process.env);
-const DEFAULT_PROJECT_NAME = process.env.PAGES_PROJECT_NAME || site.cloudflare.pagesProject;
+const DEFAULT_PROJECT_NAME = process.env.PAGES_PROJECT_NAME || concept.cloudflare.pagesProject;
 const quotedOutputDir = `"${OUTPUT_DIR}"`;
 
 const green = (msg) => `\x1b[32m${msg}\x1b[0m`;
@@ -71,9 +71,9 @@ async function main() {
     exec('pnpm run build', { cwd: BLOG_DIR });
     log(green('Build complete'));
 
-    logStep('1.1', 'Syncing guide SEO artifacts');
-    exec('pnpm sync:guide-seo', { cwd: process.cwd() });
-    log(green('Guide SEO artifacts synced'));
+    logStep('1.1', 'Syncing concept SEO artifacts');
+    exec('pnpm sync:concept-seo', { cwd: process.cwd() });
+    log(green('Concept SEO artifacts synced'));
 
     if (!existsSync(OUTPUT_DIR)) {
       throw new Error(`Build output not found at ${OUTPUT_DIR}`);

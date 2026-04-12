@@ -33,7 +33,7 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 - [x] Scaffold an unrelated site example (`gatareba-ge`) to prove separation.
 - [x] Add a dedicated route/template system for non-blog concepts like `/kommune/{slug}`.
 - [x] Add separate audit targets and quality gates per site and per concept.
-- [ ] Split deploy surfaces further so each site/concept can choose its own Pages project, worker bindings, and release mode.
+- [x] Split deploy surfaces further so each site/concept can choose its own Pages project, worker bindings, and release mode.
 - [x] Add municipality-specific visual/audit checks when `EMDASH_CONCEPT_KEY=kommune`.
 
 ## P2
@@ -81,3 +81,4 @@ These are only required when moving from generic infrastructure work into a real
 - [x] Expanded the first generated kommune content set to cover multiple large municipalities from `Ola-Turmo/kommune.no.apimcp.site`.
 - [x] Enriched generated kommune pages with municipality-specific official-source summaries, checklists, and related guide handoffs.
 - [x] Expanded the kommune rollout set to a broader starter coverage across many Norwegian municipalities from the legal/municipality source.
+- [x] Added concept-level Cloudflare deployment surfaces and a dedicated `/kommune` route worker.

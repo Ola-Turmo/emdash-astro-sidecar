@@ -45,6 +45,7 @@ A concept owns:
 - shell copy for header, homepage, article cards, article aside, and footer
 - route prefixes for article, category, and author style pages
 - audit targets for that section
+- concept-specific Cloudflare Pages and route-worker settings
 
 ## Current Limitation
 

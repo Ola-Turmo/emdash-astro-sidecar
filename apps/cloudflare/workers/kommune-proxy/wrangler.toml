@@ -1,0 +1,11 @@
+name = "kurs-ing-kommune-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+routes = [
+  { pattern = "www.kurs.ing/kommune*", zone_name = "kurs.ing" },
+  { pattern = "kurs.ing/kommune*", zone_name = "kurs.ing" },
+]
+
+[vars]
+KOMMUNE_ORIGIN = "https://kurs-ing-static.pages.dev"

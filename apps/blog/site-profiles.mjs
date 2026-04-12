@@ -13,7 +13,6 @@ const siteProfiles = {
     cloudflare: {
       pagesProject: 'emdash-astro-sidecar',
       pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
-      routeWorkerName: 'kurs-ing-guide-proxy',
     },
     courseLinks: [
       {
@@ -46,6 +45,12 @@ const siteProfiles = {
           articlePrefix: '/blog',
           categoryPrefix: '/category',
           authorPrefix: '/author',
+        },
+        cloudflare: {
+          pagesProject: 'emdash-astro-sidecar',
+          pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
+          routeWorkerName: 'kurs-ing-guide-proxy',
+          routeWorkerDirectory: 'guide-proxy',
         },
         audit: {
           sitemapUrls: ['https://www.kurs.ing/guide/sitemap.xml'],
@@ -123,6 +128,12 @@ const siteProfiles = {
           categoryPrefix: '/tema',
           authorPrefix: '/redaksjon',
         },
+        cloudflare: {
+          pagesProject: 'kurs-ing-static',
+          pagesPreviewAlias: 'kurs-ing-static.pages.dev',
+          routeWorkerName: 'kurs-ing-kommune-proxy',
+          routeWorkerDirectory: 'kommune-proxy',
+        },
         audit: {
           sitemapUrls: ['https://www.kurs.ing/kommune/sitemap.xml'],
           extraUrls: [
@@ -191,7 +202,6 @@ const siteProfiles = {
     cloudflare: {
       pagesProject: 'gatareba-sidecar',
       pagesPreviewAlias: 'main.gatareba-sidecar.pages.dev',
-      routeWorkerName: 'gatareba-guide-proxy',
     },
     courseLinks: [],
     concepts: {
@@ -207,6 +217,12 @@ const siteProfiles = {
           articlePrefix: '/blog',
           categoryPrefix: '/category',
           authorPrefix: '/author',
+        },
+        cloudflare: {
+          pagesProject: 'gatareba-sidecar',
+          pagesPreviewAlias: 'main.gatareba-sidecar.pages.dev',
+          routeWorkerName: 'gatareba-guide-proxy',
+          routeWorkerDirectory: 'guide-proxy',
         },
         audit: {
           sitemapUrls: ['https://www.gatareba.ge/guide/sitemap.xml'],

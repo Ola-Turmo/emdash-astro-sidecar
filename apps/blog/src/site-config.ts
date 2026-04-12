@@ -16,7 +16,6 @@ type RuntimeShape = {
     cloudflare: {
       pagesProject: string;
       pagesPreviewAlias: string;
-      routeWorkerName: string;
     };
     courseLinks: Array<{
       path: string;
@@ -36,6 +35,12 @@ type RuntimeShape = {
       articlePrefix: string;
       categoryPrefix: string;
       authorPrefix: string;
+    };
+    cloudflare: {
+      pagesProject: string;
+      pagesPreviewAlias: string;
+      routeWorkerName: string;
+      routeWorkerDirectory: string;
     };
     audit: {
       sitemapUrls: string[];
@@ -104,9 +109,10 @@ export const SITE_URL = ACTIVE_CONCEPT.siteUrl;
 export const SITE_NAME = ACTIVE_CONCEPT.siteName;
 export const SITE_DESCRIPTION = ACTIVE_CONCEPT.description;
 
-export const CLOUDFLARE_PAGES_PROJECT = ACTIVE_SITE.cloudflare.pagesProject;
-export const CLOUDFLARE_PAGES_PREVIEW_ALIAS = ACTIVE_SITE.cloudflare.pagesPreviewAlias;
-export const CLOUDFLARE_ROUTE_WORKER = ACTIVE_SITE.cloudflare.routeWorkerName;
+export const CLOUDFLARE_PAGES_PROJECT = ACTIVE_CONCEPT.cloudflare.pagesProject;
+export const CLOUDFLARE_PAGES_PREVIEW_ALIAS = ACTIVE_CONCEPT.cloudflare.pagesPreviewAlias;
+export const CLOUDFLARE_ROUTE_WORKER = ACTIVE_CONCEPT.cloudflare.routeWorkerName;
+export const CLOUDFLARE_ROUTE_WORKER_DIRECTORY = ACTIVE_CONCEPT.cloudflare.routeWorkerDirectory;
 export const DEPLOY_AUDIT_SITEMAPS = ACTIVE_CONCEPT.audit.sitemapUrls;
 export const DEPLOY_AUDIT_EXTRA_URLS = ACTIVE_CONCEPT.audit.extraUrls;
 

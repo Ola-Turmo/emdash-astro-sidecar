@@ -12,6 +12,7 @@
     "design:clone": "node ./scripts/design-clone.mjs",
     "generate:municipal-pages": "node ./scripts/generate-municipal-pages.mjs",
     "sync:guide-seo": "node ./scripts/sync-guide-seo-artifacts.mjs",
+    "sync:concept-seo": "node ./scripts/sync-concept-seo-artifacts.mjs",
     "audit:deployed": "node ./scripts/audit-deployed-urls.mjs",
     "audit:deployed:lighthouse": "node ./scripts/audit-deployed-urls.mjs --lighthouse",
     "audit:deployed:psi": "node ./scripts/audit-deployed-urls.mjs --lighthouse",

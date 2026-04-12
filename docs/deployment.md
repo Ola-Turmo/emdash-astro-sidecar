@@ -35,10 +35,10 @@ cd apps/blog
 pnpm exec wrangler pages deploy dist --project-name=<pages-project> --branch=<branch> --commit-dirty=true
 ```
 
-After building the blog, sync the feed and sitemap artifacts into the guide worker:
+After building the active concept, sync the feed and sitemap artifacts into that concept's route worker:
 
 ```bash
-pnpm sync:guide-seo
+pnpm sync:concept-seo
 ```
 
 Important:
@@ -48,21 +48,22 @@ Important:
 
 ## Route Worker Deployment
 
-When the blog is mounted under a subpath, deploy:
+When the active concept is mounted under a subpath, deploy the concept-specific route worker:
 
 ```bash
-cd apps/cloudflare/workers/guide-proxy
+cd apps/cloudflare/workers/<concept-worker>
 npx wrangler deploy
 ```
 
-Key file:
+Current route workers:
 
 - `apps/cloudflare/workers/guide-proxy/src/index.ts`
+- `apps/cloudflare/workers/kommune-proxy/src/index.ts`
 
 Key rule:
 
 - strip the mount prefix before requesting the Pages origin
-- serve `/guide/rss.xml`, `/guide/sitemap.xml`, and `/guide/robots.txt` from synced artifacts so feed correctness does not depend on stale Pages XML behavior
+- serve concept-local `rss.xml`, `sitemap.xml`, and `robots.txt` from synced artifacts so feed correctness does not depend on stale Pages XML behavior
 - redirect legacy top-level content paths such as `/blog/*` to the mounted sidecar path when old host pages still exist
 - block `/guide/preview/*` from public access
 
@@ -79,15 +80,16 @@ If you get that wrong, CSS requests return HTML and the live site appears unstyl
 
 ## Current Repo Defaults
 
-Current settings are stored in:
+Current concept-aware settings are stored in:
 
 - `apps/blog/src/site-config.ts`
+- `apps/blog/site-profiles.mjs`
 
-That file includes:
+Those files include:
 
-- Pages project name
-- Pages preview alias
-- route worker name
+- concept-specific Pages project name
+- concept-specific Pages preview alias
+- concept-specific route worker name and worker directory
 
 ## Deploy Script
 
@@ -98,7 +100,7 @@ There is a convenience script at:
 It now assumes:
 
 - Astro output lives in `dist`
-- the Pages project is `emdash-astro-sidecar`
+- the active concept decides which Pages project receives the deploy
 
 ## Autonomous Stack Deployment
 
