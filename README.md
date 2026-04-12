@@ -133,6 +133,7 @@ That workflow gives you:
 - [`docs/multisite-and-multi-concept.md`](docs/multisite-and-multi-concept.md)
 - [`docs/municipality-content-quality.md`](docs/municipality-content-quality.md)
 - [`docs/TODO.md`](docs/TODO.md)
+- [`docs/world-class-quality-targets.md`](docs/world-class-quality-targets.md)
 - [`docs/prd-autonomous-content-control-plane.md`](docs/prd-autonomous-content-control-plane.md)
 
 ## Repo Skills

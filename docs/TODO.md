@@ -1,98 +1,219 @@
 # Active TODO
 
-Last updated: 2026-04-12
+Last updated: 2026-04-13
 
-This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when meaningful work lands.
+This is the maintained backlog for `emdash-astro-sidecar`.
 
-## P0
+Use it as the execution list.
+Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the measurable target pack behind the list.
 
-- [x] Fix slug quality in autonomous Cloudflare-only publishing so malformed upstream text cannot produce routes like `pr-ven`.
-- [ ] Add official telemetry connectors for Google Search Console, Bing Webmaster, CrUX, and IndexNow logging.
-- [x] Add Cloudflare-native screenshot auditing so visual checks do not depend primarily on local Playwright runs.
-- [ ] Tighten unattended publish policy with hard budgets, rollback rules, cooldowns, and review gates for net-new articles.
-- [ ] Reach full parity between Astro-served articles and Cloudflare edge-served articles for metadata, shell, and navigation.
-- [x] Fail weak kommune pages closed by default so municipalities with low-quality local data are drafted instead of published.
+## Current State
 
-## P1
+- [x] Root `kurs.ing` landing page is separated from `/guide` and `/kommune` and protected by live route guards.
+- [x] Cloudflare-native screenshot auditing exists.
+- [x] Autonomous draft / eval / publish control-plane foundation exists.
+- [x] Multisite and multi-concept separation exists.
+- [x] Weak kommune pages now fail closed instead of staying published.
+- [x] Kommune quality reporting exists.
+- [x] Kommune hero-image workflow exists for the currently published municipality set.
 
-- [x] Add a first telemetry-ingestion foundation package and worker for Search Console, CrUX, Bing, and IndexNow.
-- [x] Add a safer multisite / multi-concept registry so unrelated domains and mounted sections stop sharing one flat host config.
-- [x] Add a first generated kommune content set from `Ola-Turmo/kommune.no.apimcp.site`.
+## Current Published Kommune Set
 
-- [ ] Improve first-party source quality in `research-worker` with richer extraction from course pages, FAQs, checkout, and support content.
-- [x] Strengthen semantic tag generation and controlled taxonomy handling for static and edge-only articles.
-- [x] Add a Cloudflare-hosted review UI on top of `content-api`, not just review endpoints.
-- [ ] Add better observability for provider failures, host state, publish events, audits, and content quality trends.
-- [ ] Add backup and recovery workflows for D1 review state, edge artifacts, publish history, and host runtime state.
+- [x] `Arendal`
+- [x] `Kristiansand`
+- [x] `Lillehammer`
+- [x] `Narvik`
 
-## P1 Multisite / Multi-Concept
+Everything else in the current municipality rollout should stay drafted until it clears the quality threshold.
 
-- [x] Add a site + concept registry so one repo can hold unrelated domains and multiple mounted sections per site.
-- [x] Add `EMDASH_SITE_KEY` and `EMDASH_CONCEPT_KEY` selection at build time.
-- [x] Add content scoping fields (`siteKey`, `conceptKey`) so future content can be filtered cleanly.
-- [x] Scaffold `kurs-ing/kommune` as a separate concept with its own base path and page structure intent.
-- [x] Scaffold an unrelated site example (`gatareba-ge`) to prove separation.
-- [x] Add a dedicated route/template system for non-blog concepts like `/kommune/{slug}`.
-- [x] Add separate audit targets and quality gates per site and per concept.
-- [x] Split deploy surfaces further so each site/concept can choose its own Pages project, worker bindings, and release mode.
-- [x] Add municipality-specific visual/audit checks when `EMDASH_CONCEPT_KEY=kommune`.
+## P0: Measurable World-Class Baseline
 
-## P2
+- [ ] Add first-party RUM for `LCP`, `INP`, `CLS`, `TTFB`, and `FCP`, stored as `p50/p75/p95/p99` by page template, device class, and concept.
+- [ ] Add a release gate for field-performance targets on flagship surfaces:
+  - `LCP p75 <= 2.5s`
+  - `INP p75 <= 200ms`
+  - `CLS p75 <= 0.1`
+  - `TTFB p75 <= 0.8s`
+  - `FCP p75 <= 1.8s`
+- [ ] Add stronger Lighthouse CI budgets for flagship pages:
+  - `Performance >= 90`
+  - `Accessibility >= 90`
+  - `SEO >= 90`
+  - `Best Practices >= 90`
+  - `TBT < 200ms`
+- [ ] Add a world-class `flagship` target tier for key landing pages and highest-value articles:
+  - `Performance >= 95`
+  - tighter LCP target toward `~1.2-1.5s` on hero pages
+- [ ] Make these targets visible in operator dashboards and deployment summaries, not just in local CLI output.
 
-- [ ] Remove or archive remaining legacy demo content and categories that are not part of active host rollouts.
-- [ ] Replace the placeholder newsletter UI or remove it from the shipped app surface.
-- [ ] Finish repo-wide text cleanup where older internal/demo wording still leaks through.
-- [ ] Improve Windows audit ergonomics further so Lighthouse and cleanup are fully quiet in normal success cases.
-- [ ] Add a stronger post-publish summary/report layer for recurring runs, not just single-URL audits.
+## P0: Telemetry And Feedback Loop
 
-## Content Expansion
+- [ ] Finish live Google Search Console activation and ingestion.
+- [ ] Finish live CrUX ingestion using the available API key and store trend history.
+- [ ] Finish Bing Webmaster ingestion.
+- [ ] Finish IndexNow submission plus outcome tracking.
+- [ ] Tie telemetry to automatic refresh candidates:
+  - falling CTR
+  - rising impressions with weak clicks
+  - stale page quality
+  - weak internal-link support
+- [ ] Add page-template quality dashboards that combine:
+  - field CWV
+  - Lighthouse
+  - crawl/index state
+  - publish quality state
+  - conversion/funnel signals
 
-- [ ] Build the next Norwegian cluster for etablererprøven preparation.
-- [ ] Build the next Norwegian cluster for skjenkebevilling role clarity and exam scope.
-- [ ] Build the next Norwegian cluster for salgsbevilling comparisons and edge cases.
-- [ ] Improve article-to-course and article-to-article internal linking across the existing cluster.
-- [ ] Add refresh workflows that revisit old articles when query mix, CTR, or audit quality changes.
+## P0: Kommune Concept Quality
 
-## Inputs Needed From User
+- [ ] Improve the 4 published kommune pages so they contain more true municipality-specific value:
+  - stronger local takeaways
+  - clearer process differences
+  - better "what this means for you" interpretation
+  - less repeated checklist language
+- [ ] Extract more concrete local signals from municipality sources:
+  - application flow differences
+  - renewal and controls
+  - local exceptions or seasonal distinctions
+  - consumption-stop rules and enforcement nuances
+- [ ] Make `Kort oppsummert` more decision-useful and less repetitive.
+- [ ] Replace remaining generic "Det kommunen selv fremhever" content with stronger curated local source blocks or drop that block entirely when weak.
+- [ ] Add a cache-purge or explicit invalidation path for kommune slugs that are drafted out, so stale live 200s disappear without relying on query-string cache busting.
+- [ ] Add a municipality-specific release gate that blocks publishing if:
+  - source cards are too generic
+  - local differences are too weak
+  - hero image is missing for flagship municipality pages
+  - page remains too similar to another published municipality page
 
-These are only required when moving from generic infrastructure work into a real rollout.
+## P0: Accessibility
+
+- [ ] Treat `WCAG 2.2 AA` as the standard target for key templates and flows.
+- [ ] Add automated accessibility regression checks for:
+  - contrast
+  - alt text
+  - form labels
+  - keyboard reachability on core surfaces
+- [ ] Add a manual accessibility review checklist for flagship pages and landing pages.
+- [ ] Surface accessibility trend reporting in dashboards instead of only per-run CLI output.
+
+## P0: Security And Transport
+
+- [ ] Add an explicit header-quality gate for:
+  - `HSTS`
+  - `CSP`
+  - `Referrer-Policy`
+  - `Permissions-Policy`
+  - `X-Content-Type-Options`
+- [ ] Tighten CSP toward a reusable strict baseline and document allowed exceptions.
+- [ ] Add passive vulnerability scanning into normal verification or scheduled audits.
+- [ ] Add an `OWASP ASVS`-aligned checklist for the app + worker surfaces that are exposed publicly.
+
+## P0: Reliability And Operations
+
+- [ ] Define real SLOs for:
+  - availability
+  - latency
+  - error rate
+  - queue/workflow health
+- [ ] Add error-budget style reporting and alerting for the Cloudflare control plane.
+- [ ] Add better host-state visibility:
+  - locked host runs
+  - cooldown state
+  - worker failure rate
+  - retry churn
+  - publish event timelines
+- [ ] Add backup/export workflows for:
+  - D1 runtime state
+  - review state
+  - publish history
+  - edge artifacts
+  - audit history
+
+## P1: SEO / Discoverability / Search Readiness
+
+- [ ] Add a first-class indexability audit:
+  - should-index URLs
+  - should-not-index URLs
+  - canonical correctness
+  - noindex correctness
+- [ ] Add structured-data validity checks to recurring verification.
+- [ ] Track sitemap freshness and error rate as a first-class quality signal.
+- [ ] Add a guard against intrusive overlays/interstitial patterns on production pages.
+- [ ] Add explicit crawlability and renderability checks for key templates.
+
+## P1: Astro / Edge Parity
+
+- [ ] Reach closer parity between Astro-served articles and edge-served articles for:
+  - metadata
+  - shell
+  - navigation
+  - structured data
+  - image handling
+- [ ] Add parity regression tests so edge-only pages cannot quietly diverge from the Astro standard.
+
+## P1: Multisite / Multi-Concept Maturity
+
+- [ ] Add site-onboarding tooling so a new domain can be added with less manual configuration.
+- [ ] Add concept-specific template families beyond `guide` and `kommune`.
+- [ ] Add per-site and per-concept budgets, model routing defaults, and publish policies.
+- [ ] Add concept-specific dashboards so unrelated sites do not blend into one operator view.
+
+## P1: Content Growth
+
+- [ ] Build the next Norwegian article cluster for `etablererprøven`.
+- [ ] Build the next Norwegian article cluster for `skjenkebevilling`.
+- [ ] Build the next Norwegian article cluster for `salgsbevilling`.
+- [ ] Strengthen article-to-course and article-to-article internal linking.
+- [ ] Add refresh workflows for strong existing articles, not just net-new drafts.
+
+## P2: UX / Business / Monetization
+
+- [ ] Add task-success and funnel metrics for key user journeys.
+- [ ] Add rage-click/dead-click style UX frustration signals where appropriate.
+- [ ] Add conversion and revenue-safe release reporting so UX improvements are tied to outcome changes.
+- [ ] If monetization is added later, enforce ad-quality guardrails:
+  - no intrusive interstitials
+  - no ad-induced CLS
+  - no heavy third-party script regressions
+  - prefer native or choiceful placements
+
+## P2: Repo Cleanup
+
+- [ ] Remove or archive remaining legacy demo content that should not survive active rollouts.
+- [ ] Replace or remove the placeholder newsletter UI.
+- [ ] Finish repo-wide copy cleanup for older internal/demo language.
+- [ ] Improve Windows audit ergonomics further so normal success cases stay quiet.
+- [ ] Keep generated artifacts organized so quality reports do not become clutter.
+
+## Inputs Still Needed From User
+
+These are not blockers for generic platform work, but they are needed for specific rollouts.
 
 ### For a new site
 
 - [ ] Canonical domain and mount path
-- [ ] Brand reference URLs and the main conversion pages
-- [ ] Preferred CTA targets and labels
-- [ ] Locale, language, country, and support email
+- [ ] Brand reference URLs and core conversion pages
+- [ ] CTA targets and labels
+- [ ] Locale, language, geography, and support email
 - [ ] Allowed topic clusters and categories
-- [ ] Cloudflare zone / project decisions
-- [ ] Search Console / Bing / IndexNow access details if telemetry should be live
+- [ ] Cloudflare zone / Pages / route-worker decisions
+- [ ] Search Console / Bing / IndexNow access if telemetry should go live
 
 ### For a new concept on an existing site
 
-- [ ] Route prefix, for example `/kommune`
-- [ ] Page structure, for example blog, directory, landing pages, or local pages
+- [ ] Route prefix
+- [ ] Page structure
 - [ ] Taxonomy and content model
 - [ ] CTA targets and business goal
-- [ ] Copy direction for headings, intros, and footer text
-- [ ] Content source or editorial source of truth
+- [ ] Copy direction
+- [ ] Source of truth for content
 
 ## Recently Completed
 
-- [x] Tighten Norwegian kommune writing by removing internal/generic phrases from generated descriptions, municipality leads, and section labels, and codify those bans in the copy gate.
-- [x] Add Cloudflare Browser Rendering screenshot audits and live JPEG capture through `browser-audit-worker`.
-- [x] Re-establish and protect the real `kurs.ing` landing page with dedicated root proxy workers that bypass `/guide` and `/kommune`.
-- [x] Add a root-routing guard that statically validates the root worker configs and live-checks that `kurs.ing` and `www.kurs.ing` never render kommune content.
-- [x] Expand observability with provider summaries, prompt-run summaries, and richer audit links in the Cloudflare dashboards.
-- [x] Add a first refresh-draft loop so existing published articles can re-enter generation and evaluation when there are no net-new topic candidates.
-- [x] Add a controlled slug-repair and taxonomy layer so Cloudflare-only publishing cannot emit malformed slugs and generic tags.
-- [x] Add Cloudflare-hosted review and observability dashboards on top of `content-api`.
-- [x] Add metrics summary output from `metrics-worker` for host-level self-evaluation.
-- [x] Add a Cloudflare auth preflight and Wrangler-first deploy/secret-sync flow so a bad `CLOUDFLARE_API_TOKEN` cannot silently override a healthy local OAuth session.
-- [x] Added concept-aware build verification for `kurs-ing/guide`, `kurs-ing/kommune`, and `gatareba-ge/guide`.
-- [x] Expanded the first generated kommune content set to cover multiple large municipalities from `Ola-Turmo/kommune.no.apimcp.site`.
-- [x] Enriched generated kommune pages with municipality-specific official-source summaries, checklists, and related guide handoffs.
-- [x] Expanded the kommune rollout set to a broader starter coverage across many Norwegian municipalities from the legal/municipality source.
-- [x] Added concept-level Cloudflare deployment surfaces and a dedicated `/kommune` route worker.
-- [x] Codified municipality-page quality rules so future local-content concepts start from source-backed facts, curated links, explicit uncertainty handling, and non-generic layouts.
-- [x] Added a municipality quality report so published and drafted kommuner are summarized with reasons in reusable artifacts.
-- [x] Added municipality hero-image support with text-free image prompts and automatic pickup from the public asset path.
+- [x] Added a reusable municipality quality report with publish/draft reasons.
+- [x] Added fail-closed kommune publishing so weak municipality pages are drafted out.
+- [x] Added text-free municipality hero-image support with reusable prompt files.
+- [x] Tightened Norwegian kommune writing and codified banned synthetic phrases.
+- [x] Added Cloudflare-native screenshot auditing.
+- [x] Re-established and protected the real `kurs.ing` landing page.
+- [x] Added multisite and multi-concept separation.

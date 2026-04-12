@@ -30,6 +30,8 @@ Use these docs as the operational runbook for the sidecar.
   Search Console, CrUX, Bing, and IndexNow ingestion foundation for the autonomous control plane.
 - [TODO.md](./TODO.md)
   Maintained backlog including the latest learning, review, taxonomy, and observability work.
+- [world-class-quality-targets.md](./world-class-quality-targets.md)
+  Benchmark-backed target pack for performance, accessibility, reliability, security, SEO, and kommune-quality standards.
 - [multisite-and-multi-concept.md](./multisite-and-multi-concept.md)
   How the repo separates unrelated domains from multiple mounted concepts on the same site.
 - [prd-autonomous-content-control-plane.md](./prd-autonomous-content-control-plane.md)
