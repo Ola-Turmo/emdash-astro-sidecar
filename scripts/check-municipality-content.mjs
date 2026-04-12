@@ -33,7 +33,10 @@ const entries = [];
 for (const filePath of files) {
   const relative = path.relative(repoRoot, filePath);
   const source = await readUtf8(filePath);
-  const [frontmatter = '', body = ''] = source.split('---').slice(1, 3);
+  const normalizedSource = source.replace(/^\uFEFF/, '');
+  const frontmatterMatch = normalizedSource.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n?([\s\S]*)$/);
+  const frontmatter = frontmatterMatch?.[1] ?? '';
+  const body = frontmatterMatch?.[2] ?? '';
   const municipality = capture(frontmatter, /^municipality:\s*"(.+)"$/m);
   const title = capture(frontmatter, /^title:\s*"(.+)"$/m);
   const description = capture(frontmatter, /^description:\s*"(.+)"$/m);
@@ -120,7 +123,7 @@ function capture(source, regex) {
 }
 
 function countYamlArrayItems(source, fieldName) {
-  const match = source.match(new RegExp(`${fieldName}:\\n([\\s\\S]*?)(?:\\n[a-zA-Z]|$)`));
+  const match = source.match(new RegExp(`${fieldName}:\\r?\\n([\\s\\S]*?)(?:\\r?\\n[a-zA-Z]|$)`));
   if (!match) return 0;
   return (match[1].match(/^\s*-\s/mg) || []).length;
 }
