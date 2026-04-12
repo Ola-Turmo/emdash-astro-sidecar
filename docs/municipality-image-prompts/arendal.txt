@@ -1,0 +1,8 @@
+Create an editorial hero image for a Norwegian municipality guidance page about Arendal.
+Audience: adults researching local alcohol licensing, skjenketider, and municipal procedures.
+Subject: an original atmospheric coastal South Norway city scene inspired by Arendal, with a calm harbor edge, low-rise civic architecture, clean Nordic waterfront, subtle hospitality cues like warmly lit restaurant terraces and a discreet municipal-office presence, but no identifiable logos.
+Composition: wide horizontal frame, foreground with a promenade and a few architectural details, midground with harbor water and town buildings, background with soft coastline depth; leave clear negative space in the upper-left and center-left for webpage headings.
+Style: premium editorial photography look, realistic but slightly art-directed, refined Scandinavian palette, crisp materials, high trust, contemporary and local rather than touristy.
+Lighting/Camera: overcast bright evening light with warm window glow, 35mm lens feel, eye-level perspective, natural depth, clean contrast.
+Constraints: absolutely no text, no signage, no logos, no watermark, no UI, no map graphics, no paperwork props, no generic stock-photo business people; keep the image useful as a website hero background.
+Output: 16:9 hero image, high quality.

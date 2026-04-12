@@ -1,12 +1,13 @@
 ﻿#!/usr/bin/env node
 
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const repoRoot = process.cwd();
 const sourceRepo = path.join(path.dirname(repoRoot), 'kommune.no.apimcp.site');
 const sourceCatalogPath = path.join(sourceRepo, 'kommune_catalog.enriched.json');
 const outputDir = path.join(repoRoot, 'apps', 'blog', 'src', 'content', 'municipalPages');
+const publicImageDir = path.join(repoRoot, 'apps', 'blog', 'public', 'images', 'kommune');
 
 const targetMunicipalities = [
   'Oslo',
@@ -86,13 +87,13 @@ async function main() {
 
     const slug = slugify(row.Kommunenavn);
     const filePath = path.join(outputDir, `${slug}.mdx`);
-    const content = await buildMunicipalPage(row);
+    const content = await buildMunicipalPage(row, slug);
     await writeFile(filePath, content, 'utf8');
     console.log(`Wrote ${path.relative(repoRoot, filePath)}`);
   }
 }
 
-async function buildMunicipalPage(row) {
+async function buildMunicipalPage(row, slug) {
   const normalizedRow = normalizeObjectKeys(row);
   const municipality = normalizeText(normalizedRow.Kommunenavn);
   const county = normalizeText(normalizedRow.Fylke);
@@ -187,6 +188,7 @@ async function buildMunicipalPage(row) {
     openingHoursRules,
     alcoholServingRules,
   });
+  const heroImage = await resolveMunicipalityHeroImage(slug, municipality, county);
 
   const relatedGuideLinks = [
     {
@@ -222,6 +224,9 @@ async function buildMunicipalPage(row) {
     publicRecordsUrl ? `publicRecordsUrl: "${escapeDoubleQuotes(publicRecordsUrl)}"` : null,
     publicRecordsPlatform ? `publicRecordsPlatform: "${escapeDoubleQuotes(publicRecordsPlatform)}"` : null,
     sitePlatform ? `municipalitySitePlatform: "${escapeDoubleQuotes(sitePlatform)}"` : null,
+    heroImage
+      ? `heroImage:\n  src: "${escapeDoubleQuotes(heroImage.src)}"\n  alt: "${escapeDoubleQuotes(heroImage.alt)}"`
+      : null,
     row.site_last_updated?.value
       ? `siteLastUpdated:\n  value: "${row.site_last_updated.value}"\n  method: "${escapeDoubleQuotes(normalizeText(row.site_last_updated.method || ''))}"\n  confidence: "${escapeDoubleQuotes(normalizeText(row.site_last_updated.confidence || ''))}"\n  observedAt: "${escapeDoubleQuotes(normalizeText(row.site_last_updated.observed_at || ''))}"`
       : null,
@@ -321,6 +326,20 @@ async function buildMunicipalPage(row) {
   ].filter(Boolean);
 
   return `${frontmatter.join('\n')}\n\n${body.join('\n')}\n`;
+}
+
+async function resolveMunicipalityHeroImage(slug, municipality, county) {
+  const filename = `${slug}-hero.png`;
+  const diskPath = path.join(publicImageDir, filename);
+  try {
+    await access(diskPath);
+    return {
+      src: `/images/kommune/${filename}`,
+      alt: `Stemningsbilde for ${municipality}${county ? ` i ${county}` : ''}`,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function buildMunicipalityOverview({

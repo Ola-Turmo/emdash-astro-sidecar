@@ -156,6 +156,26 @@ For `/kommune`, this means:
   - official sources
   - next step
 
+## Image Rules
+
+Municipality pages may use images, but only when the image strengthens trust and place without carrying factual claims by itself.
+
+Allowed:
+
+- municipality-specific hero images with a calm editorial look
+- coastal, urban, inland, or fjord context that fits the municipality
+- visual negative space that works with the page layout
+
+Not allowed:
+
+- text inside the image
+- maps or infographic overlays
+- fake documents, permits, or forms
+- generic business-stock imagery
+- images used to hide weak or repetitive local content
+
+The image is supporting context. The page still has to stand on local facts, useful links, and municipality-specific interpretation.
+
 ## Norwegian Writing Rules
 
 The language on municipality pages should read like local guidance, not like AI-generated content operations.

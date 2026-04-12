@@ -90,6 +90,10 @@ const municipalPages = defineCollection({
     publicRecordsUrl: z.string().url().optional(),
     publicRecordsPlatform: z.string().optional(),
     municipalitySitePlatform: z.string().optional(),
+    heroImage: z.object({
+      src: z.string(),
+      alt: z.string(),
+    }).optional(),
     siteLastUpdated: z.object({
       value: z.string(),
       method: z.string().optional(),

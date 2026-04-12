@@ -163,7 +163,7 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
       summary: hasValuableMunicipalitySummary(entry.summary) ? normalizeText(entry.summary || '') : undefined,
     }))
     .filter((entry) => hasPermitSignal(`${entry.label} ${entry.title || ''} ${entry.summary || ''}`))
-    .filter((entry) => entry.summary || entry.title)
+    .filter((entry) => entry.summary)
     .slice(0, 4);
   const checklist = uniqueValues([
     ...data.localChecklist.map((entry) => normalizeText(entry)),
@@ -231,14 +231,14 @@ function buildFacts(
   for (const entry of servingEntries) {
     const window = formatWindow(entry);
     if (window) {
-      facts.push(`${capitalize(entry.label)} er satt til ${window}.`);
+      facts.push(`For ${entry.label} oppgir kommunen skjenking ${window}.`);
     }
   }
 
   const openingEntry = timeline.find((entry) => entry.kind === 'opening');
   if (openingEntry) {
     const window = formatWindow(openingEntry);
-    facts.push(`${capitalize(openingEntry.label)} er satt til ${window}.`.replace(/\s+\./g, '.'));
+    facts.push(`${capitalize(openingEntry.label)} kan holde åpent ${window}.`.replace(/\s+\./g, '.'));
   }
 
   const specialKinds = uniqueValues(
@@ -274,19 +274,41 @@ function buildHighlights(
     highlights.push(`${normalizeText(planSource.title)}.`);
   }
 
+  const applicationLink = curatedLinks.find((entry) => entry.kind === 'application');
+  if (applicationLink) {
+    highlights.push(`${data.municipality} har en egen side for søknad og endringer, så du slipper å lete gjennom hovedsiden når du skal gjøre noe konkret.`);
+  }
+
+  const rulesLink = curatedLinks.find((entry) => entry.kind === 'rules' || entry.kind === 'plan');
+  if (rulesLink) {
+    highlights.push(`Kommunen skiller tydelig mellom praktisk søknad og lokale vilkår, noe som gjør det lettere å kontrollere reglene før du søker.`);
+  }
+
+  const examLink = curatedLinks.find((entry) => entry.kind === 'exam');
+  if (examLink) {
+    highlights.push(`${data.municipality} peker også til prøve- eller kunnskapskrav på egne sider, noe som er nyttig før du sender søknad.`);
+  }
+
+  const publicRecordsLink = curatedLinks.find((entry) => entry.kind === 'publicRecords');
+  if (publicRecordsLink && data.publicRecordsPlatform) {
+    highlights.push(`Tidligere saker kan spores i ${data.publicRecordsPlatform}, så du kan sammenligne praksis med det kommunen skriver på temasidene nå.`);
+  }
+
   const outdoorEntry = timeline.find((entry) => /ute/i.test(entry.label) || /ute/i.test(entry.note));
   if (outdoorEntry) {
     highlights.push(normalizeText(outdoorEntry.note));
   }
 
-  for (const entry of curatedLinks) {
-    if (['fees', 'renewal', 'controls', 'singleEvent', 'outdoor', 'exam', 'application', 'rules'].includes(entry.kind)) {
-      highlights.push(entry.displayNote);
-    }
+  const lateServingEntry = timeline
+    .filter((item) => item.kind === 'serving' || item.kind === 'opening')
+    .find((item) => toTimeMinutes(item.endTime) >= toTimeMinutes('03:00'));
+  if (lateServingEntry) {
+    highlights.push(`${data.municipality} åpner for sen drift sammenlignet med mange andre kommuner. Det bør du kontrollere opp mot konsept, naboer og intern drift før søknad.`);
   }
 
-  for (const entry of timeline.filter((item) => item.certainty === 'high')) {
-    highlights.push(normalizeText(entry.note));
+  const consumptionStopEntry = timeline.find((item) => /30 minutter|konsum/i.test(item.note));
+  if (consumptionStopEntry) {
+    highlights.push(`Kommunen presiserer at konsum må opphøre etter skjenkeslutt. Det er viktig å få inn i rutiner og opplæring.`);
   }
 
   return uniqueValues(highlights)
@@ -424,6 +446,13 @@ function normalizeTime(value: string) {
   return normalizeText(value).replace('.', ':');
 }
 
+function toTimeMinutes(value: string) {
+  const normalized = normalizeTime(value);
+  const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return -1;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
 function capitalize(value: string) {
   const normalized = normalizeText(value);
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
@@ -470,6 +499,7 @@ function decodeCommonMojibake(value: string) {
   }
   return normalized
     .replace(/aapaingstider/gi, 'åpningstider')
+    .replace(/aapaingstid/gi, 'åpningstid')
     .replace(/aapent/gi, 'åpent')
     .replace(/aapen/gi, 'åpen')
     .replace(/saerskilt/gi, 'særskilt')

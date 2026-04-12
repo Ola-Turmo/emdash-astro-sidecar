@@ -95,3 +95,4 @@ These are only required when moving from generic infrastructure work into a real
 - [x] Added concept-level Cloudflare deployment surfaces and a dedicated `/kommune` route worker.
 - [x] Codified municipality-page quality rules so future local-content concepts start from source-backed facts, curated links, explicit uncertainty handling, and non-generic layouts.
 - [x] Added a municipality quality report so published and drafted kommuner are summarized with reasons in reusable artifacts.
+- [x] Added municipality hero-image support with text-free image prompts and automatic pickup from the public asset path.
