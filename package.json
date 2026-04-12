@@ -11,6 +11,7 @@
     "dev": "pnpm --filter @emdash/blog dev",
     "design:clone": "node ./scripts/design-clone.mjs",
     "generate:municipal-pages": "node ./scripts/generate-municipal-pages.mjs",
+    "report:municipality": "node ./scripts/report-municipality-quality.mjs",
     "sync:guide-seo": "node ./scripts/sync-guide-seo-artifacts.mjs",
     "sync:concept-seo": "node ./scripts/sync-concept-seo-artifacts.mjs",
     "audit:deployed": "node ./scripts/audit-deployed-urls.mjs",

@@ -182,8 +182,15 @@ If a sentence sounds like internal prompt output instead of a municipal guide wr
 Before publishing municipality content, the repo should at minimum pass:
 
 - `pnpm qa:municipality`
+- `pnpm report:municipality`
 - concept build for `kurs-ing/kommune`
 - live smoke checks on representative municipality URLs
+
+The report should be treated as the operator summary for the current municipality set:
+
+- which municipalities are still publishable
+- which municipalities were drafted out
+- why weak municipalities were removed from the public set
 
 Future local concepts should add their own concept-specific content gates instead of reusing blog assumptions.
 

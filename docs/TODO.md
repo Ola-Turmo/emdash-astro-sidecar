@@ -11,7 +11,7 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 - [x] Add Cloudflare-native screenshot auditing so visual checks do not depend primarily on local Playwright runs.
 - [ ] Tighten unattended publish policy with hard budgets, rollback rules, cooldowns, and review gates for net-new articles.
 - [ ] Reach full parity between Astro-served articles and Cloudflare edge-served articles for metadata, shell, and navigation.
-- [ ] Fail weak kommune pages closed by default so municipalities with low-quality local data are drafted instead of published.
+- [x] Fail weak kommune pages closed by default so municipalities with low-quality local data are drafted instead of published.
 
 ## P1
 
@@ -94,3 +94,4 @@ These are only required when moving from generic infrastructure work into a real
 - [x] Expanded the kommune rollout set to a broader starter coverage across many Norwegian municipalities from the legal/municipality source.
 - [x] Added concept-level Cloudflare deployment surfaces and a dedicated `/kommune` route worker.
 - [x] Codified municipality-page quality rules so future local-content concepts start from source-backed facts, curated links, explicit uncertainty handling, and non-generic layouts.
+- [x] Added a municipality quality report so published and drafted kommuner are summarized with reasons in reusable artifacts.
