@@ -131,6 +131,7 @@ That workflow gives you:
 - [`docs/provider-runtime.md`](docs/provider-runtime.md)
 - [`docs/telemetry-ingestion.md`](docs/telemetry-ingestion.md)
 - [`docs/multisite-and-multi-concept.md`](docs/multisite-and-multi-concept.md)
+- [`docs/municipality-content-quality.md`](docs/municipality-content-quality.md)
 - [`docs/TODO.md`](docs/TODO.md)
 - [`docs/prd-autonomous-content-control-plane.md`](docs/prd-autonomous-content-control-plane.md)
 

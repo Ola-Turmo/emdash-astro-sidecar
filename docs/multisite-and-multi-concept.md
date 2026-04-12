@@ -77,9 +77,25 @@ Relevant files:
 
 To support concepts like `kurs.ing/kommune/oslo` cleanly, the next implementation step is:
 
-1. enrich the municipality template with more kommune-specific editorial copy and CTA logic
+1. continue enriching the municipality template with stronger source-backed local curation
 2. add concept-specific audit handling once kommune pages are live
 3. add concept-specific worker routing where needed
+
+## Local-Content Rule
+
+For local concepts like `/kommune`, the repo should not treat pages as ordinary article generation.
+
+Use the municipality standard in:
+
+- [docs/municipality-content-quality.md](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\docs\municipality-content-quality.md)
+
+The important pattern to reuse on future projects is:
+
+- facts first
+- explicit uncertainty handling
+- curated local source links
+- short interpretation
+- no generic filler paragraphs
 
 ## Current Kommune Content Source
 

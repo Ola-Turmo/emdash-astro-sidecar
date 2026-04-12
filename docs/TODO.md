@@ -91,3 +91,4 @@ These are only required when moving from generic infrastructure work into a real
 - [x] Enriched generated kommune pages with municipality-specific official-source summaries, checklists, and related guide handoffs.
 - [x] Expanded the kommune rollout set to a broader starter coverage across many Norwegian municipalities from the legal/municipality source.
 - [x] Added concept-level Cloudflare deployment surfaces and a dedicated `/kommune` route worker.
+- [x] Codified municipality-page quality rules so future local-content concepts start from source-backed facts, curated links, explicit uncertainty handling, and non-generic layouts.
