@@ -8,7 +8,7 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 
 - [x] Fix slug quality in autonomous Cloudflare-only publishing so malformed upstream text cannot produce routes like `pr-ven`.
 - [ ] Add official telemetry connectors for Google Search Console, Bing Webmaster, CrUX, and IndexNow logging.
-- [ ] Add Cloudflare-native screenshot auditing so visual checks do not depend primarily on local Playwright runs.
+- [x] Add Cloudflare-native screenshot auditing so visual checks do not depend primarily on local Playwright runs.
 - [ ] Tighten unattended publish policy with hard budgets, rollback rules, cooldowns, and review gates for net-new articles.
 - [ ] Reach full parity between Astro-served articles and Cloudflare edge-served articles for metadata, shell, and navigation.
 
@@ -77,6 +77,9 @@ These are only required when moving from generic infrastructure work into a real
 
 ## Recently Completed
 
+- [x] Add Cloudflare Browser Rendering screenshot audits and live JPEG capture through `browser-audit-worker`.
+- [x] Expand observability with provider summaries, prompt-run summaries, and richer audit links in the Cloudflare dashboards.
+- [x] Add a first refresh-draft loop so existing published articles can re-enter generation and evaluation when there are no net-new topic candidates.
 - [x] Add a controlled slug-repair and taxonomy layer so Cloudflare-only publishing cannot emit malformed slugs and generic tags.
 - [x] Add Cloudflare-hosted review and observability dashboards on top of `content-api`.
 - [x] Add metrics summary output from `metrics-worker` for host-level self-evaluation.

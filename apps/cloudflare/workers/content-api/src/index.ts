@@ -5,6 +5,7 @@ interface Env {
   MATERIALIZE_BATCH_LIMIT?: string;
   CONTENT_API_TOKEN?: string;
   REVIEW_BATCH_LIMIT?: string;
+  BROWSER_AUDIT_WORKER_URL?: string;
 }
 
 interface MaterializationRow {
@@ -54,6 +55,22 @@ interface RecentAuditRow {
   host_name: string;
   url: string;
   status_code: number | null;
+  created_at: string;
+}
+
+interface ProviderSummaryRow {
+  provider_id: string | null;
+  model_id: string | null;
+  draft_count: number;
+  published_count: number;
+}
+
+interface PromptSummaryRow {
+  family_id: string;
+  validation_score: number;
+  total_score: number;
+  max_score: number;
+  kept: number;
   created_at: string;
 }
 
@@ -373,6 +390,32 @@ async function buildObservabilitySummary(env: Env): Promise<Record<string, unkno
     )
     .all<Record<string, unknown>>();
 
+  const providerSummary = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT
+          provider_id,
+          model_id,
+          COUNT(*) AS draft_count,
+          SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) AS published_count
+        FROM drafts
+        GROUP BY provider_id, model_id
+        ORDER BY draft_count DESC
+      `,
+    )
+    .all<ProviderSummaryRow>();
+
+  const promptSummary = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT family_id, validation_score, total_score, max_score, kept, created_at
+        FROM prompt_runs
+        ORDER BY created_at DESC
+        LIMIT 12
+      `,
+    )
+    .all<PromptSummaryRow>();
+
   return {
     ok: true,
     generatedAt: new Date().toISOString(),
@@ -380,6 +423,8 @@ async function buildObservabilitySummary(env: Env): Promise<Record<string, unkno
     recentPublications: recentPublications.results,
     recentAudits: recentAudits.results,
     latestCrux: latestCrux.results,
+    providerSummary: providerSummary.results,
+    promptSummary: promptSummary.results,
   };
 }
 
@@ -477,7 +522,11 @@ async function buildReviewUi(env: Env, url: URL): Promise<string> {
           </article>
           <article class="card">
             <p class="eyebrow">Nylige audits</p>
-            ${renderAuditList(observability.recentAudits as RecentAuditRow[])}
+            ${renderAuditList(observability.recentAudits as RecentAuditRow[], env.BROWSER_AUDIT_WORKER_URL)}
+          </article>
+          <article class="card">
+            <p class="eyebrow">Leverandører</p>
+            ${renderProviderTable(observability.providerSummary as ProviderSummaryRow[])}
           </article>
         </section>
       </div>
@@ -511,6 +560,9 @@ async function buildObservabilityUi(env: Env): Promise<string> {
       <p class="eyebrow">Observability</p>
       <h1>Kontrollplanstatus</h1>
       <div class="card">${renderHostTable(summary.hosts as SummaryHostRow[])}</div>
+      <div class="card"><p class="eyebrow">Modellbruk</p>${renderProviderTable(summary.providerSummary as ProviderSummaryRow[])}</div>
+      <div class="card"><p class="eyebrow">Prompt runs</p>${renderPromptTable(summary.promptSummary as PromptSummaryRow[])}</div>
+      <div class="card"><p class="eyebrow">Nylige audits</p>${renderAuditList(summary.recentAudits as RecentAuditRow[], env.BROWSER_AUDIT_WORKER_URL)}</div>
       <div class="card"><pre>${escapeHtml(JSON.stringify(summary.latestCrux, null, 2))}</pre></div>
     </main>
   </body>
@@ -825,13 +877,37 @@ function renderPublicationList(rows: RecentPublicationRow[]): string {
     .join('')}</tbody></table>`;
 }
 
-function renderAuditList(rows: RecentAuditRow[]): string {
+function renderAuditList(rows: RecentAuditRow[], browserAuditWorkerUrl?: string): string {
   if (!rows.length) return '<p>Ingen nylige audits.</p>';
-  return `<table><thead><tr><th>Vert</th><th>Status</th><th>URL</th></tr></thead><tbody>${rows
+  return `<table><thead><tr><th>Vert</th><th>Status</th><th>URL</th><th>Skjermbilde</th></tr></thead><tbody>${rows
     .map(
-      (row) => `<tr><td>${escapeHtml(row.host_name)}</td><td>${escapeHtml(String(row.status_code ?? '-'))}</td><td>${escapeHtml(row.url)}</td></tr>`,
+      (row) => `<tr><td>${escapeHtml(row.host_name)}</td><td>${escapeHtml(String(row.status_code ?? '-'))}</td><td>${escapeHtml(row.url)}</td><td>${renderAuditScreenshotLink(row.url, browserAuditWorkerUrl)}</td></tr>`,
     )
     .join('')}</tbody></table>`;
+}
+
+function renderProviderTable(rows: ProviderSummaryRow[]): string {
+  if (!rows.length) return '<p>Ingen provider-data enda.</p>';
+  return `<table><thead><tr><th>Provider</th><th>Modell</th><th>Utkast</th><th>Publisert</th></tr></thead><tbody>${rows
+    .map(
+      (row) => `<tr><td>${escapeHtml(row.provider_id ?? 'ukjent')}</td><td>${escapeHtml(row.model_id ?? 'ukjent')}</td><td>${row.draft_count}</td><td>${row.published_count}</td></tr>`,
+    )
+    .join('')}</tbody></table>`;
+}
+
+function renderPromptTable(rows: PromptSummaryRow[]): string {
+  if (!rows.length) return '<p>Ingen prompt-runs enda.</p>';
+  return `<table><thead><tr><th>Familie</th><th>Validering</th><th>Total</th><th>Kept</th><th>Tid</th></tr></thead><tbody>${rows
+    .map(
+      (row) => `<tr><td>${escapeHtml(row.family_id)}</td><td>${row.validation_score}/${row.max_score}</td><td>${row.total_score}</td><td>${row.kept}</td><td>${escapeHtml(row.created_at)}</td></tr>`,
+    )
+    .join('')}</tbody></table>`;
+}
+
+function renderAuditScreenshotLink(targetUrl: string, browserAuditWorkerUrl?: string): string {
+  if (!browserAuditWorkerUrl) return '-';
+  const screenshotUrl = `${browserAuditWorkerUrl}?target=${encodeURIComponent(targetUrl)}&screenshot=1&format=image`;
+  return `<a href="${escapeHtml(screenshotUrl)}" target="_blank" rel="noreferrer">Åpne</a>`;
 }
 
 function htmlResponse(html: string): Response {

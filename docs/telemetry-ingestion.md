@@ -36,6 +36,7 @@ What it does now:
 - store raw telemetry payloads in D1
 - support optional IndexNow submissions for a set of URLs
 - expose a host summary endpoint through `metrics-worker` at `GET /summary?hostId=<host-id>`
+- feed those summaries into the Cloudflare observability dashboard in `content-api`
 
 What still needs to be added:
 

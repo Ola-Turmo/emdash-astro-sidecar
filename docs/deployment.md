@@ -190,6 +190,30 @@ There is now also a lightweight operator dashboard and observability surface on 
 
 If `CONTENT_API_TOKEN` is configured, open the browser UI with `?token=<CONTENT_API_TOKEN>` or send the token in `Authorization: Bearer ...`.
 
+## Cloudflare-Native Screenshot Audits
+
+`browser-audit-worker` now supports real Browser Rendering screenshots through Cloudflare.
+
+Examples:
+
+```bash
+curl "https://emdash-browser-audit-worker.ola-turmo.workers.dev?target=https://www.kurs.ing/guide/&screenshot=1"
+curl -o guide-home.jpg "https://emdash-browser-audit-worker.ola-turmo.workers.dev?target=https://www.kurs.ing/guide/&screenshot=1&format=image"
+```
+
+The JSON audit response now includes:
+
+- `auditMode`
+- `screenshotCaptured`
+- `screenshotSha256`
+- `screenshotBytes`
+
+To persist the audit into D1 for a host:
+
+```bash
+curl "https://emdash-browser-audit-worker.ola-turmo.workers.dev?target=https://www.kurs.ing/guide/&screenshot=1&persist=1&hostId=<host-id>"
+```
+
 `approve-and-publish` now performs the publish directly inside `content-api` against D1 and the shared publish engine, so it does not depend on a worker-to-worker network hop.
 
 ## Cloudflare-Only Publish Fallback

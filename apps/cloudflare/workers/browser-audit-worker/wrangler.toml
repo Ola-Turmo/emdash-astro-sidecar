@@ -1,12 +1,21 @@
 name = "emdash-browser-audit-worker"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat_v2"]
 
 [limits]
 cpu_ms = 5000
 
+[[d1_databases]]
+binding = "AUTONOMOUS_DB"
+database_name = "emdash-autonomous-control-plane"
+database_id = "a1cd1a45-8a71-48e1-a067-df7f1e6924ea"
+
+[browser]
+binding = "MYBROWSER"
+
 [vars]
 CF_PLAN_TIER = "free"
 CF_RESOURCE_GUARD_MODE = "conservative"
-BROWSER_AUDIT_ENABLED = "false"
-MAX_AUDIT_URLS_PER_RUN = "1"
+BROWSER_AUDIT_ENABLED = "true"
+MAX_AUDIT_URLS_PER_RUN = "2"

@@ -191,21 +191,25 @@ async function runDraftStepForHost(
     )
     .bind(hostId)
     .first<{ id: string; topic: string }>();
+  const refreshCandidate = candidate ? null : await pickRefreshCandidate(db, hostId);
+  const topicCandidateId = candidate?.id ?? null;
 
-  if (!candidate) {
+  if (!candidate && !refreshCandidate) {
     return {
       status: 'skipped',
       step: 'draft_candidates',
-      reason: 'No new topic candidate available.',
+      reason: 'No new topic candidate or refresh candidate available.',
     };
   }
 
+  const activeTopic = candidate?.topic ?? refreshCandidate!.title ?? refreshCandidate!.slug.replace(/-/g, ' ');
+
   const draftContext = await buildDraftRequest(db, hostId, {
-    topic: candidate.topic,
+    topic: activeTopic,
     hostName: host.host_name,
     siteUrl: host.site_url,
     basePath: host.base_path,
-  });
+  }, refreshCandidate);
 
   const maxOutputTokens = clampMaxTokens(env.DRAFT_MAX_OUTPUT_TOKENS);
   const allowFallbackDrafts = env.AUTONOMOUS_ALLOW_FALLBACK_DRAFTS === 'true';
@@ -231,12 +235,12 @@ async function runDraftStepForHost(
       prompt: buildAutonomousDraftPrompt(draftContext),
       temperature: 0.15,
       maxOutputTokens,
-      metadata: {
-        hostId,
-        runId,
-        topicCandidateId: candidate.id,
-      },
-    });
+        metadata: {
+          hostId,
+          runId,
+          topicCandidateId: topicCandidateId ?? 'refresh',
+        },
+      });
     providerTrace.push({
       phase: 'generate',
       providerId,
@@ -244,7 +248,7 @@ async function runDraftStepForHost(
       text: truncateTrace(generation.text),
     });
 
-    artifact = await parseOrRepairArtifact(provider.adapter, generation.text, candidate.topic, draftContext);
+    artifact = await parseOrRepairArtifact(provider.adapter, generation.text, activeTopic, draftContext);
     artifact = normalizeAutonomousDraftArtifact(artifact, draftContext);
     providerTrace.push({
       phase: 'parsed',
@@ -254,7 +258,7 @@ async function runDraftStepForHost(
       qualityNotes: artifact.qualityNotes,
     });
 
-    artifact = await reviseArtifactForQuality(provider.adapter, artifact, draftContext, candidate.topic);
+    artifact = await reviseArtifactForQuality(provider.adapter, artifact, draftContext, activeTopic);
     artifact = normalizeAutonomousDraftArtifact(artifact, draftContext);
     providerTrace.push({
       phase: 'revised',
@@ -269,7 +273,7 @@ async function runDraftStepForHost(
       runId,
       snapshotType: 'draft-generation-error',
       content: {
-        topicCandidateId: candidate.id,
+        topicCandidateId,
         providerId,
         modelId,
         trace: providerTrace,
@@ -286,10 +290,13 @@ async function runDraftStepForHost(
   }
 
   const draftId = crypto.randomUUID();
-  const slug = buildSemanticSlug(candidate.topic, {
-    fallback: artifact.title || candidate.topic,
+  const slug = buildSemanticSlug(refreshCandidate?.slug || activeTopic, {
+    fallback: artifact.title || activeTopic,
   });
   const qualityNotes = [...new Set(artifact.qualityNotes)].sort();
+  if (refreshCandidate) {
+    qualityNotes.unshift('refresh-draft');
+  }
 
   await db
     .prepare(
@@ -314,7 +321,7 @@ async function runDraftStepForHost(
     .bind(
       draftId,
       hostId,
-      candidate.id,
+      topicCandidateId,
       slug,
       artifact.title,
       artifact.description,
@@ -344,7 +351,8 @@ async function runDraftStepForHost(
     snapshotType: 'draft-generation',
     content: {
       draftId,
-      topicCandidateId: candidate.id,
+      topicCandidateId,
+      refreshSourceDraftId: refreshCandidate?.draft_id ?? null,
       providerId,
       modelId,
       usedFallback,
@@ -364,7 +372,7 @@ async function runDraftStepForHost(
         WHERE id = ?1
       `,
     )
-    .bind(candidate.id)
+    .bind(topicCandidateId)
     .run();
 
   return {
@@ -373,7 +381,8 @@ async function runDraftStepForHost(
     draftId,
     draftStatus: 'queued_eval',
     draftSectionsCreated: artifact.sections.length,
-    topicCandidateId: candidate.id,
+    topicCandidateId,
+    refreshSourceDraftId: refreshCandidate?.draft_id ?? null,
     providerId,
     modelId,
     usedFallback,
@@ -505,6 +514,12 @@ async function buildDraftRequest(
     siteUrl: string;
     basePath: string;
   },
+  refreshCandidate?: {
+    draft_id: string;
+    slug: string;
+    title: string | null;
+    excerpt: string | null;
+  } | null,
 ): Promise<AutonomousDraftRequest> {
   const sources = await db
     .prepare(
@@ -546,6 +561,17 @@ async function buildDraftRequest(
     ),
   }));
 
+  if (refreshCandidate) {
+    sourceExcerpts.unshift({
+      title: normalizeSearchText(refreshCandidate.title ?? refreshCandidate.slug.replace(/-/g, ' ')),
+      excerpt: normalizeSearchText(
+        refreshCandidate.excerpt ??
+          `Eksisterende artikkel som skal forbedres og oppdateres for samme leserintensjon.`,
+      ),
+      url: new URL(`${normalizeBasePath(input.basePath)}blog/${refreshCandidate.slug}/`, input.siteUrl).toString(),
+    });
+  }
+
   return {
     topic: input.topic,
     hostName: input.hostName,
@@ -554,6 +580,44 @@ async function buildDraftRequest(
     sourceExcerpts,
     internalLinks,
   };
+}
+
+async function pickRefreshCandidate(
+  db: D1Database,
+  hostId: string,
+): Promise<{
+  draft_id: string;
+  slug: string;
+  title: string | null;
+  excerpt: string | null;
+} | null> {
+  return db
+    .prepare(
+      `
+        SELECT d.id AS draft_id, d.slug, d.title, d.excerpt
+        FROM drafts d
+        WHERE d.host_id = ?1
+          AND d.status = 'published'
+          AND d.slug IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1
+            FROM drafts pending
+            WHERE pending.host_id = d.host_id
+              AND pending.slug = d.slug
+              AND pending.status IN ('queued_eval', 'ready_for_review', 'ready_for_publish', 'approved_for_publish')
+              AND pending.id != d.id
+          )
+        ORDER BY d.created_at ASC
+        LIMIT 1
+      `,
+    )
+    .bind(hostId)
+    .first<{
+      draft_id: string;
+      slug: string;
+      title: string | null;
+      excerpt: string | null;
+    }>();
 }
 
 function buildInternalLinks(

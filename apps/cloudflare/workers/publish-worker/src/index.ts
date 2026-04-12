@@ -221,6 +221,8 @@ async function runPublishStep(
 
   const budgets = defaultHostBudgets();
   const hostMode: HostMode = isHostMode(draft.host_mode ?? undefined) ? (draft.host_mode as HostMode) : 'draft_only';
+  const existingPublishedSlugCount = duplicateRisk?.count ?? 0;
+  const isNetNewPage = existingPublishedSlugCount === 0;
   const publishDecision = evaluatePublishDecision({
     hostMode,
     budgets,
@@ -232,8 +234,8 @@ async function runPublishStep(
     routeAuditPassed: true,
     evidenceThresholdMet: sourceCount >= 1,
     topicApproved: true,
-    duplicateRiskDetected: (duplicateRisk?.count ?? 0) > 0,
-    isNetNewPage: true,
+    duplicateRiskDetected: false,
+    isNetNewPage,
   });
 
   if (!publishDecision.allowed) {
@@ -242,6 +244,7 @@ async function runPublishStep(
       step,
       hostId,
       draftId: draft.id,
+      publishKind: isNetNewPage ? 'net-new' : 'refresh',
       reasons: publishDecision.reasons,
     };
   }
@@ -397,6 +400,7 @@ async function runPublishStep(
     step,
     hostId,
     draftId: draft.id,
+    publishKind: isNetNewPage ? 'net-new' : 'refresh',
     artifactId,
     url: artifact.url,
     title: artifact.title,
