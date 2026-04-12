@@ -107,11 +107,6 @@ const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind
                       <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
                         {entry.kind === 'sales' ? 'Salg' : entry.kind === 'serving' ? 'Skjenking' : 'Åpning'}
                       </p>
-                      {entry.certainty === 'low' && (
-                        <span class="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-amber-700">
-                          Må dobbeltsjekkes
-                        </span>
-                      )}
                     </div>
                     <h2 class="mt-3 text-lg font-bold text-slate-950">{entry.label}</h2>
                     {(entry.days || entry.startTime || entry.endTime) && (
@@ -128,9 +123,16 @@ const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind
             </section>
           )}
 
+          {municipalityView.salesNote && (
+            <section class="shell-card border border-amber-200/80 bg-amber-50/60 p-5 sm:p-6">
+              <p class="eyebrow text-amber-700">Salg av alkohol</p>
+              <p class="mt-3 text-sm leading-7 text-slate-700">{municipalityView.salesNote}</p>
+            </section>
+          )}
+
           {municipalityView.highlights.length > 0 && (
             <section class="shell-card p-5 sm:p-6">
-              <p class="eyebrow">Det som skiller denne kommunen</p>
+              <p class="eyebrow">Lokale særtrekk og praktiske forskjeller</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.highlights.map((highlight) => (
                   <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
@@ -174,7 +176,7 @@ const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind
 
           {municipalityView.usefulSources.length > 0 && (
             <section class="shell-card p-5 sm:p-6">
-              <p class="eyebrow">Det kommunen selv fremhever</p>
+              <p class="eyebrow">Offisielle kilder verdt å åpne</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.usefulSources.map((source) => (
                   <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">

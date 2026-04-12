@@ -1,4 +1,4 @@
-type LinkEntry = {
+﻿type LinkEntry = {
   label: string;
   url: string;
   note?: string;
@@ -64,12 +64,13 @@ export type MunicipalityViewModel = {
   checklist: string[];
   lead: string;
   cardSummary: string;
+  salesNote: string;
 };
 
 const linkKinds: Record<string, { label: string; note: string }> = {
   plan: {
     label: 'Alkoholpolitisk plan',
-    note: 'Siden peker til kommunens egne retningslinjer eller lokale tider.',
+    note: 'Her ligger kommunens egne retningslinjer eller lokale tider for alkohol.',
   },
   forms: {
     label: 'Skjema og selvbetjening',
@@ -78,6 +79,18 @@ const linkKinds: Record<string, { label: string; note: string }> = {
   publicRecords: {
     label: 'Innsyn og offentlig journal',
     note: 'Her kan du følge saker, postlister og tidligere behandling.',
+  },
+  serviceHub: {
+    label: 'Salg, servering og skjenking',
+    note: 'Dette er kommunens hovedside for salg, servering og skjenking.',
+  },
+  application: {
+    label: 'Søke bevilling eller gjøre endringer',
+    note: 'Her starter den praktiske søknadsprosessen eller endringer i en eksisterende bevilling.',
+  },
+  rules: {
+    label: 'Regler og lokale vilkår',
+    note: 'Denne siden samler de lokale reglene kommunen peker til for salg eller skjenking.',
   },
   sales: {
     label: 'Salgsbevilling',
@@ -124,20 +137,23 @@ const linkKinds: Record<string, { label: string; note: string }> = {
 const bannedUrlFragments = ['gravplass', 'barnehage', 'skole', 'feiing', 'bal-og-grill', 'bygg', 'anlegg', 'rabattordning'];
 
 export function deriveMunicipalityView(data: MunicipalityData): MunicipalityViewModel {
-  const curatedLinks = uniqueByUrl([
-    ...(data.alcoholPolicyPlanUrl ? [{ label: 'Alkoholpolitisk plan', url: data.alcoholPolicyPlanUrl, note: '' }] : []),
-    ...(data.formsUrl ? [{ label: 'Skjema og selvbetjening', url: data.formsUrl, note: '' }] : []),
-    ...(data.publicRecordsUrl ? [{ label: 'Innsyn og offentlig journal', url: data.publicRecordsUrl, note: '' }] : []),
-    ...data.serviceLinks,
-    ...data.regulationsLinks,
-    ...data.bylawLinks,
-  ])
-    .map((entry) => decorateLink(entry))
-    .filter((entry) => !bannedUrlFragments.some((fragment) => entry.url.toLowerCase().includes(fragment)))
-    .filter((entry) => entry.kind !== 'general' || entry.url.toLowerCase().includes('alkohol') || entry.url.toLowerCase().includes('bevilling'))
-    .slice(0, 8);
+  const curatedLinks = uniqueByKey(
+    uniqueByUrl([
+      ...(data.alcoholPolicyPlanUrl ? [{ label: 'Alkoholpolitisk plan', url: data.alcoholPolicyPlanUrl, note: '' }] : []),
+      ...(data.formsUrl ? [{ label: 'Skjema og selvbetjening', url: data.formsUrl, note: '' }] : []),
+      ...(data.publicRecordsUrl ? [{ label: 'Innsyn og offentlig journal', url: data.publicRecordsUrl, note: '' }] : []),
+      ...data.serviceLinks,
+      ...data.regulationsLinks,
+      ...data.bylawLinks,
+    ])
+      .map((entry) => decorateLink(entry))
+      .filter((entry) => !bannedUrlFragments.some((fragment) => entry.url.toLowerCase().includes(fragment)))
+      .filter((entry) => entry.kind !== 'general' || entry.url.toLowerCase().includes('alkohol') || entry.url.toLowerCase().includes('bevilling')),
+    (entry) => `${entry.kind}|${entry.displayLabel}`,
+  ).slice(0, 6);
 
-  const timeline = buildTimeline(data, curatedLinks);
+  const timeline = buildTimeline(data);
+  const salesNote = buildSalesNote(curatedLinks, timeline);
   const facts = buildFacts(data, curatedLinks, timeline);
   const highlights = buildHighlights(data, curatedLinks, timeline);
   const usefulSources = data.officialSources
@@ -146,9 +162,7 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
     .slice(0, 4);
   const checklist = uniqueValues([
     ...data.localChecklist.map((entry) => normalizeText(entry)),
-    timeline.some((entry) => entry.kind === 'sales' && entry.certainty === 'low')
-      ? 'Kontroller salgstid direkte på plan- eller salgsbevillingssiden hvis kommunen ikke oppgir et tydelig klokkeslett i datagrunnlaget.'
-      : '',
+    salesNote ? 'Kontroller salgstid direkte på plan- eller salgsbevillingssiden hvis kommunen ikke oppgir et tydelig klokkeslett i datagrunnlaget.' : '',
   ]).slice(0, 6);
 
   return {
@@ -160,10 +174,11 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
     checklist,
     lead: facts.slice(0, 2).join(' '),
     cardSummary: facts[0] || highlights[0] || `Se lokale regler og lenker for ${data.municipality}.`,
+    salesNote,
   };
 }
 
-function buildTimeline(data: MunicipalityData, curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>) {
+function buildTimeline(data: MunicipalityData) {
   const timeline: MunicipalityTimelineEntry[] = [];
 
   for (const rule of data.alcoholServingRules) {
@@ -190,26 +205,17 @@ function buildTimeline(data: MunicipalityData, curatedLinks: Array<LinkEntry & {
     });
   }
 
-  const saleLink = curatedLinks.find((entry) => entry.kind === 'sales');
-  if (saleLink) {
-    timeline.push({
-      kind: 'sales',
-      label: 'Salg av alkohol',
-      days: '',
-      startTime: '',
-      endTime: '',
-      note: 'Kommunen har en egen side for salgsbevilling, men datagrunnlaget oppgir ikke alltid et eksplisitt klokkeslett for salg. Åpne siden før du fastsetter salgstid lokalt.',
-      certainty: 'low',
-    });
-  }
-
   return uniqueByKey(
     timeline,
     (entry) => `${entry.kind}|${entry.label}|${entry.days}|${entry.startTime}|${entry.endTime}|${entry.note}`,
-  ).slice(0, 8);
+  ).slice(0, 6);
 }
 
-function buildFacts(data: MunicipalityData, curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>, timeline: MunicipalityTimelineEntry[]) {
+function buildFacts(
+  data: MunicipalityData,
+  curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>,
+  timeline: MunicipalityTimelineEntry[],
+) {
   const facts: string[] = [];
 
   if (data.county) {
@@ -233,7 +239,7 @@ function buildFacts(data: MunicipalityData, curatedLinks: Array<LinkEntry & { ki
   const specialKinds = uniqueValues(
     curatedLinks
       .map((entry) => entry.kind)
-      .filter((kind) => ['fees', 'renewal', 'controls', 'singleEvent', 'outdoor', 'exam'].includes(kind))
+      .filter((kind) => ['fees', 'renewal', 'controls', 'singleEvent', 'outdoor', 'exam', 'application', 'rules'].includes(kind))
       .map((kind) => linkKinds[kind].label.toLowerCase()),
   );
   if (specialKinds.length) {
@@ -251,8 +257,17 @@ function buildFacts(data: MunicipalityData, curatedLinks: Array<LinkEntry & { ki
   return uniqueValues(facts).slice(0, 4);
 }
 
-function buildHighlights(data: MunicipalityData, curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>, timeline: MunicipalityTimelineEntry[]) {
+function buildHighlights(
+  data: MunicipalityData,
+  curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>,
+  timeline: MunicipalityTimelineEntry[],
+) {
   const highlights: string[] = [];
+
+  const planSource = data.officialSources.find((entry) => /plan|skjenketider|alkohol/i.test(`${entry.label} ${entry.title || ''}`));
+  if (planSource?.title && !/kommune$/i.test(planSource.title) && !looksGenericSourceSummary(planSource.summary)) {
+    highlights.push(`${normalizeText(planSource.title)}.`);
+  }
 
   const serviceSource = data.officialSources.find((entry) => /salg|skjenk|servering/i.test(`${entry.label} ${entry.title || ''}`));
   if (serviceSource?.summary && !looksGenericSourceSummary(serviceSource.summary)) {
@@ -265,7 +280,7 @@ function buildHighlights(data: MunicipalityData, curatedLinks: Array<LinkEntry &
   }
 
   for (const entry of curatedLinks) {
-    if (['fees', 'renewal', 'controls', 'singleEvent', 'outdoor', 'exam'].includes(entry.kind)) {
+    if (['fees', 'renewal', 'controls', 'singleEvent', 'outdoor', 'exam', 'application', 'rules'].includes(entry.kind)) {
       highlights.push(entry.displayNote);
     }
   }
@@ -274,22 +289,29 @@ function buildHighlights(data: MunicipalityData, curatedLinks: Array<LinkEntry &
     highlights.push(normalizeText(entry.note));
   }
 
-  return uniqueValues(highlights).filter((entry) => entry.length >= 40).slice(0, 6);
+  return uniqueValues(highlights)
+    .filter((entry) => entry.length >= 35)
+    .slice(0, 4);
 }
 
 function decorateLink(entry: LinkEntry) {
   const kind = classifyLinkKind(entry.url, entry.label);
   const definition = linkKinds[kind] || linkKinds.general;
+  const forceKindLabel = ['plan', 'serviceHub', 'application', 'rules', 'forms', 'publicRecords'].includes(kind);
   return {
     ...entry,
     kind,
-    displayLabel: needsDerivedLabel(entry.label) ? definition.label : normalizeText(entry.label),
+    displayLabel: forceKindLabel || needsDerivedLabel(entry.label) ? definition.label : normalizeText(entry.label),
     displayNote: normalizeText(entry.note || definition.note),
   };
 }
 
 function classifyLinkKind(url: string, label: string) {
   const source = `${url} ${label}`.toLowerCase();
+  if (/handlingsplan|alkoholpolitisk|skjenketider|retningslinje/.test(source)) return 'plan';
+  if (/soke-bevilling|søke-bevilling|gjore-endringer|gjøre-endringer/.test(source)) return 'application';
+  if (/regler-for|lokale-regler|skjenketider/.test(source)) return 'rules';
+  if (/salg-servering-og-skjenking|alkohol-og-servering/.test(source)) return 'serviceHub';
   if (/skjema|ekstern\/veiledere|\/skjema/.test(source)) return 'forms';
   if (/innsyn|journal|einnsyn/.test(source)) return 'publicRecords';
   if (/uteserver|offentlig-areal/.test(source)) return 'outdoor';
@@ -301,7 +323,6 @@ function classifyLinkKind(url: string, label: string) {
   if (/salgsbevilling|salg/.test(source)) return 'sales';
   if (/serveringsbevilling|servering/.test(source)) return 'servering';
   if (/skjenkebevilling|skjenking|alkohol/.test(source)) return 'serving';
-  if (/plan|retningslinje|skjenketider/.test(source)) return 'plan';
   return 'general';
 }
 
@@ -319,6 +340,7 @@ function buildServingLabel(rule: ServingRule) {
 
 function buildOpeningLabel(rule: OpeningRule) {
   if (rule.appliesTo === 'outdoor_area') return 'uteservering';
+  if ((rule.days || '').match(/juli|august|desember/i)) return 'utvidet åpningstid';
   if (rule.appliesTo === 'serving_place') return 'serveringssted';
   return normalizeText(rule.appliesTo || 'åpningstid');
 }
@@ -335,7 +357,17 @@ function formatWindow(entry: MunicipalityTimelineEntry) {
 function looksGenericSourceSummary(summary?: string) {
   const text = normalizeText(summary || '');
   if (!text) return true;
-  return /legevakt|barnevern|vann- og avløp|overgrepsmottak/i.test(text);
+  return /legevakt|barnevern|vann- og avløp|overgrepsmottak|stedet for å finne tjenester|postboks|telefon|talende web|fingeren på/i.test(text);
+}
+
+function buildSalesNote(
+  curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>,
+  timeline: MunicipalityTimelineEntry[],
+) {
+  if (timeline.some((entry) => entry.kind === 'sales')) return '';
+  const salesLink = curatedLinks.find((entry) => ['sales', 'rules', 'serviceHub'].includes(entry.kind));
+  if (!salesLink) return '';
+  return `Salgstid er ikke eksplisitt oppgitt i det kontrollerte datagrunnlaget. Åpne ${salesLink.displayLabel.toLowerCase()} før du fastsetter lokale salgstider.`;
 }
 
 function normalizeTime(value: string) {
@@ -381,7 +413,7 @@ function normalizeText(value: string) {
 function decodeCommonMojibake(value: string) {
   let normalized = String(value ?? '');
   for (let index = 0; index < 2; index += 1) {
-    if (!/[ÃÂ]/.test(normalized)) break;
+    if (!/[ÃƒÃ‚]/.test(normalized)) break;
     const repaired = Buffer.from(normalized, 'latin1').toString('utf8');
     if (countMarkers(repaired) > countMarkers(normalized)) break;
     normalized = repaired;
@@ -397,5 +429,5 @@ function decodeCommonMojibake(value: string) {
 }
 
 function countMarkers(value: string) {
-  return [...String(value || '')].filter((character) => character === 'Ã' || character === 'Â').length;
+  return [...String(value || '')].filter((character) => character === 'Ãƒ' || character === 'Ã‚').length;
 }
