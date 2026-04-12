@@ -90,14 +90,15 @@ for (const banned of bannedDistRoutes) {
 }
 
 const artifactChecks = [
-  { name: 'guideRssXml', content: rssXml },
-  { name: 'guideSitemapXml', content: sitemapXml },
-  { name: 'guideRobotsTxt', content: robotsTxt },
+  { names: ['guideRssXml', 'conceptRssXml'], content: rssXml },
+  { names: ['guideSitemapXml', 'conceptSitemapXml'], content: sitemapXml },
+  { names: ['guideRobotsTxt', 'conceptRobotsTxt'], content: robotsTxt },
 ];
 
-for (const { name, content } of artifactChecks) {
-  if (!artifactModule.includes(`export const ${name} = ${JSON.stringify(content)};`)) {
-    findings.push(`guide worker SEO artifacts are out of sync for ${name}. Run pnpm sync:guide-seo`);
+for (const { names, content } of artifactChecks) {
+  const matched = names.some((name) => artifactModule.includes(`export const ${name} = ${JSON.stringify(content)};`));
+  if (!matched) {
+    findings.push(`guide worker SEO artifacts are out of sync for ${names[0]}. Run pnpm sync:guide-seo`);
   }
 }
 

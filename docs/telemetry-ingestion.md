@@ -35,6 +35,7 @@ What it does now:
 - fetch data for a single host
 - store raw telemetry payloads in D1
 - support optional IndexNow submissions for a set of URLs
+- expose a host summary endpoint through `metrics-worker` at `GET /summary?hostId=<host-id>`
 
 What still needs to be added:
 
@@ -63,6 +64,12 @@ Example:
 curl -X POST https://<metrics-worker-url> \
   -H "content-type: application/json" \
   -d "{\"hostId\":\"<host-id>\"}"
+```
+
+Host summary:
+
+```bash
+curl "https://<metrics-worker-url>/summary?hostId=<host-id>"
 ```
 
 Optional IndexNow submission:

@@ -16,6 +16,16 @@ interface Env {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+
+    if (request.method === 'GET' && url.pathname === '/summary') {
+      const hostId = url.searchParams.get('hostId');
+      if (!hostId) {
+        return Response.json({ ok: false, error: 'hostId is required' }, { status: 400 });
+      }
+      return Response.json(await buildMetricsSummary(env, hostId));
+    }
+
     if (request.method !== 'POST') {
       return new Response('Method Not Allowed', { status: 405 });
     }
@@ -61,6 +71,88 @@ export default {
     });
   },
 };
+
+async function buildMetricsSummary(env: Env, hostId: string): Promise<Record<string, unknown>> {
+  const host = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT id, host_name, site_url
+        FROM hosts
+        WHERE id = ?1
+      `,
+    )
+    .bind(hostId)
+    .first<{ id: string; host_name: string; site_url: string }>();
+
+  if (!host) {
+    return { ok: false, error: `Unknown host ${hostId}` };
+  }
+
+  const latestCrux = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT metric_week, lcp_p75, inp_p75, cls_p75
+        FROM metrics_crux
+        WHERE host_id = ?1
+        ORDER BY metric_week DESC
+        LIMIT 1
+      `,
+    )
+    .bind(hostId)
+    .first<Record<string, unknown>>();
+
+  const gscTotals = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT
+          SUM(clicks) AS clicks,
+          SUM(impressions) AS impressions,
+          AVG(position) AS avg_position
+        FROM metrics_gsc
+        WHERE host_id = ?1
+          AND metric_date >= date('now', '-28 day')
+      `,
+    )
+    .bind(hostId)
+    .first<Record<string, unknown>>();
+
+  const bingTotals = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT
+          SUM(clicks) AS clicks,
+          SUM(impressions) AS impressions
+        FROM metrics_bing
+        WHERE host_id = ?1
+          AND metric_date >= date('now', '-28 day')
+      `,
+    )
+    .bind(hostId)
+    .first<Record<string, unknown>>();
+
+  const indexNow = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT submitted_at, url_count, status
+        FROM indexnow_submissions
+        WHERE host_id = ?1
+        ORDER BY submitted_at DESC
+        LIMIT 5
+      `,
+    )
+    .bind(hostId)
+    .all<Record<string, unknown>>();
+
+  return {
+    ok: true,
+    host,
+    latestCrux,
+    gsc28Day: gscTotals,
+    bing28Day: bingTotals,
+    latestIndexNowSubmissions: indexNow.results,
+    generatedAt: new Date().toISOString(),
+  };
+}
 
 async function ingestGsc(
   env: Env,

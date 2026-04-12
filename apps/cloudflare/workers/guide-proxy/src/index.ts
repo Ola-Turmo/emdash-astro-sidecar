@@ -1,4 +1,4 @@
-import { guideRobotsTxt, guideRssXml, guideSitemapXml } from './generated/seo-artifacts';
+import { conceptRobotsTxt, conceptRssXml, conceptSitemapXml } from './generated/seo-artifacts';
 
 interface Env {
   GUIDE_ORIGIN: string;
@@ -85,17 +85,17 @@ export default {
     }
 
     if (incomingUrl.pathname === `${GUIDE_PREFIX}/rss.xml`) {
-      const merged = await mergeRssXml(env.AUTONOMOUS_DB, guideRssXml);
+      const merged = await mergeRssXml(env.AUTONOMOUS_DB, conceptRssXml);
       return responseWithBody(merged, 'application/xml');
     }
 
     if (incomingUrl.pathname === `${GUIDE_PREFIX}/sitemap.xml`) {
-      const merged = await mergeSitemapXml(env.AUTONOMOUS_DB, guideSitemapXml);
+      const merged = await mergeSitemapXml(env.AUTONOMOUS_DB, conceptSitemapXml);
       return responseWithBody(merged, 'application/xml');
     }
 
     if (incomingUrl.pathname === `${GUIDE_PREFIX}/robots.txt`) {
-      return responseWithBody(guideRobotsTxt, 'text/plain');
+      return responseWithBody(conceptRobotsTxt, 'text/plain');
     }
 
     if (incomingUrl.pathname.startsWith(`${GUIDE_PREFIX}/preview/`)) {

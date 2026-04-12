@@ -6,7 +6,7 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 
 ## P0
 
-- [ ] Fix slug quality in autonomous Cloudflare-only publishing so malformed upstream text cannot produce routes like `pr-ven`.
+- [x] Fix slug quality in autonomous Cloudflare-only publishing so malformed upstream text cannot produce routes like `pr-ven`.
 - [ ] Add official telemetry connectors for Google Search Console, Bing Webmaster, CrUX, and IndexNow logging.
 - [ ] Add Cloudflare-native screenshot auditing so visual checks do not depend primarily on local Playwright runs.
 - [ ] Tighten unattended publish policy with hard budgets, rollback rules, cooldowns, and review gates for net-new articles.
@@ -19,8 +19,8 @@ This is the maintained backlog for `emdash-astro-sidecar`. Keep it current when 
 - [x] Add a first generated kommune content set from `Ola-Turmo/kommune.no.apimcp.site`.
 
 - [ ] Improve first-party source quality in `research-worker` with richer extraction from course pages, FAQs, checkout, and support content.
-- [ ] Strengthen semantic tag generation and controlled taxonomy handling for static and edge-only articles.
-- [ ] Add a Cloudflare-hosted review UI on top of `content-api`, not just review endpoints.
+- [x] Strengthen semantic tag generation and controlled taxonomy handling for static and edge-only articles.
+- [x] Add a Cloudflare-hosted review UI on top of `content-api`, not just review endpoints.
 - [ ] Add better observability for provider failures, host state, publish events, audits, and content quality trends.
 - [ ] Add backup and recovery workflows for D1 review state, edge artifacts, publish history, and host runtime state.
 
@@ -77,6 +77,9 @@ These are only required when moving from generic infrastructure work into a real
 
 ## Recently Completed
 
+- [x] Add a controlled slug-repair and taxonomy layer so Cloudflare-only publishing cannot emit malformed slugs and generic tags.
+- [x] Add Cloudflare-hosted review and observability dashboards on top of `content-api`.
+- [x] Add metrics summary output from `metrics-worker` for host-level self-evaluation.
 - [x] Add a Cloudflare auth preflight and Wrangler-first deploy/secret-sync flow so a bad `CLOUDFLARE_API_TOKEN` cannot silently override a healthy local OAuth session.
 - [x] Added concept-aware build verification for `kurs-ing/guide`, `kurs-ing/kommune`, and `gatareba-ge/guide`.
 - [x] Expanded the first generated kommune content set to cover multiple large municipalities from `Ola-Turmo/kommune.no.apimcp.site`.

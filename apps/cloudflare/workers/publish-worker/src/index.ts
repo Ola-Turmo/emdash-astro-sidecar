@@ -1,5 +1,11 @@
 import { claimNextJob, clampLeaseSeconds, completeJob, failJob } from '../../shared/job-runtime';
 import { buildPublicationArtifact, validatePublicationArtifact } from '../../../../../packages/publish-engine/src/index';
+import {
+  defaultHostBudgets,
+  evaluatePublishDecision,
+  isHostMode,
+} from '../../../../../packages/content-policy/src/index';
+import type { HostMode } from '../../../../../packages/content-policy/src/index';
 
 interface Env {
   AUTONOMOUS_DB: D1Database;
@@ -120,10 +126,12 @@ async function runPublishStep(
           tc.topic,
           h.host_name,
           h.site_url,
-          h.base_path
+          h.base_path,
+          hm.mode AS host_mode
         FROM drafts d
         JOIN hosts h ON h.id = d.host_id
         LEFT JOIN topic_candidates tc ON tc.id = d.topic_candidate_id
+        LEFT JOIN host_modes hm ON hm.host_id = d.host_id
         WHERE d.host_id = ?1
           AND d.status IN ('ready_for_publish', 'approved_for_publish')
         ORDER BY d.created_at ASC
@@ -141,6 +149,7 @@ async function runPublishStep(
       host_name: string;
       site_url: string;
       base_path: string;
+      host_mode: string | null;
     }>();
 
   if (!draft) {
@@ -163,6 +172,79 @@ async function runPublishStep(
     )
     .bind(draft.id)
     .all<{ heading: string; body: string }>();
+
+  const sourceCount = await countHostSources(db, hostId);
+  const publicationBudgetCounts = await db
+    .prepare(
+      `
+        SELECT
+          SUM(CASE WHEN published_at >= datetime('now', '-7 day') THEN 1 ELSE 0 END) AS published_this_week
+        FROM publications
+        WHERE host_id = ?1
+      `,
+    )
+    .bind(hostId)
+    .first<{ published_this_week: number | null }>();
+  const draftAttemptsToday = await db
+    .prepare(
+      `
+        SELECT COUNT(*) AS count
+        FROM drafts
+        WHERE host_id = ?1
+          AND created_at >= datetime('now', 'start of day')
+      `,
+    )
+    .bind(hostId)
+    .first<{ count: number | null }>();
+  const duplicateRisk = await db
+    .prepare(
+      `
+        SELECT COUNT(*) AS count
+        FROM publication_edge_artifacts
+        WHERE host_id = ?1
+          AND slug = ?2
+      `,
+    )
+    .bind(hostId, draft.slug)
+    .first<{ count: number | null }>();
+  const failedEvalCount = await db
+    .prepare(
+      `
+        SELECT COUNT(*) AS count
+        FROM draft_evals
+        WHERE draft_id = ?1
+          AND passed = 0
+      `,
+    )
+    .bind(draft.id)
+    .first<{ count: number | null }>();
+
+  const budgets = defaultHostBudgets();
+  const hostMode: HostMode = isHostMode(draft.host_mode ?? undefined) ? (draft.host_mode as HostMode) : 'draft_only';
+  const publishDecision = evaluatePublishDecision({
+    hostMode,
+    budgets,
+    netNewPagesPublishedThisWeek: publicationBudgetCounts?.published_this_week ?? 0,
+    autoRefreshesToday: 0,
+    draftAttemptsToday: draftAttemptsToday?.count ?? 0,
+    providerRetriesThisHour: 0,
+    allContentEvalsPassed: (failedEvalCount?.count ?? 0) === 0,
+    routeAuditPassed: true,
+    evidenceThresholdMet: sourceCount >= 1,
+    topicApproved: true,
+    duplicateRiskDetected: (duplicateRisk?.count ?? 0) > 0,
+    isNetNewPage: true,
+  });
+
+  if (!publishDecision.allowed) {
+    return {
+      status: 'blocked',
+      step,
+      hostId,
+      draftId: draft.id,
+      reasons: publishDecision.reasons,
+    };
+  }
 
   const artifact = buildPublicationArtifact(
     {
@@ -325,4 +407,19 @@ async function runPublishStep(
 
 function isPublishStep(step: string): step is (typeof SUPPORTED_STEPS)[number] {
   return SUPPORTED_STEPS.includes(step as (typeof SUPPORTED_STEPS)[number]);
+}
+
+async function countHostSources(db: D1Database, hostId: string): Promise<number> {
+  const row = await db
+    .prepare(
+      `
+        SELECT COUNT(*) AS count
+        FROM source_documents
+        WHERE host_id = ?1
+      `,
+    )
+    .bind(hostId)
+    .first<{ count: number | null }>();
+
+  return row?.count ?? 0;
 }

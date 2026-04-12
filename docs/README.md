@@ -10,6 +10,8 @@ Use these docs as the operational runbook for the sidecar.
   End-to-end process for adapting the sidecar to a new host site.
 - [deployment.md](./deployment.md)
   Cloudflare Pages deployment and subpath route-worker setup.
+- [telemetry-ingestion.md](./telemetry-ingestion.md)
+  Telemetry ingestion plus host summary endpoint for self-evaluation.
 - [troubleshooting.md](./troubleshooting.md)
   Known failure modes, especially subpath asset failures and Cloudflare routing mistakes.
 - [quality-gates.md](./quality-gates.md)
@@ -26,10 +28,10 @@ Use these docs as the operational runbook for the sidecar.
   Provider runtime, secret contract, routing defaults, and health-check workflow for TheClawBay and MiniMax.
 - [telemetry-ingestion.md](./telemetry-ingestion.md)
   Search Console, CrUX, Bing, and IndexNow ingestion foundation for the autonomous control plane.
+- [TODO.md](./TODO.md)
+  Maintained backlog including the latest learning, review, taxonomy, and observability work.
 - [multisite-and-multi-concept.md](./multisite-and-multi-concept.md)
   How the repo separates unrelated domains from multiple mounted concepts on the same site.
-- [TODO.md](./TODO.md)
-  The maintained backlog for what is left, what is highest value next, and what input is still required.
 - [prd-autonomous-content-control-plane.md](./prd-autonomous-content-control-plane.md)
   One-go implementation PRD for the autonomous Cloudflare-native research, drafting, scoring, publishing, and audit system.
 - [autonomous-content-control-plane-technical-design.md](./autonomous-content-control-plane-technical-design.md)

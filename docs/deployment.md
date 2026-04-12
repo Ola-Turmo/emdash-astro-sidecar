@@ -177,9 +177,18 @@ pnpm materialize:publications -- --apply --verify --audit --deploy=production
 If you want a review gate before publish, use the Cloudflare-side review endpoints exposed by `content-api`:
 
 - `GET /review/drafts`
+- `GET /review/ui`
 - `POST /review/approve`
 - `POST /review/reject`
 - `POST /review/approve-and-publish`
+
+There is now also a lightweight operator dashboard and observability surface on Cloudflare:
+
+- `GET /review/ui`
+- `GET /observability/ui`
+- `GET /observability/summary`
+
+If `CONTENT_API_TOKEN` is configured, open the browser UI with `?token=<CONTENT_API_TOKEN>` or send the token in `Authorization: Bearer ...`.
 
 `approve-and-publish` now performs the publish directly inside `content-api` against D1 and the shared publish engine, so it does not depend on a worker-to-worker network hop.
 

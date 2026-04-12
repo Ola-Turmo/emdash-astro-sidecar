@@ -61,6 +61,18 @@ export const defaultContentCriteria: BinaryEvalCriterion[] = [
     description: 'The page should have enough structure and word count to answer the question clearly.',
   },
   {
+    id: 'answers-early',
+    label: 'Answers the question early',
+    method: 'rule',
+    description: 'The first section should give a direct useful answer, not only throat-clearing.',
+  },
+  {
+    id: 'distinct-section-headings',
+    label: 'Distinct section headings',
+    method: 'rule',
+    description: 'Section headings should stay distinct so the page does not repeat itself.',
+  },
+  {
     id: 'internal-links',
     label: 'Internal linking present',
     method: 'rule',
@@ -89,6 +101,9 @@ export function evaluateDraftArtifact(input: DraftArtifactForEval): BinaryEvalRe
   const sectionsWithBody = input.sections.filter(
     (section) => countWords(`${section.heading} ${section.body}`) >= 35,
   ).length;
+  const firstSectionWordCount = countWords(input.sections[0]?.body ?? '');
+  const normalizedHeadings = input.sections.map((section) => section.heading.trim().toLowerCase()).filter(Boolean);
+  const duplicateHeadingCount = normalizedHeadings.length - new Set(normalizedHeadings).size;
 
   return [
     {
@@ -113,6 +128,22 @@ export function evaluateDraftArtifact(input: DraftArtifactForEval): BinaryEvalRe
         input.sections.length >= 3 && sectionsWithBody >= 3 && totalWordCount >= 320
           ? 'Draft has enough structure and detail to help the reader.'
           : 'Draft is still too thin or too short to answer the question well.',
+    },
+    {
+      criterionId: 'answers-early',
+      passed: firstSectionWordCount >= 45,
+      reason:
+        firstSectionWordCount >= 45
+          ? 'The first section contains enough substance to answer the question early.'
+          : 'The first section is still too thin to answer the reader quickly.',
+    },
+    {
+      criterionId: 'distinct-section-headings',
+      passed: duplicateHeadingCount === 0,
+      reason:
+        duplicateHeadingCount === 0
+          ? 'Section headings are distinct.'
+          : 'The draft repeats section headings and needs clearer structure.',
     },
     {
       criterionId: 'internal-links',

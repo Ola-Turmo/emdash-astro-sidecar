@@ -1,4 +1,10 @@
-import { buildSemanticSlug, normalizeSearchText, normalizeSemanticTag } from '../../model-runtime/src/index.js';
+import {
+  buildSemanticSlug,
+  isValidSemanticSlug,
+  normalizeSearchText,
+  repairExistingSlug,
+} from '../../model-runtime/src/index.js';
+import { buildControlledTags, inferControlledCategory, type ControlledCategory } from './taxonomy.js';
 
 export interface PublicationHostContext {
   hostId: string;
@@ -28,7 +34,7 @@ export interface PublicationArtifact {
   mdx: string;
   html: string;
   excerpt: string;
-  category: string;
+  category: ControlledCategory;
   tags: string[];
 }
 
@@ -48,12 +54,23 @@ export function buildPublicationArtifact(
   }));
   const description = normalizeSearchText(draft.description?.trim() || summarizeDescription(sections));
   const excerpt = normalizeSearchText(draft.excerpt?.trim() || summarizeExcerpt(sections));
-  const slug = buildSemanticSlug(draft.slug || draft.title || draft.topic, {
+  const slug = buildSemanticSlug(repairExistingSlug(draft.slug || draft.title || draft.topic, title || draft.topic), {
     fallback: title || draft.topic,
   });
+  const category = inferControlledCategory({
+    slug,
+    topic: draft.topic,
+    title,
+    sections,
+  });
+  const tags = buildControlledTags({
+    category,
+    slug,
+    topic: draft.topic,
+    title,
+    sections,
+  });
   const url = new URL(`${normalizeBasePath(host.basePath)}/blog/${slug}/`, host.siteUrl).toString();
-  const category = inferCategory(draft);
-  const tags = inferTags(draft, sections);
   const brand = buildBrandContext(host);
 
   const frontmatterLines = [
@@ -77,6 +94,10 @@ export function buildPublicationArtifact(
     slug,
     title,
     description,
+    excerpt,
+    category,
+    tags,
+    mdx: `${frontmatterLines.join('\n')}\n\n${body}\n`,
     html: buildEdgeHtml({
       canonicalUrl: url,
       category,
@@ -87,16 +108,13 @@ export function buildPublicationArtifact(
       tags,
       title,
     }),
-    excerpt,
-    category,
-    tags,
-    mdx: `${frontmatterLines.join('\n')}\n\n${body}\n`,
   };
 }
 
 export function validatePublicationArtifact(artifact: PublicationArtifact): PublicationArtifactValidation {
   const reasons: string[] = [];
   const bodyWordCount = countWords(artifact.mdx);
+  const duplicateHeadings = findDuplicateHeadings(artifact.mdx);
   const bannedPhrases = [
     'Cloudflare edge-artikkel',
     'Publisert fra Cloudflare',
@@ -110,6 +128,9 @@ export function validatePublicationArtifact(artifact: PublicationArtifact): Publ
   if (!artifact.title || artifact.title.trim().length < 20) {
     reasons.push('Publication artifact title is too weak.');
   }
+  if (!isValidSemanticSlug(artifact.slug)) {
+    reasons.push('Publication artifact slug is malformed.');
+  }
   if (!artifact.description || artifact.description.trim().length < 90 || artifact.description.trim().length > 170) {
     reasons.push('Publication artifact description is outside the safe range.');
   }
@@ -118,6 +139,9 @@ export function validatePublicationArtifact(artifact: PublicationArtifact): Publ
   }
   if (artifact.tags.length < 3) {
     reasons.push('Publication artifact needs at least three semantic tags.');
+  }
+  if (duplicateHeadings.length > 0) {
+    reasons.push(`Publication artifact repeats headings: ${duplicateHeadings.join(', ')}.`);
   }
   if (bodyWordCount < 320) {
     reasons.push('Publication artifact body is too short.');
@@ -135,108 +159,6 @@ export function validatePublicationArtifact(artifact: PublicationArtifact): Publ
     valid: reasons.length === 0,
     reasons,
   };
-}
-
-function inferCategory(draft: PublicationDraftContext): string {
-  const haystack = normalizeSearchText(`${draft.slug} ${draft.topic} ${draft.title ?? ''}`).toLowerCase();
-  if (haystack.includes('skjenk')) return 'skjenkebevilling';
-  if (haystack.includes('etablerer')) return 'etablererproven';
-  if (haystack.includes('kommune')) return 'kommune';
-  return 'salgsbevilling';
-}
-
-function inferTags(
-  draft: PublicationDraftContext,
-  sections: Array<{ heading: string; body: string }>,
-): string[] {
-  const normalizedTopic = normalizeSearchText(`${draft.slug} ${draft.topic} ${draft.title ?? ''}`).toLowerCase();
-  const normalizedSections = sections
-    .map((section) => `${section.heading} ${section.body}`)
-    .join(' ')
-    .toLowerCase();
-  const haystack = `${normalizedTopic} ${normalizedSections}`;
-
-  const tags = new Set<string>();
-  const category = inferCategory(draft);
-  tags.add(category);
-
-  for (const [needle, tag] of semanticTagMap) {
-    if (haystack.includes(needle)) {
-      tags.add(tag);
-    }
-  }
-
-  for (const candidate of extractSemanticTokens(haystack)) {
-    tags.add(candidate);
-    if (tags.size >= 6) break;
-  }
-
-  if (tags.size < 3) {
-    tags.add('kurs');
-    tags.add('prove');
-  }
-
-  return [...tags].slice(0, 6);
-}
-
-const semanticTagMap: Array<[needle: string, tag: string]> = [
-  ['alkoholloven', 'alkoholloven'],
-  ['serveringsloven', 'serveringsloven'],
-  ['etablererprøven', 'etablererproven'],
-  ['etablererproven', 'etablererproven'],
-  ['skjenkebevilling', 'skjenkebevilling'],
-  ['salgsbevilling', 'salgsbevilling'],
-  ['styrer', 'styrer'],
-  ['stedfortreder', 'stedfortreder'],
-  ['pensum', 'pensum'],
-  ['vanlige feil', 'vanlige-feil'],
-  ['forberede', 'forberedelse'],
-  ['ansvar', 'ansvar'],
-  ['internkontroll', 'internkontroll'],
-  ['kommune', 'kommune'],
-  ['kommunens prøve', 'kommunens-prove'],
-  ['kommunens prove', 'kommunens-prove'],
-  ['bestå', 'besta'],
-  ['besta', 'besta'],
-];
-
-function extractSemanticTokens(haystack: string): string[] {
-  const stopWords = new Set([
-    'dette',
-    'denne',
-    'hva',
-    'hvor',
-    'hvordan',
-    'hvilke',
-    'hvilken',
-    'for',
-    'med',
-    'til',
-    'hos',
-    'som',
-    'det',
-    'der',
-    'leser',
-    'klart',
-    'guide',
-    'kurs',
-    'prove',
-    'prøve',
-  ]);
-
-  const seen = new Set<string>();
-  const tokens: string[] = [];
-
-  for (const rawToken of haystack.split(/[^a-z0-9æøå]+/i)) {
-    const token = normalizeSemanticTag(rawToken);
-    if (!token || token.length < 4 || stopWords.has(token) || seen.has(token)) {
-      continue;
-    }
-    seen.add(token);
-    tokens.push(token);
-  }
-
-  return tokens;
 }
 
 function normalizeBasePath(basePath: string): string {
@@ -305,7 +227,7 @@ function buildEdgeHtml(input: {
   title: string;
   description: string;
   excerpt: string;
-  category: string;
+  category: ControlledCategory;
   tags: string[];
   sections: Array<{
     heading: string;
@@ -556,4 +478,18 @@ function escapeHtml(value: string): string {
 
 function countWords(value: string): number {
   return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function findDuplicateHeadings(mdx: string): string[] {
+  const headings = [...mdx.matchAll(/^##\s+(.+)$/gm)].map((match) => normalizeSearchText(match[1] ?? '').toLowerCase());
+  const duplicates = new Set<string>();
+  const seen = new Set<string>();
+
+  for (const heading of headings) {
+    if (!heading) continue;
+    if (seen.has(heading)) duplicates.add(heading);
+    seen.add(heading);
+  }
+
+  return [...duplicates];
 }
