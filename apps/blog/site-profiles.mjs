@@ -14,6 +14,12 @@ const siteProfiles = {
       pagesProject: 'emdash-astro-sidecar',
       pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
     },
+    rootRouting: {
+      rootOrigin: 'https://new.kurs.ing',
+      requiredMarkers: ['<title>kurs.ing</title>'],
+      forbiddenMarkers: ['Kurs.ing Kommune', 'Kommuneguide', 'Kommunespesifikke sider'],
+      exactBypassPaths: ['/robots.txt', '/sitemap.xml', '/sitemap-index.xml'],
+    },
     courseLinks: [
       {
         path: '/etablererproven',
@@ -202,6 +208,12 @@ const siteProfiles = {
     cloudflare: {
       pagesProject: 'gatareba-sidecar',
       pagesPreviewAlias: 'main.gatareba-sidecar.pages.dev',
+    },
+    rootRouting: {
+      rootOrigin: 'https://www.gatareba.ge',
+      requiredMarkers: [],
+      forbiddenMarkers: [],
+      exactBypassPaths: ['/robots.txt', '/sitemap.xml', '/sitemap-index.xml'],
     },
     courseLinks: [],
     concepts: {

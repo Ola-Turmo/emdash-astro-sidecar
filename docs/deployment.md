@@ -21,6 +21,20 @@ Before any Cloudflare deploy or secret sync, verify the local Wrangler auth path
 pnpm cloudflare:check-auth
 ```
 
+Root routing now has its own hard guard:
+
+```bash
+pnpm qa:root-routing
+pnpm qa:root-routing -- --live
+```
+
+The static check verifies the committed worker configs. The live check asserts that:
+
+- `https://www.kurs.ing/` still serves the real landing page
+- `https://kurs.ing/` still serves the real landing page
+- root hosts do not contain kommune-specific markers
+- `/kommune` still resolves as its own concept
+
 This repo now treats Cloudflare auth in this order:
 
 1. a valid `CLOUDFLARE_API_TOKEN` if you intentionally set one
@@ -96,6 +110,8 @@ Both proxy the landing-page host to `https://new.kurs.ing` and explicitly bypass
 - `/robots.txt`
 - `/sitemap.xml`
 - `/sitemap-index.xml`
+
+`apps/blog/deploy.ts` now runs the live root-routing guard after Pages deployment, so a concept deploy fails fast if it hijacks the main landing page.
 
 Example:
 

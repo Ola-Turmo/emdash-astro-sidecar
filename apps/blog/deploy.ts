@@ -118,6 +118,12 @@ async function main() {
     log(yellow('No deployment target specified. Use --prod or --preview.'));
   }
 
+  if (site.rootRouting) {
+    logStep(3.1, 'Running live root routing guard');
+    exec('pnpm qa:root-routing -- --live', { cwd: process.cwd() });
+    log(green('Root routing guard passed'));
+  }
+
   logStep(4, 'Fetching Pages project list');
   try {
     runWrangler(['pages', 'project', 'list'], {
