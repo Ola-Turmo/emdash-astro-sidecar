@@ -15,6 +15,20 @@ This is the correct shape when the blog lives under a host path such as:
 
 ## Pages Deployment
 
+Before any Cloudflare deploy or secret sync, verify the local Wrangler auth path:
+
+```bash
+pnpm cloudflare:check-auth
+```
+
+This repo now treats Cloudflare auth in this order:
+
+1. a valid `CLOUDFLARE_API_TOKEN` if you intentionally set one
+2. otherwise the local Wrangler OAuth session
+3. if a bad `CLOUDFLARE_API_TOKEN` is present but local OAuth works, the deploy scripts automatically ignore the bad env token and continue with OAuth
+
+That prevents the previous failure mode where a stale or invalid env token silently overrode a healthy local Wrangler login.
+
 Select the active site and concept before building when this repo hosts more than one mounted surface:
 
 ```bash
@@ -133,11 +147,12 @@ That registry now includes `metrics-worker`, which is the first Cloudflare-nativ
 Sync worker secrets directly to Cloudflare without GitHub:
 
 ```bash
+pnpm cloudflare:check-auth
 pnpm cloudflare:sync-secrets -- --worker=draft-worker
 pnpm cloudflare:sync-secrets -- --worker=content-api --rotate-content-api-token
 ```
 
-That script prefers a local Wrangler OAuth session and pushes secrets through the Cloudflare Workers API, so the operational source of truth lives in Cloudflare rather than in GitHub Actions.
+That script now uses `wrangler secret put` directly, so the operational source of truth lives in Cloudflare rather than in GitHub Actions and it does not depend on manually reusing the raw OAuth token as an API bearer.
 
 The GitHub workflow at `.github/workflows/cloudflare-deploy.yml` now uses the same registry-driven path instead of hardcoding only the old workers.
 

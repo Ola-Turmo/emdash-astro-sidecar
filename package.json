@@ -18,6 +18,7 @@
     "audit:deployed:psi": "node ./scripts/audit-deployed-urls.mjs --lighthouse",
     "autonomous:check-env": "node ./scripts/check-autonomous-env.mjs",
     "autonomous:deploy-workers": "node ./scripts/deploy-autonomous-workers.mjs",
+    "cloudflare:check-auth": "node ./scripts/check-cloudflare-auth.mjs --require-pages",
     "cloudflare:sync-secrets": "node ./scripts/sync-cloudflare-worker-secrets.mjs",
     "materialize:publications": "node ./scripts/materialize-publications.mjs",
     "providers:health": "node ./scripts/provider-healthcheck.mjs",

@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
-import os from 'node:os';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { detectCloudflareAuth, runWrangler } from './cloudflare-auth.mjs';
 
 const repoRoot = process.cwd();
 const registryPath = path.join(repoRoot, 'docs', 'autonomous-worker-registry.json');
@@ -36,56 +35,6 @@ function readWranglerName(configPath) {
   return match[1];
 }
 
-function readWranglerOAuthToken() {
-  const configPath = path.join(os.homedir(), '.wrangler', 'config', 'default.toml');
-  if (!existsSync(configPath)) {
-    return null;
-  }
-
-  const text = readFileSync(configPath, 'utf8');
-  return text.match(/^oauth_token\s*=\s*"([^"]+)"/m)?.[1] ?? null;
-}
-
-function getApiToken() {
-  return process.env.CLOUDFLARE_API_TOKEN || readWranglerOAuthToken();
-}
-
-function getAccountId() {
-  if (process.env.CLOUDFLARE_ACCOUNT_ID) {
-    return process.env.CLOUDFLARE_ACCOUNT_ID;
-  }
-
-  try {
-    const output =
-      process.platform === 'win32'
-        ? execFileSync(process.env.ComSpec || 'cmd.exe', ['/c', 'pnpm', 'exec', 'wrangler', 'whoami', '--json'], {
-            cwd: repoRoot,
-            env: process.env,
-            encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'pipe'],
-          })
-        : execFileSync('pnpm', ['exec', 'wrangler', 'whoami', '--json'], {
-            cwd: repoRoot,
-            env: process.env,
-            encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'pipe'],
-          });
-    const parsed = JSON.parse(output);
-    const accountId =
-      parsed?.accounts?.[0]?.id ??
-      parsed?.account?.id ??
-      parsed?.memberships?.[0]?.account?.id ??
-      null;
-    if (accountId) {
-      return accountId;
-    }
-  } catch {
-    // fall through
-  }
-
-  throw new Error('Unable to resolve Cloudflare account id. Set CLOUDFLARE_ACCOUNT_ID or log in with wrangler.');
-}
-
 function buildSecretValue(secretName, options) {
   const explicit = process.env[secretName];
   if (explicit) {
@@ -99,34 +48,17 @@ function buildSecretValue(secretName, options) {
   return null;
 }
 
-async function putWorkerSecret({ accountId, apiToken, workerName, secretName, secretValue, dryRun }) {
-  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/${workerName}/secrets`;
+function putSecret({ configPath, workerName, secretName, secretValue, dryRun }) {
   if (dryRun) {
     console.log(`[dry-run] Would set ${secretName} on ${workerName}`);
     return;
   }
 
-  const response = await fetch(endpoint, {
-    method: 'PUT',
-    headers: {
-      authorization: `Bearer ${apiToken}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      name: secretName,
-      text: secretValue,
-      type: 'secret_text',
-    }),
+  runWrangler(['secret', 'put', secretName, '--config', configPath], {
+    cwd: repoRoot,
+    input: `${secretValue}\n`,
+    stdio: 'inherit',
   });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || payload?.success === false) {
-    throw new Error(
-      `Failed to set ${secretName} on ${workerName}: ${payload?.errors?.[0]?.message || response.status}`,
-    );
-  }
-
-  console.log(`Set ${secretName} on ${workerName}`);
 }
 
 async function main() {
@@ -137,12 +69,9 @@ async function main() {
     throw new Error('No workers matched the provided filters.');
   }
 
-  const apiToken = getApiToken();
-  if (!apiToken) {
-    throw new Error('Missing Cloudflare API/OAuth token. Log in with wrangler or set CLOUDFLARE_API_TOKEN.');
-  }
+  const authState = detectCloudflareAuth();
+  console.log(`[cloudflare-auth] ${authState.recommendation}`);
 
-  const accountId = getAccountId();
   const generatedSecrets = [];
 
   for (const worker of workers) {
@@ -159,14 +88,15 @@ async function main() {
         continue;
       }
 
-      await putWorkerSecret({
-        accountId,
-        apiToken,
+      putSecret({
+        configPath: worker.wranglerConfig,
         workerName,
         secretName,
         secretValue,
         dryRun: options.dryRun,
       });
+
+      console.log(`Set ${secretName} on ${workerName}`);
 
       if (secretName === 'CONTENT_API_TOKEN' && options.rotateContentApiToken) {
         generatedSecrets.push(secretName);

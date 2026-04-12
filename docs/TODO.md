@@ -77,6 +77,7 @@ These are only required when moving from generic infrastructure work into a real
 
 ## Recently Completed
 
+- [x] Add a Cloudflare auth preflight and Wrangler-first deploy/secret-sync flow so a bad `CLOUDFLARE_API_TOKEN` cannot silently override a healthy local OAuth session.
 - [x] Added concept-aware build verification for `kurs-ing/guide`, `kurs-ing/kommune`, and `gatareba-ge/guide`.
 - [x] Expanded the first generated kommune content set to cover multiple large municipalities from `Ola-Turmo/kommune.no.apimcp.site`.
 - [x] Enriched generated kommune pages with municipality-specific official-source summaries, checklists, and related guide handoffs.

@@ -14,12 +14,12 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { resolveActiveSiteRuntime } from './site-profiles.mjs';
+import { detectCloudflareAuth, runWrangler } from '../../scripts/cloudflare-auth.mjs';
 
 const BLOG_DIR = join(process.cwd(), 'apps/blog');
 const OUTPUT_DIR = join(BLOG_DIR, 'dist');
 const { site, concept } = resolveActiveSiteRuntime(process.env);
 const DEFAULT_PROJECT_NAME = process.env.PAGES_PROJECT_NAME || concept.cloudflare.pagesProject;
-const quotedOutputDir = `"${OUTPUT_DIR}"`;
 
 const green = (msg) => `\x1b[32m${msg}\x1b[0m`;
 const blue = (msg) => `\x1b[34m${msg}\x1b[0m`;
@@ -66,6 +66,9 @@ async function main() {
   console.log(`Blog directory: ${blue(BLOG_DIR)}`);
   console.log(`Active site/concept: ${yellow(`${site.key}/${concept.key}`)}`);
 
+  const authState = detectCloudflareAuth({ requirePages: true });
+  log(`[cloudflare-auth] ${authState.recommendation}`);
+
   if (!skipBuild) {
     logStep(1, 'Building Astro app');
     exec('pnpm run build', { cwd: BLOG_DIR });
@@ -100,16 +103,16 @@ async function main() {
 
   if (isProduction) {
     const productionBranch = explicitBranch || 'main';
-    exec(
-      `pnpm exec wrangler pages deploy ${quotedOutputDir} --project-name=${projectName} --branch=${productionBranch} --commit-dirty=true`,
-      { cwd: BLOG_DIR },
+    runWrangler(
+      ['pages', 'deploy', OUTPUT_DIR, `--project-name=${projectName}`, `--branch=${productionBranch}`, '--commit-dirty=true'],
+      { cwd: BLOG_DIR, stdio: 'inherit' },
     );
   } else if (isPreview) {
     const branchName =
       explicitBranch || exec('git branch --show-current', { cwd: process.cwd() }).toString().trim();
-    exec(
-      `pnpm exec wrangler pages deploy ${quotedOutputDir} --project-name=${projectName} --branch=${branchName} --commit-dirty=true`,
-      { cwd: BLOG_DIR },
+    runWrangler(
+      ['pages', 'deploy', OUTPUT_DIR, `--project-name=${projectName}`, `--branch=${branchName}`, '--commit-dirty=true'],
+      { cwd: BLOG_DIR, stdio: 'inherit' },
     );
   } else {
     log(yellow('No deployment target specified. Use --prod or --preview.'));
@@ -117,9 +120,10 @@ async function main() {
 
   logStep(4, 'Fetching Pages project list');
   try {
-    exec('pnpm exec wrangler pages project list', {
+    runWrangler(['pages', 'project', 'list'], {
       cwd: BLOG_DIR,
-      encoding: 'utf-8',
+      encoding: 'utf8',
+      stdio: 'inherit',
     });
   } catch {
     log(yellow('Could not fetch project list automatically'));
