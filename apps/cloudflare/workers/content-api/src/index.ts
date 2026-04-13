@@ -65,6 +65,23 @@ interface ProviderSummaryRow {
   published_count: number;
 }
 
+type FieldMetricName = 'LCP' | 'INP' | 'CLS' | 'TTFB' | 'FCP';
+
+interface RumMetricRow {
+  site_key: string;
+  concept_key: string;
+  page_type: string | null;
+  metric_name: FieldMetricName;
+  metric_value: number;
+}
+
+interface ConceptFieldSummaryRow {
+  siteKey: string;
+  conceptKey: string;
+  sampleCount: number;
+  metrics: Record<FieldMetricName, { p75: number | null; rating: string; sampleCount: number }>;
+}
+
 interface PromptSummaryRow {
   family_id: string;
   validation_score: number;
@@ -73,6 +90,14 @@ interface PromptSummaryRow {
   kept: number;
   created_at: string;
 }
+
+const FIELD_TARGETS: Record<FieldMetricName, { good: number; poor: number }> = {
+  LCP: { good: 2500, poor: 4000 },
+  INP: { good: 200, poor: 500 },
+  CLS: { good: 0.1, poor: 0.25 },
+  TTFB: { good: 800, poor: 1800 },
+  FCP: { good: 1800, poor: 3000 },
+};
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -416,6 +441,18 @@ async function buildObservabilitySummary(env: Env): Promise<Record<string, unkno
     )
     .all<PromptSummaryRow>();
 
+  const fieldMetricRows = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT site_key, concept_key, page_type, metric_name, metric_value
+        FROM metrics_rum
+        WHERE collected_at >= datetime('now', '-28 day')
+      `,
+    )
+    .all<RumMetricRow>();
+
+  const fieldSummary = buildFieldSummary(fieldMetricRows.results);
+
   return {
     ok: true,
     generatedAt: new Date().toISOString(),
@@ -425,6 +462,7 @@ async function buildObservabilitySummary(env: Env): Promise<Record<string, unkno
     latestCrux: latestCrux.results,
     providerSummary: providerSummary.results,
     promptSummary: promptSummary.results,
+    fieldSummary,
   };
 }
 
@@ -528,6 +566,10 @@ async function buildReviewUi(env: Env, url: URL): Promise<string> {
             <p class="eyebrow">Leverandører</p>
             ${renderProviderTable(observability.providerSummary as ProviderSummaryRow[])}
           </article>
+          <article class="card">
+            <p class="eyebrow">Feltdata</p>
+            ${renderFieldSummaryTable((observability.fieldSummary as ConceptFieldSummaryRow[]) ?? [])}
+          </article>
         </section>
       </div>
     </main>
@@ -560,6 +602,7 @@ async function buildObservabilityUi(env: Env): Promise<string> {
       <p class="eyebrow">Observability</p>
       <h1>Kontrollplanstatus</h1>
       <div class="card">${renderHostTable(summary.hosts as SummaryHostRow[])}</div>
+      <div class="card"><p class="eyebrow">Feltdata</p>${renderFieldSummaryTable((summary.fieldSummary as ConceptFieldSummaryRow[]) ?? [])}</div>
       <div class="card"><p class="eyebrow">Modellbruk</p>${renderProviderTable(summary.providerSummary as ProviderSummaryRow[])}</div>
       <div class="card"><p class="eyebrow">Prompt runs</p>${renderPromptTable(summary.promptSummary as PromptSummaryRow[])}</div>
       <div class="card"><p class="eyebrow">Nylige audits</p>${renderAuditList(summary.recentAudits as RecentAuditRow[], env.BROWSER_AUDIT_WORKER_URL)}</div>
@@ -895,6 +938,23 @@ function renderProviderTable(rows: ProviderSummaryRow[]): string {
     .join('')}</tbody></table>`;
 }
 
+function renderFieldSummaryTable(rows: ConceptFieldSummaryRow[]): string {
+  if (!rows.length) return '<p>Ingen feltdata enda.</p>';
+  return `<table><thead><tr><th>Site</th><th>Konsept</th><th>Prøver</th><th>LCP p75</th><th>INP p75</th><th>CLS p75</th><th>Status</th></tr></thead><tbody>${rows
+    .map((row) => {
+      const lcp = row.metrics.LCP;
+      const inp = row.metrics.INP;
+      const cls = row.metrics.CLS;
+      const status = [lcp.rating, inp.rating, cls.rating].every((rating) => rating === 'good')
+        ? 'grønn'
+        : [lcp.rating, inp.rating, cls.rating].some((rating) => rating === 'poor')
+          ? 'svak'
+          : 'blandet';
+      return `<tr><td>${escapeHtml(row.siteKey)}</td><td>${escapeHtml(row.conceptKey)}</td><td>${row.sampleCount}</td><td>${formatFieldValue(lcp.p75)}</td><td>${formatFieldValue(inp.p75)}</td><td>${formatFieldValue(cls.p75)}</td><td>${escapeHtml(status)}</td></tr>`;
+    })
+    .join('')}</tbody></table>`;
+}
+
 function renderPromptTable(rows: PromptSummaryRow[]): string {
   if (!rows.length) return '<p>Ingen prompt-runs enda.</p>';
   return `<table><thead><tr><th>Familie</th><th>Validering</th><th>Total</th><th>Kept</th><th>Tid</th></tr></thead><tbody>${rows
@@ -917,6 +977,61 @@ function htmlResponse(html: string): Response {
       'cache-control': 'no-store',
     },
   });
+}
+
+function buildFieldSummary(rows: RumMetricRow[]): ConceptFieldSummaryRow[] {
+  const grouped = new Map<string, RumMetricRow[]>();
+  for (const row of rows) {
+    const key = `${row.site_key}::${row.concept_key}`;
+    const bucket = grouped.get(key) ?? [];
+    bucket.push(row);
+    grouped.set(key, bucket);
+  }
+
+  return [...grouped.entries()]
+    .map(([key, bucket]) => {
+      const [siteKey, conceptKey] = key.split('::');
+      const metrics = {} as ConceptFieldSummaryRow['metrics'];
+      for (const metricName of Object.keys(FIELD_TARGETS) as FieldMetricName[]) {
+        const values = bucket
+          .filter((row) => row.metric_name === metricName)
+          .map((row) => Number(row.metric_value))
+          .sort((left, right) => left - right);
+        const p75 = percentile(values, 0.75);
+        metrics[metricName] = {
+          p75,
+          sampleCount: values.length,
+          rating: rateFieldMetric(metricName, p75),
+        };
+      }
+
+      return {
+        siteKey,
+        conceptKey,
+        sampleCount: bucket.length,
+        metrics,
+      };
+    })
+    .sort((left, right) => right.sampleCount - left.sampleCount);
+}
+
+function percentile(values: number[], ratio: number): number | null {
+  if (!values.length) return null;
+  const index = Math.max(0, Math.min(values.length - 1, Math.ceil(values.length * ratio) - 1));
+  return Number(values[index].toFixed(2));
+}
+
+function rateFieldMetric(metricName: FieldMetricName, value: number | null): string {
+  if (value === null) return 'no-data';
+  const target = FIELD_TARGETS[metricName];
+  if (value <= target.good) return 'good';
+  if (value <= target.poor) return 'needs-improvement';
+  return 'poor';
+}
+
+function formatFieldValue(value: number | null): string {
+  if (value === null) return '-';
+  return String(value);
 }
 
 function escapeHtml(value: string): string {

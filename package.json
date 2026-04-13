@@ -27,6 +27,8 @@
     "qa:municipality": "node ./scripts/check-municipality-content.mjs",
     "qa:encoding": "node ./scripts/check-text-encoding.mjs",
     "qa:mobile": "node ./scripts/check-mobile-layout.mjs",
+    "report:field": "node ./scripts/check-field-performance.mjs",
+    "qa:field": "node ./scripts/check-field-performance.mjs --strict",
     "qa:cloudflare": "node ./scripts/check-cloudflare-guardrails.mjs",
     "qa:root-routing": "node ./scripts/check-root-routing.mjs",
     "qa:config": "node ./scripts/check-host-config.mjs",

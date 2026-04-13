@@ -34,6 +34,8 @@ Everything else in the current municipality rollout should stay drafted until it
   - flagship-page tracking
   - persistent trend views
   - deploy summaries tied to field targets
+- [x] Added reusable field-performance reporting and a strict gate entrypoint (`pnpm report:field`, `pnpm qa:field`).
+- [x] Added field-performance summaries to the Cloudflare observability surface.
 - [ ] Add a release gate for field-performance targets on flagship surfaces:
   - `LCP p75 <= 2.5s`
   - `INP p75 <= 200ms`

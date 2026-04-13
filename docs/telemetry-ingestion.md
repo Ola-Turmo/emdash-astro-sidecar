@@ -48,6 +48,9 @@ What it does now:
 - split field metrics by device class and page type
 - expose top sampled pages by field-performance profile
 - disable caching on dynamic metrics responses so operator views are not stale
+- feed field summaries into the Cloudflare observability UI
+- support reusable local reporting through `pnpm report:field`
+- support a strict field gate entrypoint through `pnpm qa:field`
 
 What still needs to be added:
 
@@ -59,6 +62,7 @@ What still needs to be added:
 - deploy and dashboard gating tied to the field targets in `docs/world-class-quality-targets.md`
 - trustworthy live proof paths for automatic browser beacons on every concept surface
 - stronger release gates tied to the field targets in `docs/world-class-quality-targets.md`
+- a stable sample policy for when `pnpm qa:field` should be considered blocking in CI
 
 ## Worker Secrets
 
