@@ -11,6 +11,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const args = new Set(process.argv.slice(2));
 const strict = args.has('--strict');
 const minSamples = Number.parseInt(process.env.EMDASH_FIELD_MIN_SAMPLES ?? '5', 10);
+const sampleSource = process.env.EMDASH_FIELD_SAMPLE_SOURCE ?? 'browser_rum';
 
 const targets = {
   LCP: 2500,
@@ -28,6 +29,7 @@ for (const concept of concepts) {
   endpoint.pathname = '/rum/summary';
   endpoint.searchParams.set('siteKey', concept.siteKey);
   endpoint.searchParams.set('conceptKey', concept.conceptKey);
+  endpoint.searchParams.set('sampleSource', sampleSource);
   endpoint.searchParams.set('ts', String(Date.now()));
 
   try {
@@ -128,6 +130,7 @@ function renderMarkdown(results) {
     '',
     `Strict mode: ${strict ? 'on' : 'off'}`,
     `Minimum samples per metric for strict mode: ${minSamples}`,
+    `Sample source: ${sampleSource}`,
     '',
   ];
 

@@ -14,7 +14,8 @@ routes = [
 ]
 
 [vars]
-GUIDE_ORIGIN = "https://master.emdash-astro-sidecar.pages.dev"
+GUIDE_ORIGIN = "https://emdash-astro-sidecar.pages.dev"
+METRICS_WORKER_URL = "https://emdash-metrics-worker.ola-turmo.workers.dev"
 
 [[d1_databases]]
 binding = "AUTONOMOUS_DB"

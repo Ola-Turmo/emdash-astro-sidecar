@@ -118,7 +118,7 @@ export const CLOUDFLARE_ROUTE_WORKER = ACTIVE_CONCEPT.cloudflare.routeWorkerName
 export const CLOUDFLARE_ROUTE_WORKER_DIRECTORY = ACTIVE_CONCEPT.cloudflare.routeWorkerDirectory;
 export const DEPLOY_AUDIT_SITEMAPS = ACTIVE_CONCEPT.audit.sitemapUrls;
 export const DEPLOY_AUDIT_EXTRA_URLS = ACTIVE_CONCEPT.audit.extraUrls;
-export const RUM_ENDPOINT = ACTIVE_SITE.telemetry?.rumEndpoint ?? '';
+export const RUM_ENDPOINT = conceptPath('/__rum');
 
 export const PRIMARY_CTA = ACTIVE_CONCEPT.callsToAction.primary;
 export const SECONDARY_CTA = ACTIVE_CONCEPT.callsToAction.secondary;

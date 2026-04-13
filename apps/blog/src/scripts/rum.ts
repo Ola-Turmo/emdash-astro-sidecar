@@ -10,6 +10,8 @@ type RumMetricPayload = {
   conceptKey: string;
   pagePath: string;
   pageType: string;
+  sampleSource: 'browser_rum';
+  sessionId: string;
   deviceClass: 'mobile' | 'desktop';
   viewportWidth: number;
   viewportHeight: number;
@@ -23,6 +25,8 @@ type RumMetricPayload = {
 
 const collected = new Map<string, { value: number; rating: 'good' | 'needs-improvement' | 'poor' }>();
 let hasFlushed = false;
+const sessionId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `session-${Date.now()}`;
+const AUTO_FLUSH_MS = 8000;
 
 export function startRumCollection(): void {
   if (typeof window === 'undefined' || typeof PerformanceObserver === 'undefined' || !RUM_ENDPOINT) {
@@ -39,6 +43,10 @@ export function startRumCollection(): void {
   observeCls();
   observeInp();
   observeTtfb();
+
+  window.setTimeout(() => {
+    flushRum(pagePath);
+  }, AUTO_FLUSH_MS);
 
   addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
@@ -59,6 +67,8 @@ function flushRum(pagePath: string): void {
     conceptKey: ACTIVE_CONCEPT_KEY,
     pagePath,
     pageType: classifyPageType(pagePath),
+    sampleSource: 'browser_rum',
+    sessionId,
     deviceClass: window.innerWidth < 768 ? 'mobile' : 'desktop',
     viewportWidth: window.innerWidth,
     viewportHeight: window.innerHeight,
@@ -74,22 +84,23 @@ function flushRum(pagePath: string): void {
   hasFlushed = true;
   collected.clear();
 
+  if (sendWithBeacon(body)) {
+    return;
+  }
+
   if (typeof fetch === 'function') {
     fetch(RUM_ENDPOINT, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'content-type': 'text/plain;charset=UTF-8',
       },
       body,
       keepalive: true,
       mode: 'cors',
     }).catch(() => {
-      sendWithBeacon(body);
+      // Ignore final fallback errors during unload.
     });
-    return;
   }
-
-  sendWithBeacon(body);
 }
 
 function observeFcp(): void {
@@ -174,9 +185,9 @@ function recordMetric(
   collected.set(name, { value, rating });
 }
 
-function sendWithBeacon(body: string): void {
-  if (typeof navigator.sendBeacon !== 'function') return;
-  navigator.sendBeacon(RUM_ENDPOINT, new Blob([body], { type: 'application/json' }));
+function sendWithBeacon(body: string): boolean {
+  if (typeof navigator.sendBeacon !== 'function') return false;
+  return navigator.sendBeacon(RUM_ENDPOINT, new Blob([body], { type: 'application/json' }));
 }
 
 function rateMetric(

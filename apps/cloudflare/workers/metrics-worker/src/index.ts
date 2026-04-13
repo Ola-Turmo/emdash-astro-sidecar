@@ -18,6 +18,8 @@ type RumMetricName = 'LCP' | 'INP' | 'CLS' | 'TTFB' | 'FCP';
 type RumRow = {
   metric_name: RumMetricName;
   metric_value: number;
+  sample_source: string | null;
+  session_id: string | null;
   device_class: string | null;
   page_type: string | null;
   page_path: string;
@@ -28,6 +30,8 @@ type RumPayload = {
   conceptKey?: string;
   pagePath?: string;
   pageType?: string;
+  sampleSource?: string;
+  sessionId?: string;
   deviceClass?: string;
   viewportWidth?: number;
   viewportHeight?: number;
@@ -66,10 +70,11 @@ export default {
     if (request.method === 'GET' && url.pathname === '/rum/summary') {
       const siteKey = url.searchParams.get('siteKey');
       const conceptKey = url.searchParams.get('conceptKey');
+      const sampleSource = url.searchParams.get('sampleSource')?.trim() || 'browser_rum';
       if (!siteKey || !conceptKey) {
         return jsonWithCors(request, { ok: false, error: 'siteKey and conceptKey are required' }, 400);
       }
-      return jsonWithCors(request, await buildRumSummary(env, siteKey, conceptKey));
+      return jsonWithCors(request, await buildRumSummary(env, siteKey, conceptKey, sampleSource));
     }
 
     if (request.method === 'POST' && url.pathname === '/rum') {
@@ -136,9 +141,9 @@ async function ingestRum(env: Env, payload: Required<RumPayload>): Promise<void>
       `
         INSERT INTO metrics_rum (
           id, site_key, concept_key, page_path, page_type, metric_name, metric_value, rating,
-          device_class, viewport_width, viewport_height, user_agent, collected_at
+          sample_source, session_id, device_class, viewport_width, viewport_height, user_agent, collected_at
         )
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
       `,
     )
       .bind(
@@ -150,6 +155,8 @@ async function ingestRum(env: Env, payload: Required<RumPayload>): Promise<void>
         metric.name,
         metric.value,
         metric.rating || null,
+        payload.sampleSource || 'unknown',
+        payload.sessionId || null,
         payload.deviceClass || null,
         payload.viewportWidth || null,
         payload.viewportHeight || null,
@@ -242,19 +249,25 @@ async function buildMetricsSummary(env: Env, hostId: string): Promise<Record<str
   };
 }
 
-async function buildRumSummary(env: Env, siteKey: string, conceptKey: string): Promise<Record<string, unknown>> {
+async function buildRumSummary(
+  env: Env,
+  siteKey: string,
+  conceptKey: string,
+  sampleSource: string,
+): Promise<Record<string, unknown>> {
   await ensureRumTable(env.AUTONOMOUS_DB);
   const rows = await env.AUTONOMOUS_DB
     .prepare(
       `
-        SELECT metric_name, metric_value, device_class, page_type, page_path, collected_at
+        SELECT metric_name, metric_value, sample_source, session_id, device_class, page_type, page_path, collected_at
         FROM metrics_rum
         WHERE site_key = ?1
           AND concept_key = ?2
+          AND sample_source = ?3
           AND collected_at >= datetime('now', '-28 day')
       `,
     )
-    .bind(siteKey, conceptKey)
+    .bind(siteKey, conceptKey, sampleSource)
     .all<RumRow>();
 
   const metrics = summarizeRumRows(rows.results);
@@ -279,6 +292,7 @@ async function buildRumSummary(env: Env, siteKey: string, conceptKey: string): P
     ok: true,
     siteKey,
     conceptKey,
+    sampleSource,
     metrics,
     byDeviceClass,
     byPageType,
@@ -570,6 +584,8 @@ async function ensureRumTable(db: D1Database): Promise<void> {
           metric_name TEXT NOT NULL,
           metric_value REAL NOT NULL,
           rating TEXT,
+          sample_source TEXT,
+          session_id TEXT,
           device_class TEXT,
           viewport_width INTEGER,
           viewport_height INTEGER,
@@ -593,6 +609,10 @@ async function ensureRumTable(db: D1Database): Promise<void> {
 function validateRumPayload(payload: RumPayload): string | null {
   if (!payload.siteKey || !payload.conceptKey || !payload.pagePath || !payload.metrics?.length) {
     return 'siteKey, conceptKey, pagePath, and metrics are required';
+  }
+
+  if (!payload.sampleSource) {
+    return 'sampleSource is required';
   }
 
   for (const metric of payload.metrics) {

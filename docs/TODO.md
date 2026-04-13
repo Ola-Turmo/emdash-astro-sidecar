@@ -36,6 +36,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - deploy summaries tied to field targets
 - [x] Added reusable field-performance reporting and a strict gate entrypoint (`pnpm report:field`, `pnpm qa:field`).
 - [x] Added field-performance summaries to the Cloudflare observability surface.
+- [x] Split field summaries by explicit sample source so `browser_rum` can be gated separately from synthetic/manual tests.
 - [ ] Add a release gate for field-performance targets on flagship surfaces:
   - `LCP p75 <= 2.5s`
   - `INP p75 <= 200ms`
@@ -71,6 +72,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - publish quality state
   - conversion/funnel signals
 - [ ] Add trustworthy live verification for real browser RUM samples on both `guide` and `kommune`, not just synthetic or manual validation paths.
+- [ ] Debug and prove automatic browser-to-`/__rum` collection on live `guide` and `kommune` pages. The same-origin proxy path is implemented, but a normal browser session still needs explicit end-to-end proof in D1.
 
 ## P0: Kommune Concept Quality
 

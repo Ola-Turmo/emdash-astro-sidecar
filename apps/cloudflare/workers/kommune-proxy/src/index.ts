@@ -2,9 +2,11 @@ import { conceptRobotsTxt, conceptRssXml, conceptSitemapXml } from './generated/
 
 interface Env {
   KOMMUNE_ORIGIN: string;
+  METRICS_WORKER_URL: string;
 }
 
 const PREFIX = '/kommune';
+const RUM_PATH = `${PREFIX}/__rum`;
 const ALLOWED_PATHS = new Set(
   [...conceptSitemapXml.matchAll(/<loc>https:\/\/www\.kurs\.ing(\/kommune(?:\/[^<]*)?)<\/loc>/g)].map((match) =>
     normalizeConceptPath(match[1] || PREFIX),
@@ -81,6 +83,10 @@ export default {
       return responseWithBody(conceptRobotsTxt, 'text/plain');
     }
 
+    if (incomingUrl.pathname === RUM_PATH || incomingUrl.pathname === `${RUM_PATH}/`) {
+      return proxyRumRequest(request, env.METRICS_WORKER_URL);
+    }
+
     const normalizedIncomingPath = normalizeConceptPath(incomingUrl.pathname);
     if (
       normalizedIncomingPath.startsWith(`${PREFIX}/`) &&
@@ -117,3 +123,44 @@ export default {
     });
   },
 };
+
+async function proxyRumRequest(request: Request, metricsWorkerUrl: string): Promise<Response> {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'POST,OPTIONS',
+        'access-control-allow-headers': 'content-type',
+        'cache-control': 'no-store',
+      },
+    });
+  }
+
+  if (request.method !== 'POST') {
+    return new Response('Method Not Allowed', {
+      status: 405,
+      headers: {
+        'cache-control': 'no-store',
+      },
+    });
+  }
+
+  const targetUrl = new URL('/rum', metricsWorkerUrl);
+  const upstreamResponse = await fetch(targetUrl.toString(), {
+    method: 'POST',
+    headers: {
+      'content-type': request.headers.get('content-type') ?? 'application/json',
+    },
+    body: request.body,
+  });
+
+  return new Response(upstreamResponse.body, {
+    status: upstreamResponse.status,
+    statusText: upstreamResponse.statusText,
+    headers: {
+      'access-control-allow-origin': '*',
+      'cache-control': 'no-store',
+      'content-type': upstreamResponse.headers.get('content-type') ?? 'application/json; charset=utf-8',
+    },
+  });
+}

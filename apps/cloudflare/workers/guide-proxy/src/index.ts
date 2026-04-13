@@ -3,10 +3,12 @@ import { conceptRobotsTxt, conceptRssXml, conceptSitemapXml } from './generated/
 interface Env {
   GUIDE_ORIGIN: string;
   AUTONOMOUS_DB: D1Database;
+  METRICS_WORKER_URL: string;
 }
 
 const GUIDE_PREFIX = '/guide';
 const LEGACY_GUIDE_PREFIXES = ['/blog', '/category', '/author'];
+const GUIDE_RUM_PATH = `${GUIDE_PREFIX}/__rum`;
 
 function withSecurityHeaders(headers: Headers): Headers {
   const next = new Headers(headers);
@@ -98,6 +100,10 @@ export default {
       return responseWithBody(conceptRobotsTxt, 'text/plain');
     }
 
+    if (incomingUrl.pathname === GUIDE_RUM_PATH || incomingUrl.pathname === `${GUIDE_RUM_PATH}/`) {
+      return proxyRumRequest(request, env.METRICS_WORKER_URL);
+    }
+
     if (incomingUrl.pathname.startsWith(`${GUIDE_PREFIX}/preview/`)) {
       return new Response('Not Found', {
         status: 404,
@@ -161,6 +167,47 @@ export default {
     });
   },
 };
+
+async function proxyRumRequest(request: Request, metricsWorkerUrl: string): Promise<Response> {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'POST,OPTIONS',
+        'access-control-allow-headers': 'content-type',
+        'cache-control': 'no-store',
+      },
+    });
+  }
+
+  if (request.method !== 'POST') {
+    return new Response('Method Not Allowed', {
+      status: 405,
+      headers: {
+        'cache-control': 'no-store',
+      },
+    });
+  }
+
+  const targetUrl = new URL('/rum', metricsWorkerUrl);
+  const upstreamResponse = await fetch(targetUrl.toString(), {
+    method: 'POST',
+    headers: {
+      'content-type': request.headers.get('content-type') ?? 'application/json',
+    },
+    body: request.body,
+  });
+
+  return new Response(upstreamResponse.body, {
+    status: upstreamResponse.status,
+    statusText: upstreamResponse.statusText,
+    headers: {
+      'access-control-allow-origin': '*',
+      'cache-control': 'no-store',
+      'content-type': upstreamResponse.headers.get('content-type') ?? 'application/json; charset=utf-8',
+    },
+  });
+}
 
 function responseWithEdgeArtifact(html: string, mode: string): Response {
   return new Response(html, {
