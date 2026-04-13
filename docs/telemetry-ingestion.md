@@ -14,6 +14,10 @@ The autonomous control plane now has a first telemetry-ingestion foundation inst
   Cloudflare worker that ingests telemetry into D1 for one host at a time.
 - [apps/cloudflare/d1/migrations/0010_metrics_ingestion.sql](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\cloudflare\d1\migrations\0010_metrics_ingestion.sql)
   D1 tables for `metrics_gsc`, `metrics_crux`, `metrics_bing`, and `indexnow_submissions`.
+- [apps/cloudflare/d1/migrations/0011_rum_metrics.sql](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\cloudflare\d1\migrations\0011_rum_metrics.sql)
+  D1 table for first-party `metrics_rum`.
+- [apps/blog/src/scripts/rum.ts](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\blog\src\scripts\rum.ts)
+  Browser-side collection for `LCP`, `INP`, `CLS`, `TTFB`, and `FCP`.
 
 ## Why This Exists
 
@@ -25,6 +29,7 @@ This foundation is meant to support:
 - origin-level UX metrics from CrUX
 - Bing search metrics through Bing Webmaster
 - explicit IndexNow logging for submitted URLs
+- first-party field-performance measurement for real users
 
 ## Current Limits
 
@@ -37,6 +42,12 @@ What it does now:
 - support optional IndexNow submissions for a set of URLs
 - expose a host summary endpoint through `metrics-worker` at `GET /summary?hostId=<host-id>`
 - feed those summaries into the Cloudflare observability dashboard in `content-api`
+- ingest browser-side RUM beacons through `POST /rum`
+- expose field metric summaries through `GET /rum/summary?siteKey=<site>&conceptKey=<concept>`
+- return `p50/p75/p95/p99` rollups per metric
+- split field metrics by device class and page type
+- expose top sampled pages by field-performance profile
+- disable caching on dynamic metrics responses so operator views are not stale
 
 What still needs to be added:
 
@@ -45,6 +56,9 @@ What still needs to be added:
 - normalized reporting tables or rollups
 - dashboards and alerting
 - URL Inspection or sitemap health follow-up for Google
+- deploy and dashboard gating tied to the field targets in `docs/world-class-quality-targets.md`
+- trustworthy live proof paths for automatic browser beacons on every concept surface
+- stronger release gates tied to the field targets in `docs/world-class-quality-targets.md`
 
 ## Worker Secrets
 
@@ -72,6 +86,22 @@ Host summary:
 ```bash
 curl "https://<metrics-worker-url>/summary?hostId=<host-id>"
 ```
+
+RUM ingest:
+
+```bash
+curl -X POST https://<metrics-worker-url>/rum \
+  -H "content-type: application/json" \
+  -d "{\"siteKey\":\"kurs-ing\",\"conceptKey\":\"guide\",\"pagePath\":\"/guide/blog/example/\",\"pageType\":\"article\",\"deviceClass\":\"desktop\",\"metrics\":[{\"name\":\"LCP\",\"value\":1800,\"rating\":\"good\"}]}"
+```
+
+RUM summary:
+
+```bash
+curl "https://<metrics-worker-url>/rum/summary?siteKey=kurs-ing&conceptKey=guide"
+```
+
+The browser collector currently posts with `fetch(..., { keepalive: true })` and falls back to `navigator.sendBeacon()` using an `application/json` blob. This avoids the weaker plain-string beacon path and prevents duplicate flushes on `visibilitychange` plus `pagehide`.
 
 Optional IndexNow submission:
 

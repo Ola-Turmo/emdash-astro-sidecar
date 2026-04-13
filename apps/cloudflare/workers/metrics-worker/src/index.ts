@@ -14,9 +14,46 @@ interface Env {
   INDEXNOW_KEY?: string;
 }
 
+type RumMetricName = 'LCP' | 'INP' | 'CLS' | 'TTFB' | 'FCP';
+type RumRow = {
+  metric_name: RumMetricName;
+  metric_value: number;
+  device_class: string | null;
+  page_type: string | null;
+  page_path: string;
+  collected_at: string;
+};
+type RumPayload = {
+  siteKey?: string;
+  conceptKey?: string;
+  pagePath?: string;
+  pageType?: string;
+  deviceClass?: string;
+  viewportWidth?: number;
+  viewportHeight?: number;
+  userAgent?: string;
+  metrics?: Array<{
+    name: RumMetricName;
+    value: number;
+    rating?: string;
+  }>;
+};
+
+const FIELD_TARGETS: Record<RumMetricName, { good: number; poor: number; unit: string }> = {
+  LCP: { good: 2500, poor: 4000, unit: 'ms' },
+  INP: { good: 200, poor: 500, unit: 'ms' },
+  CLS: { good: 0.1, poor: 0.25, unit: 'score' },
+  TTFB: { good: 800, poor: 1800, unit: 'ms' },
+  FCP: { good: 1800, poor: 3000, unit: 'ms' },
+};
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders(request.headers.get('origin')) });
+    }
 
     if (request.method === 'GET' && url.pathname === '/summary') {
       const hostId = url.searchParams.get('hostId');
@@ -24,6 +61,25 @@ export default {
         return Response.json({ ok: false, error: 'hostId is required' }, { status: 400 });
       }
       return Response.json(await buildMetricsSummary(env, hostId));
+    }
+
+    if (request.method === 'GET' && url.pathname === '/rum/summary') {
+      const siteKey = url.searchParams.get('siteKey');
+      const conceptKey = url.searchParams.get('conceptKey');
+      if (!siteKey || !conceptKey) {
+        return jsonWithCors(request, { ok: false, error: 'siteKey and conceptKey are required' }, 400);
+      }
+      return jsonWithCors(request, await buildRumSummary(env, siteKey, conceptKey));
+    }
+
+    if (request.method === 'POST' && url.pathname === '/rum') {
+      const payload = (await request.json().catch(() => ({}))) as RumPayload;
+      const validationError = validateRumPayload(payload);
+      if (validationError) {
+        return jsonWithCors(request, { ok: false, error: validationError }, 400);
+      }
+      await ingestRum(env, payload as Required<RumPayload>);
+      return jsonWithCors(request, { ok: true });
     }
 
     if (request.method !== 'POST') {
@@ -71,6 +127,38 @@ export default {
     });
   },
 };
+
+async function ingestRum(env: Env, payload: Required<RumPayload>): Promise<void> {
+  await ensureRumTable(env.AUTONOMOUS_DB);
+  const now = new Date().toISOString();
+  for (const metric of payload.metrics) {
+    await env.AUTONOMOUS_DB.prepare(
+      `
+        INSERT INTO metrics_rum (
+          id, site_key, concept_key, page_path, page_type, metric_name, metric_value, rating,
+          device_class, viewport_width, viewport_height, user_agent, collected_at
+        )
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
+      `,
+    )
+      .bind(
+        crypto.randomUUID(),
+        payload.siteKey,
+        payload.conceptKey,
+        payload.pagePath,
+        payload.pageType || null,
+        metric.name,
+        metric.value,
+        metric.rating || null,
+        payload.deviceClass || null,
+        payload.viewportWidth || null,
+        payload.viewportHeight || null,
+        truncateValue(payload.userAgent || '', 240),
+        now,
+      )
+      .run();
+  }
+}
 
 async function buildMetricsSummary(env: Env, hostId: string): Promise<Record<string, unknown>> {
   const host = await env.AUTONOMOUS_DB
@@ -150,6 +238,52 @@ async function buildMetricsSummary(env: Env, hostId: string): Promise<Record<str
     gsc28Day: gscTotals,
     bing28Day: bingTotals,
     latestIndexNowSubmissions: indexNow.results,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+async function buildRumSummary(env: Env, siteKey: string, conceptKey: string): Promise<Record<string, unknown>> {
+  await ensureRumTable(env.AUTONOMOUS_DB);
+  const rows = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT metric_name, metric_value, device_class, page_type, page_path, collected_at
+        FROM metrics_rum
+        WHERE site_key = ?1
+          AND concept_key = ?2
+          AND collected_at >= datetime('now', '-28 day')
+      `,
+    )
+    .bind(siteKey, conceptKey)
+    .all<RumRow>();
+
+  const metrics = summarizeRumRows(rows.results);
+  const byDeviceClass = Object.fromEntries(
+    ['mobile', 'desktop'].map((deviceClass) => [
+      deviceClass,
+      summarizeRumRows(rows.results.filter((row) => row.device_class === deviceClass)),
+    ]),
+  );
+
+  const pageTypes = [...new Set(rows.results.map((row) => row.page_type).filter((value): value is string => Boolean(value)))];
+  const byPageType = Object.fromEntries(
+    pageTypes.map((pageType) => [
+      pageType,
+      summarizeRumRows(rows.results.filter((row) => row.page_type === pageType)),
+    ]),
+  );
+
+  const topPages = summarizeTopPages(rows.results);
+
+  return {
+    ok: true,
+    siteKey,
+    conceptKey,
+    metrics,
+    byDeviceClass,
+    byPageType,
+    topPages,
+    sampleCount: rows.results.length,
     generatedAt: new Date().toISOString(),
   };
 }
@@ -421,4 +555,162 @@ async function ensureIndexNowTable(db: D1Database): Promise<void> {
       `,
     )
     .run();
+}
+
+async function ensureRumTable(db: D1Database): Promise<void> {
+  await db
+    .prepare(
+      `
+        CREATE TABLE IF NOT EXISTS metrics_rum (
+          id TEXT PRIMARY KEY,
+          site_key TEXT NOT NULL,
+          concept_key TEXT NOT NULL,
+          page_path TEXT NOT NULL,
+          page_type TEXT,
+          metric_name TEXT NOT NULL,
+          metric_value REAL NOT NULL,
+          rating TEXT,
+          device_class TEXT,
+          viewport_width INTEGER,
+          viewport_height INTEGER,
+          user_agent TEXT,
+          collected_at TEXT NOT NULL
+        )
+      `,
+    )
+    .run();
+
+  await db
+    .prepare(
+      `
+        CREATE INDEX IF NOT EXISTS idx_metrics_rum_scope_time
+        ON metrics_rum(site_key, concept_key, metric_name, collected_at)
+      `,
+    )
+    .run();
+}
+
+function validateRumPayload(payload: RumPayload): string | null {
+  if (!payload.siteKey || !payload.conceptKey || !payload.pagePath || !payload.metrics?.length) {
+    return 'siteKey, conceptKey, pagePath, and metrics are required';
+  }
+
+  for (const metric of payload.metrics) {
+    if (!FIELD_TARGETS[metric.name]) {
+      return `Unsupported metric ${metric.name}`;
+    }
+    if (!Number.isFinite(metric.value) || metric.value <= 0) {
+      return `Invalid value for ${metric.name}`;
+    }
+  }
+
+  return null;
+}
+
+function percentile(values: number[], ratio: number): number | null {
+  if (!values.length) return null;
+  const index = Math.max(0, Math.min(values.length - 1, Math.ceil(values.length * ratio) - 1));
+  return Number(values[index].toFixed(2));
+}
+
+function summarizeRumRows(rows: RumRow[]): Record<RumMetricName, Record<string, unknown>> {
+  const byMetric = new Map<RumMetricName, number[]>();
+  for (const row of rows) {
+    const values = byMetric.get(row.metric_name) ?? [];
+    values.push(Number(row.metric_value));
+    byMetric.set(row.metric_name, values);
+  }
+
+  const summary = {} as Record<RumMetricName, Record<string, unknown>>;
+  for (const metricName of Object.keys(FIELD_TARGETS) as RumMetricName[]) {
+    const values = [...(byMetric.get(metricName) ?? [])].sort((a, b) => a - b);
+    const target = FIELD_TARGETS[metricName];
+    const p50 = percentile(values, 0.5);
+    const p75 = percentile(values, 0.75);
+    const p95 = percentile(values, 0.95);
+    const p99 = percentile(values, 0.99);
+    summary[metricName] = {
+      sampleCount: values.length,
+      p50,
+      p75,
+      p95,
+      p99,
+      rating: rateFieldMetric(metricName, p75),
+      targetGood: target.good,
+      targetPoor: target.poor,
+      unit: target.unit,
+    };
+  }
+  return summary;
+}
+
+function summarizeTopPages(rows: RumRow[]): Array<Record<string, unknown>> {
+  const pageMap = new Map<
+    string,
+    {
+      pageType: string | null;
+      metrics: Map<RumMetricName, number[]>;
+    }
+  >();
+
+  for (const row of rows) {
+    const current = pageMap.get(row.page_path) ?? {
+      pageType: row.page_type,
+      metrics: new Map<RumMetricName, number[]>(),
+    };
+    const metricValues = current.metrics.get(row.metric_name) ?? [];
+    metricValues.push(Number(row.metric_value));
+    current.metrics.set(row.metric_name, metricValues);
+    pageMap.set(row.page_path, current);
+  }
+
+  return [...pageMap.entries()]
+    .map(([pagePath, pageData]) => {
+      const lcpValues = [...(pageData.metrics.get('LCP') ?? [])].sort((a, b) => a - b);
+      const inpValues = [...(pageData.metrics.get('INP') ?? [])].sort((a, b) => a - b);
+      const clsValues = [...(pageData.metrics.get('CLS') ?? [])].sort((a, b) => a - b);
+      return {
+        pagePath,
+        pageType: pageData.pageType,
+        sampleCount: lcpValues.length || inpValues.length || clsValues.length,
+        lcpP75: percentile(lcpValues, 0.75),
+        inpP75: percentile(inpValues, 0.75),
+        clsP75: percentile(clsValues, 0.75),
+      };
+    })
+    .sort((left, right) => Number(right.lcpP75 ?? 0) - Number(left.lcpP75 ?? 0))
+    .slice(0, 10);
+}
+
+function rateFieldMetric(metric: RumMetricName, value: number | null): 'good' | 'needs-improvement' | 'poor' | 'no-data' {
+  if (value === null) return 'no-data';
+  const target = FIELD_TARGETS[metric];
+  if (value <= target.good) return 'good';
+  if (value <= target.poor) return 'needs-improvement';
+  return 'poor';
+}
+
+function corsHeaders(origin: string | null): HeadersInit {
+  return {
+    'access-control-allow-origin': origin || '*',
+    'access-control-allow-methods': 'GET,POST,OPTIONS',
+    'access-control-allow-headers': 'content-type,authorization',
+  };
+}
+
+function jsonWithCors(request: Request, body: Record<string, unknown>, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store, max-age=0',
+      vary: 'Origin',
+      ...corsHeaders(request.headers.get('origin')),
+    },
+  });
+}
+
+function truncateValue(value: string, maxLength: number): string {
+  if (value.length <= maxLength) return value;
+  return value.slice(0, maxLength);
 }

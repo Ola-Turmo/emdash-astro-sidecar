@@ -16,6 +16,7 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 - [x] Weak kommune pages now fail closed instead of staying published.
 - [x] Kommune quality reporting exists.
 - [x] Kommune hero-image workflow exists for the currently published municipality set.
+- [x] First-party RUM exists for field CWV ingestion, `p50/p75/p95/p99` summaries, device splits, page-type splits, and top-page rollups.
 
 ## Current Published Kommune Set
 
@@ -28,7 +29,11 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P0: Measurable World-Class Baseline
 
-- [ ] Add first-party RUM for `LCP`, `INP`, `CLS`, `TTFB`, and `FCP`, stored as `p50/p75/p95/p99` by page template, device class, and concept.
+- [ ] Turn the current RUM summary foundation into production release gating and dashboarding:
+  - alerting on regressions
+  - flagship-page tracking
+  - persistent trend views
+  - deploy summaries tied to field targets
 - [ ] Add a release gate for field-performance targets on flagship surfaces:
   - `LCP p75 <= 2.5s`
   - `INP p75 <= 200ms`
@@ -63,6 +68,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - crawl/index state
   - publish quality state
   - conversion/funnel signals
+- [ ] Add trustworthy live verification for real browser RUM samples on both `guide` and `kommune`, not just synthetic or manual validation paths.
 
 ## P0: Kommune Concept Quality
 
@@ -183,6 +189,7 @@ Everything else in the current municipality rollout should stay drafted until it
 - [ ] Replace or remove the placeholder newsletter UI.
 - [ ] Finish repo-wide copy cleanup for older internal/demo language.
 - [ ] Improve Windows audit ergonomics further so normal success cases stay quiet.
+- [ ] Make concept deployments more Windows-safe by avoiding shared `dist` collisions across parallel guide/kommune deploys.
 - [ ] Keep generated artifacts organized so quality reports do not become clutter.
 
 ## Inputs Still Needed From User
@@ -217,3 +224,4 @@ These are not blockers for generic platform work, but they are needed for specif
 - [x] Added Cloudflare-native screenshot auditing.
 - [x] Re-established and protected the real `kurs.ing` landing page.
 - [x] Added multisite and multi-concept separation.
+- [x] Added live first-party RUM ingestion with percentile summaries, device splits, page-type splits, and top-page rollups.

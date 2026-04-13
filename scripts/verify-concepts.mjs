@@ -30,12 +30,10 @@ const concepts = [
     conceptKey: 'kommune',
     expectedFiles: [
       'index.html',
-      path.join('oslo', 'index.html'),
-      path.join('bergen', 'index.html'),
-      path.join('sandefjord', 'index.html'),
-      path.join('alta', 'index.html'),
-      path.join('trondheim', 'index.html'),
-      path.join('stavanger', 'index.html'),
+      path.join('arendal', 'index.html'),
+      path.join('kristiansand', 'index.html'),
+      path.join('lillehammer', 'index.html'),
+      path.join('narvik', 'index.html'),
     ],
     textChecks: [
       {
@@ -43,8 +41,8 @@ const concepts = [
         snippets: ['Kommuneguide', 'Velg kommunen du vil se nærmere på'],
       },
       {
-        file: path.join('oslo', 'index.html'),
-        snippets: ['Kontaktpunkter', 'Skjenking og servering', 'Datagrunnlag'],
+        file: path.join('arendal', 'index.html'),
+        snippets: ['Tidslinje for lokale alkoholregler', 'Kilder og kontrollpunkter', 'Se kurspakken'],
       },
     ],
   },
