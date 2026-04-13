@@ -2,15 +2,16 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import { resolveActiveSiteRuntime } from './site-profiles.mjs';
+import { getConceptOutputDir, resolveActiveSiteRuntime } from './site-profiles.mjs';
 
-const { concept } = resolveActiveSiteRuntime(process.env);
+const { siteKey, conceptKey, concept } = resolveActiveSiteRuntime(process.env);
 
 // https://astro.build/config
 export default defineConfig({
   site: concept.siteUrl,
   base: concept.basePath,
   output: 'static',
+  outDir: getConceptOutputDir(siteKey, conceptKey),
   integrations: [
     tailwind(),
     mdx(),

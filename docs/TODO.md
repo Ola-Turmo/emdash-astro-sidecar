@@ -191,7 +191,7 @@ Everything else in the current municipality rollout should stay drafted until it
 - [ ] Replace or remove the placeholder newsletter UI.
 - [ ] Finish repo-wide copy cleanup for older internal/demo language.
 - [ ] Improve Windows audit ergonomics further so normal success cases stay quiet.
-- [ ] Make concept deployments more Windows-safe by avoiding shared `dist` collisions across parallel guide/kommune deploys.
+- [x] Isolated Astro build output per `site/concept` to avoid shared `dist` collisions across guide/kommune deploys.
 - [ ] Keep generated artifacts organized so quality reports do not become clutter.
 
 ## Inputs Still Needed From User

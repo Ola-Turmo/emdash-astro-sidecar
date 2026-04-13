@@ -13,12 +13,12 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { resolveActiveSiteRuntime } from './site-profiles.mjs';
+import { getConceptOutputDir, resolveActiveSiteRuntime } from './site-profiles.mjs';
 import { detectCloudflareAuth, runWrangler } from '../../scripts/cloudflare-auth.mjs';
 
 const BLOG_DIR = join(process.cwd(), 'apps/blog');
-const OUTPUT_DIR = join(BLOG_DIR, 'dist');
-const { site, concept } = resolveActiveSiteRuntime(process.env);
+const { siteKey, conceptKey, site, concept } = resolveActiveSiteRuntime(process.env);
+const OUTPUT_DIR = join(BLOG_DIR, getConceptOutputDir(siteKey, conceptKey).replace(/^\.\//, ''));
 const DEFAULT_PROJECT_NAME = process.env.PAGES_PROJECT_NAME || concept.cloudflare.pagesProject;
 
 const green = (msg) => `\x1b[32m${msg}\x1b[0m`;

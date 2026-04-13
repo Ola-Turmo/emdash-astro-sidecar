@@ -55,7 +55,7 @@ jobs:
         id: deploy
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/staging')
         run: |
-          DEPLOY_OUTPUT=$(pnpm exec wrangler pages deploy apps/blog/dist \
+          DEPLOY_OUTPUT=$(pnpm exec wrangler pages deploy apps/blog/dist/kurs-ing/guide \
             --project-name=emdash-astro-sidecar \
             --branch=${{ github.head_ref || github.ref_name }} \
             --commit-message="${{ github.event.head_commit.message || 'Preview deployment' }}" 2>&1)
@@ -71,7 +71,7 @@ jobs:
       - name: Deploy Production to Cloudflare Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          pnpm exec wrangler pages deploy apps/blog/dist \
+          pnpm exec wrangler pages deploy apps/blog/dist/kurs-ing/guide \
             --project-name=emdash-astro-sidecar \
             --branch=main \
             --commit-message="${{ github.event.head_commit.message || 'Production deployment' }}"

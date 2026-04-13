@@ -19,7 +19,7 @@ Or connect manually in the Cloudflare dashboard:
 3. Configure build settings:
    - **Framework preset**: Astro
    - **Build command**: `pnpm build`
-   - **Build output directory**: `apps/blog/dist`
+   - **Build output directory**: `apps/blog/dist/kurs-ing/guide`
 
 ### 2. Set environment variables
 
@@ -33,7 +33,7 @@ Push to `main` branch for automatic deployment, or use manual deploys.
 
 ## Other Static Hosts
 
-EmDash builds to a static `dist/` directory, compatible with:
+EmDash builds to concept-specific static directories under `dist/<site>/<concept>/`, compatible with:
 - Vercel
 - Netlify
 - GitHub Pages

@@ -50,7 +50,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: emdash-astro-sidecar
-          directory: apps/blog/dist
+          directory: apps/blog/dist/kurs-ing/guide
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: '3'
 
@@ -85,6 +85,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: emdash-astro-sidecar
-          directory: apps/blog/dist
+          directory: apps/blog/dist/kurs-ing/guide
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: '3'

@@ -3,6 +3,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { getConceptOutputDir } from '../apps/blog/site-profiles.mjs';
 
 const repoRoot = process.cwd();
 const blogAppRoot = path.join(repoRoot, 'apps', 'blog');
@@ -73,7 +74,7 @@ for (const target of concepts) {
 }
 
 function verifyBuildOutputs(target) {
-  const distRoot = path.join(blogAppRoot, 'dist');
+  const distRoot = path.join(blogAppRoot, getConceptOutputDir(target.siteKey, target.conceptKey).replace(/^\.\//, ''));
 
   for (const relativePath of target.expectedFiles) {
     const absolutePath = path.join(distRoot, relativePath);

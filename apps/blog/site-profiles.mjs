@@ -289,6 +289,10 @@ const siteProfiles = {
   },
 };
 
+function getConceptOutputDir(siteKey, conceptKey) {
+  return `./dist/${siteKey}/${conceptKey}`;
+}
+
 function resolveActiveSiteRuntime(env = process.env) {
   const siteKey = env.EMDASH_SITE_KEY || 'kurs-ing';
   const site = siteProfiles[siteKey];
@@ -311,3 +315,4 @@ function resolveActiveSiteRuntime(env = process.env) {
 }
 
 export { siteProfiles, resolveActiveSiteRuntime };
+export { getConceptOutputDir };
