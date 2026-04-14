@@ -58,6 +58,20 @@ if (!wranglerSource.includes(`"PUBLIC_SITE_URL": "${siteUrl}"`)) {
   findings.push(`apps/blog/wrangler.jsonc PUBLIC_SITE_URL must match ${siteUrl}`);
 }
 
+const productionVarsMatch = wranglerSource.match(
+  /"production"\s*:\s*\{[\s\S]*?"vars"\s*:\s*\{([\s\S]*?)\}\s*,[\s\S]*?"kv_namespaces"/,
+);
+
+if (!productionVarsMatch) {
+  findings.push('apps/blog/wrangler.jsonc must define env.production.vars before production kv_namespaces');
+} else {
+  for (const requiredVar of ['PUBLIC_SITE_URL', 'EMDASH_HOST', 'EMDASH_API_VERSION']) {
+    if (!productionVarsMatch[1].includes(`"${requiredVar}"`)) {
+      findings.push(`apps/blog/wrangler.jsonc env.production.vars must define ${requiredVar}`);
+    }
+  }
+}
+
 if (!guideWorkerSource.includes(`name = "${routeWorkerName}"`)) {
   if (routeWorkerDirectory === 'guide-proxy') {
     findings.push(`guide-proxy worker name must match ${routeWorkerName}`);

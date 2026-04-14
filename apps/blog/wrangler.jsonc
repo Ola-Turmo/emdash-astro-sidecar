@@ -17,6 +17,11 @@
   // Environment-specific configuration
   "env": {
     "production": {
+      "vars": {
+        "PUBLIC_SITE_URL": "https://www.kurs.ing/guide",
+        "EMDASH_HOST": "https://api.emdash.io",
+        "EMDASH_API_VERSION": "v1"
+      },
       "kv_namespaces": [
         {
           "binding": "EMDASH_CONTENT_CACHE",
