@@ -54,6 +54,7 @@ What it does now:
 - support reusable local reporting through `pnpm report:field`
 - support a strict field gate entrypoint through `pnpm qa:field`
 - support a reusable browser proof path through `pnpm proof:rum`
+- support a strict browser proof gate through `pnpm qa:rum`
 - distinguish `browser_rum` from synthetic or manual verification samples
 
 What still needs to be added:
@@ -65,6 +66,7 @@ What still needs to be added:
 - URL Inspection or sitemap health follow-up for Google
 - deploy and dashboard gating tied to the field targets in `docs/world-class-quality-targets.md`
 - a stricter operator/CI gate on top of the live browser proof path
+- integration of the strict browser proof gate into the normal deployment/reporting workflow
 - stronger release gates tied to the field targets in `docs/world-class-quality-targets.md`
 - a stable sample policy for when `pnpm qa:field` should be considered blocking in CI
 - a stronger operator workflow for collecting enough real `browser_rum` samples before enforcing field gates
@@ -117,6 +119,8 @@ The summary endpoint now accepts `sampleSource`, and the field report defaults t
 The route workers now expose same-origin collection endpoints at `/guide/__rum` and `/kommune/__rum`, and forward those to the metrics worker. That removes the long-term dependency on cross-origin unload behavior for browser-side collection.
 
 `pnpm proof:rum -- --concept guide` and `pnpm proof:rum -- --concept kommune` now exercise a real headless browser visit, wait long enough for the in-page collector to flush, and then fetch the live `browser_rum` summary back from the metrics worker.
+
+The metrics worker also exposes `GET /rum/recent` so proof tooling can verify fresh browser rows for a specific `pagePath`, instead of relying only on cumulative percentile summaries.
 
 Optional IndexNow submission:
 

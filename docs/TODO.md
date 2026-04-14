@@ -74,7 +74,8 @@ Everything else in the current municipality rollout should stay drafted until it
   - conversion/funnel signals
 - [x] Added trustworthy live verification for real browser RUM samples on both `guide` and `kommune`, not just synthetic or manual validation paths.
 - [x] Proved automatic browser-to-`/__rum` collection on live `guide` and `kommune` pages after the inline-client fix.
-- [ ] Turn `pnpm proof:rum` into a stricter operator gate that checks for fresh browser samples on flagship URLs and fails when summaries stay empty.
+- [x] Turned `pnpm proof:rum` into a stricter operator gate that can fail when fresh browser samples do not appear.
+- [ ] Wire `pnpm qa:rum` into recurring operator checks and deployment summaries so fresh browser samples stay continuously verified.
 
 ## P0: Kommune Concept Quality
 
@@ -233,3 +234,4 @@ These are not blockers for generic platform work, but they are needed for specif
 - [x] Added live first-party RUM ingestion with percentile summaries, device splits, page-type splits, and top-page rollups.
 - [x] Removed the separate `rum-client.js` dependency by embedding the browser collector directly in generated HTML.
 - [x] Added a reusable Playwright-based browser proof for first-party RUM on both `guide` and `kommune`.
+- [x] Added `pnpm qa:rum` plus `/rum/recent` support so browser proof can verify fresh rows, not only cumulative summaries.

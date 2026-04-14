@@ -42,6 +42,17 @@ type RumPayload = {
     rating?: string;
   }>;
 };
+type RecentRumRow = {
+  page_path: string;
+  page_type: string | null;
+  metric_name: RumMetricName;
+  metric_value: number;
+  rating: string | null;
+  sample_source: string | null;
+  session_id: string | null;
+  device_class: string | null;
+  collected_at: string;
+};
 
 const FIELD_TARGETS: Record<RumMetricName, { good: number; poor: number; unit: string }> = {
   LCP: { good: 2500, poor: 4000, unit: 'ms' },
@@ -75,6 +86,18 @@ export default {
         return jsonWithCors(request, { ok: false, error: 'siteKey and conceptKey are required' }, 400);
       }
       return jsonWithCors(request, await buildRumSummary(env, siteKey, conceptKey, sampleSource));
+    }
+
+    if (request.method === 'GET' && url.pathname === '/rum/recent') {
+      const siteKey = url.searchParams.get('siteKey');
+      const conceptKey = url.searchParams.get('conceptKey');
+      const sampleSource = url.searchParams.get('sampleSource')?.trim() || 'browser_rum';
+      const pagePath = url.searchParams.get('pagePath')?.trim() || null;
+      const limit = clampLimit(Number(url.searchParams.get('limit') || 20));
+      if (!siteKey || !conceptKey) {
+        return jsonWithCors(request, { ok: false, error: 'siteKey and conceptKey are required' }, 400);
+      }
+      return jsonWithCors(request, await listRecentRumRows(env, siteKey, conceptKey, sampleSource, pagePath, limit));
     }
 
     if (request.method === 'POST' && url.pathname === '/rum') {
@@ -298,6 +321,54 @@ async function buildRumSummary(
     byPageType,
     topPages,
     sampleCount: rows.results.length,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+async function listRecentRumRows(
+  env: Env,
+  siteKey: string,
+  conceptKey: string,
+  sampleSource: string,
+  pagePath: string | null,
+  limit: number,
+): Promise<Record<string, unknown>> {
+  await ensureRumTable(env.AUTONOMOUS_DB);
+  const statement = pagePath
+    ? env.AUTONOMOUS_DB.prepare(
+        `
+          SELECT page_path, page_type, metric_name, metric_value, rating, sample_source, session_id, device_class, collected_at
+          FROM metrics_rum
+          WHERE site_key = ?1
+            AND concept_key = ?2
+            AND sample_source = ?3
+            AND page_path = ?4
+          ORDER BY collected_at DESC
+          LIMIT ?5
+        `,
+      ).bind(siteKey, conceptKey, sampleSource, pagePath, limit)
+    : env.AUTONOMOUS_DB.prepare(
+        `
+          SELECT page_path, page_type, metric_name, metric_value, rating, sample_source, session_id, device_class, collected_at
+          FROM metrics_rum
+          WHERE site_key = ?1
+            AND concept_key = ?2
+            AND sample_source = ?3
+          ORDER BY collected_at DESC
+          LIMIT ?4
+        `,
+      ).bind(siteKey, conceptKey, sampleSource, limit);
+
+  const rows = await statement.all<RecentRumRow>();
+
+  return {
+    ok: true,
+    siteKey,
+    conceptKey,
+    sampleSource,
+    pagePath,
+    limit,
+    rows: rows.results,
     generatedAt: new Date().toISOString(),
   };
 }
@@ -733,4 +804,9 @@ function jsonWithCors(request: Request, body: Record<string, unknown>, status = 
 function truncateValue(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   return value.slice(0, maxLength);
+}
+
+function clampLimit(value: number): number {
+  if (!Number.isFinite(value)) return 20;
+  return Math.max(1, Math.min(50, Math.round(value)));
 }
