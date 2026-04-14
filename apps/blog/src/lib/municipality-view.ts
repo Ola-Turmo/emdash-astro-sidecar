@@ -37,6 +37,9 @@ type MunicipalityData = {
   regulationsLinks: LinkEntry[];
   bylawLinks: LinkEntry[];
   officialSources: SourceEntry[];
+  editorialTakeaways?: string[];
+  practicalSteps?: string[];
+  editorialLead?: string;
   localChecklist: string[];
   openingHoursRules: OpeningRule[];
   alcoholServingRules: ServingRule[];
@@ -65,6 +68,7 @@ export type MunicipalityViewModel = {
   lead: string;
   cardSummary: string;
   salesNote: string;
+  summaryRows: Array<{ label: string; value: string }>;
 };
 
 const linkKinds: Record<string, { label: string; note: string }> = {
@@ -155,7 +159,9 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
   const timeline = buildTimeline(data);
   const salesNote = buildSalesNote(curatedLinks, timeline);
   const facts = buildFacts(data, curatedLinks, timeline);
-  const highlights = buildHighlights(data, curatedLinks, timeline);
+  const highlights = uniqueValues((data.editorialTakeaways || []).map((entry) => normalizeText(entry))).length
+    ? uniqueValues((data.editorialTakeaways || []).map((entry) => normalizeText(entry))).slice(0, 4)
+    : buildHighlights(data, curatedLinks, timeline);
   const usefulSources = data.officialSources
     .filter((entry) => entry.url)
     .map((entry) => ({
@@ -166,9 +172,11 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
     .filter((entry) => entry.summary)
     .slice(0, 4);
   const checklist = uniqueValues([
+    ...(data.practicalSteps || []).map((entry) => normalizeText(entry)),
     ...data.localChecklist.map((entry) => normalizeText(entry)),
     salesNote ? 'Kontroller salgstid direkte på plan- eller salgsbevillingssiden hvis kommunen ikke oppgir et tydelig klokkeslett.' : '',
   ]).slice(0, 6);
+  const summaryRows = buildSummaryRows(data, timeline, curatedLinks, salesNote);
 
   return {
     facts,
@@ -177,9 +185,10 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
     curatedLinks,
     usefulSources,
     checklist,
-    lead: buildLead(data, timeline, curatedLinks, salesNote),
-    cardSummary: facts[0] || highlights[0] || `Se lokale regler og nyttige kommunesider for ${data.municipality}.`,
+    lead: normalizeText(data.editorialLead || '') || buildLead(data, timeline, curatedLinks, salesNote),
+    cardSummary: buildCardSummary(data, facts, highlights),
     salesNote,
+    summaryRows,
   };
 }
 
@@ -223,22 +232,20 @@ function buildFacts(
 ) {
   const facts: string[] = [];
 
-  if (data.county) {
-    facts.push(`I ${data.municipality} er det kommunen selv som avgjør skjenketider, praksis og oppfølging.`);
-  }
-
-  const servingEntries = timeline.filter((entry) => entry.kind === 'serving').slice(0, 2);
+  const servingEntries = timeline.filter((entry) => entry.kind === 'serving').slice(0, 3);
   for (const entry of servingEntries) {
-    const window = formatWindow(entry);
+    const window = formatWindow(entry, ' · ');
     if (window) {
-      facts.push(`For ${entry.label} oppgir kommunen skjenking ${window}.`);
+      facts.push(`${capitalize(entry.label)}: ${window}.`);
     }
   }
 
-  const openingEntry = timeline.find((entry) => entry.kind === 'opening');
-  if (openingEntry) {
-    const window = formatWindow(openingEntry);
-    facts.push(`${capitalize(openingEntry.label)} kan holde åpent ${window}.`.replace(/\s+\./g, '.'));
+  const openingEntries = timeline.filter((entry) => entry.kind === 'opening').slice(0, 2);
+  for (const openingEntry of openingEntries) {
+    const window = formatWindow(openingEntry, ' · ');
+    if (window) {
+      facts.push(`${capitalize(openingEntry.label)}: ${window}.`);
+    }
   }
 
   const specialKinds = uniqueValues(
@@ -402,13 +409,50 @@ function buildOpeningLabel(rule: OpeningRule) {
   return normalizeText(rule.appliesTo || 'åpningstid');
 }
 
-function formatWindow(entry: MunicipalityTimelineEntry) {
+function formatWindow(entry: MunicipalityTimelineEntry, joiner = ', ') {
   const parts = [];
   if (entry.days) parts.push(entry.days);
   if (entry.startTime && entry.endTime) parts.push(`${entry.startTime}–${entry.endTime}`);
   else if (entry.endTime) parts.push(`til ${entry.endTime}`);
   else if (entry.startTime) parts.push(`fra ${entry.startTime}`);
-  return parts.join(', ');
+  return parts.join(joiner);
+}
+
+function buildSummaryRows(
+  data: MunicipalityData,
+  timeline: MunicipalityTimelineEntry[],
+  curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>,
+  salesNote: string,
+) {
+  const rows: Array<{ label: string; value: string }> = [];
+  const servingEntries = timeline.filter((entry) => entry.kind === 'serving').slice(0, 2);
+  const openingEntries = timeline.filter((entry) => entry.kind === 'opening').slice(0, 2);
+  for (const entry of servingEntries) {
+    rows.push({ label: capitalize(entry.label), value: formatWindow(entry, ' · ') || normalizeText(entry.note) });
+  }
+  for (const entry of openingEntries) {
+    rows.push({ label: capitalize(entry.label), value: formatWindow(entry, ' · ') || normalizeText(entry.note) });
+  }
+  const applicationLink = curatedLinks.find((entry) => ['application', 'forms'].includes(entry.kind));
+  if (applicationLink) {
+    rows.push({ label: 'Søknad', value: applicationLink.displayLabel });
+  }
+  if (data.publicRecordsPlatform) {
+    rows.push({ label: 'Innsyn', value: normalizeText(data.publicRecordsPlatform) });
+  }
+  if (salesNote) {
+    rows.push({ label: 'Salg', value: 'Må kontrolleres på kommunens egne sider' });
+  }
+  return uniqueByKey(rows, (entry) => `${entry.label}|${entry.value}`).slice(0, 6);
+}
+
+function buildCardSummary(data: MunicipalityData, facts: string[], highlights: string[]) {
+  const firstFact = facts[0];
+  const secondFact = facts[1];
+  if (firstFact && secondFact) {
+    return `${firstFact} ${secondFact}`;
+  }
+  return firstFact || highlights[0] || `Se lokale regler og nyttige kommunesider for ${data.municipality}.`;
 }
 
 function looksGenericSourceSummary(summary?: string) {

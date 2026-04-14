@@ -74,6 +74,8 @@ Good blocks:
 - fact cards
 - local timeline cards
 - curated municipal links
+- municipality-specific editorial takeaways
+- municipality-specific practical next steps
 - short local-difference summaries
 - checklist blocks
 - selected official-source cards
@@ -196,6 +198,31 @@ Bad direction:
 - meta phrasing like `praktiske innganger`
 
 If a sentence sounds like internal prompt output instead of a municipal guide written for a Norwegian reader, rewrite it before shipping.
+
+## Curated Publish Set Rule
+
+Do not assume the biggest municipalities are automatically the best pages to publish first.
+
+For `/kommune`, the correct rollout model is:
+
+- curate the strongest municipality set
+- publish only the municipalities that clear the content gate
+- draft out municipalities that are still too weak, even if they were live earlier
+
+The live set should therefore be treated as a quality-controlled selection, not as a promise that every municipality in the source dataset must be public.
+
+## Structured Editorial Layer
+
+Raw rule extraction is not enough on its own.
+
+Each published municipality page should also carry a structured editorial layer that answers:
+
+- what is actually different in this municipality
+- what matters operationally for a restaurant, bar, kiosk, or arrangement
+- what the reader should open first on the municipal site
+- what the reader should verify before they apply or set opening hours
+
+That layer should be stored as reusable structured content, not improvised as a generic paragraph in the renderer.
 
 ## Required Gates
 

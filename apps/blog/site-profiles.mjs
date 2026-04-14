@@ -152,7 +152,8 @@ const siteProfiles = {
           sitemapUrls: ['https://www.kurs.ing/kommune/sitemap.xml'],
           extraUrls: [
             'https://www.kurs.ing/kommune/arendal/',
-            'https://www.kurs.ing/kommune/kristiansand/',
+            'https://www.kurs.ing/kommune/bergen/',
+            'https://www.kurs.ing/kommune/trysil/',
           ],
           lighthouse: {
             runs: 3,
@@ -161,9 +162,10 @@ const siteProfiles = {
         },
         nav: [
           { path: '/', label: 'Kommuner' },
-          { path: '/oslo', label: 'Oslo' },
+          { path: '/arendal', label: 'Arendal' },
           { path: '/bergen', label: 'Bergen' },
-          { path: '/sandefjord', label: 'Sandefjord' },
+          { path: '/lillehammer', label: 'Lillehammer' },
+          { path: '/trysil', label: 'Trysil' },
         ],
         callsToAction: {
           primary: {

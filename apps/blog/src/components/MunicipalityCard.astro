@@ -17,7 +17,7 @@ const {
   heroImage,
 } = page.data;
 const municipalityView = deriveMunicipalityView(page.data);
-const primaryTimeline = municipalityView.timeline.find((entry) => entry.kind === 'serving');
+const summaryRows = municipalityView.summaryRows.slice(0, 2);
 const heroImageSrc = heroImage?.src
   ? blogPath(heroImage.src.replace(/-hero\.png$/i, '-hero-thumb.webp').replace(/\.png$/i, '.webp'))
   : null;
@@ -63,12 +63,12 @@ const heroImageSrc = heroImage?.src
           <dd>{municipalitySitePlatform}</dd>
         </div>
       )}
-      {primaryTimeline && (
+      {summaryRows.map((row) => (
         <div>
-          <dt class="font-bold text-slate-900">Skjenking</dt>
-          <dd>{primaryTimeline.note}</dd>
+          <dt class="font-bold text-slate-900">{row.label}</dt>
+          <dd>{row.value}</dd>
         </div>
-      )}
+      ))}
     </dl>
 
     <div class="mt-5 flex items-center justify-between gap-4 text-sm">

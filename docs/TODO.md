@@ -17,6 +17,7 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 - [x] Kommune quality reporting exists.
 - [x] Kommune hero-image workflow exists for the currently published municipality set.
 - [x] Kommune landing cards now use dedicated thumbnail derivatives instead of loading full hero assets in the listing grid.
+- [x] Kommune publishing is now driven by a curated municipality set with structured editorial takeaways and practical steps instead of the old generic 30-page generator.
 - [x] First-party RUM exists for field CWV ingestion, `p50/p75/p95/p99` summaries, device splits, page-type splits, and top-page rollups.
 - [x] The browser RUM client is now embedded directly in generated HTML, removing the fragile external `rum-client.js` delivery path from `guide` and `kommune`.
 - [x] The current mobile Lighthouse budget gate passes for the active `guide` and `kommune` flagship URLs.
@@ -25,9 +26,15 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 ## Current Published Kommune Set
 
 - [x] `Arendal`
-- [x] `Kristiansand`
+- [x] `Bergen`
+- [x] `Bjerkreim`
+- [x] `Bremanger`
+- [x] `Farsund`
+- [x] `Halden`
 - [x] `Lillehammer`
 - [x] `Narvik`
+- [x] `Nord-Aurdal`
+- [x] `Trysil`
 
 Everything else in the current municipality rollout should stay drafted until it clears the quality threshold.
 
@@ -93,18 +100,17 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P0: Kommune Concept Quality
 
-- [ ] Improve the 4 published kommune pages so they contain more true municipality-specific value:
-  - stronger local takeaways
-  - clearer process differences
-  - better "what this means for you" interpretation
-  - less repeated checklist language
+- [x] Raised `/kommune` from 4 weakly mixed pages to a curated 10-page published set with municipality-specific takeaways and practical next steps.
+- [x] Legacy published municipalities outside the curated set are now drafted out automatically by the municipality generator.
+- [x] The `/kommune` nav and audit URLs now point to the current curated municipality set instead of stale municipalities.
+- [x] Added a Bergen-specific hero image to stabilize the last major Lighthouse outlier in the current `/kommune` audit set.
 - [ ] Extract more concrete local signals from municipality sources:
   - application flow differences
   - renewal and controls
   - local exceptions or seasonal distinctions
   - consumption-stop rules and enforcement nuances
-- [ ] Make `Kort oppsummert` more decision-useful and less repetitive.
-- [ ] Replace remaining generic "Det kommunen selv fremhever" content with stronger curated local source blocks or drop that block entirely when weak.
+- [ ] Make `Kort oppsummert` more decision-useful and less repetitive across all 10 published pages.
+- [ ] Add hero images for the rest of the curated municipality set where they improve trust and visual balance without hurting performance.
 - [ ] Add a cache-purge or explicit invalidation path for kommune slugs that are drafted out, so stale live 200s disappear without relying on query-string cache busting.
 - [ ] Add a municipality-specific release gate that blocks publishing if:
   - source cards are too generic
@@ -240,7 +246,10 @@ These are not blockers for generic platform work, but they are needed for specif
 
 - [x] Added a reusable municipality quality report with publish/draft reasons.
 - [x] Added fail-closed kommune publishing so weak municipality pages are drafted out.
+- [x] Rebuilt `/kommune` around a curated 10-page publish set with municipality-specific editorial takeaways and practical steps.
+- [x] Redeployed `/kommune` so the live route worker returns `404` for drafted-out municipalities like `Kristiansand`.
 - [x] Added text-free municipality hero-image support with reusable prompt files.
+- [x] Added a Bergen-specific hero image and derivative assets to stabilize live kommune Lighthouse performance.
 - [x] Tightened Norwegian kommune writing and codified banned synthetic phrases.
 - [x] Added Cloudflare-native screenshot auditing.
 - [x] Re-established and protected the real `kurs.ing` landing page.

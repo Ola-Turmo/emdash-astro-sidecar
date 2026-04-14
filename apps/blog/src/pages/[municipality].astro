@@ -42,7 +42,6 @@ const {
   alcoholPolicyPlanUrl,
   formsUrl,
   publicRecordsUrl,
-  publicRecordsPlatform,
   municipalitySitePlatform,
   heroImage,
   siteLastUpdated,
@@ -55,7 +54,6 @@ const {
   updatedDate,
 } = page.data;
 const municipalityView = deriveMunicipalityView(page.data);
-const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind === 'serving');
 const heroImageSrc = heroImage?.src ? blogPath(heroImage.src.replace(/\.png$/i, '.webp')) : null;
 ---
 
@@ -146,7 +144,7 @@ const heroImageSrc = heroImage?.src ? blogPath(heroImage.src.replace(/\.png$/i, 
 
           {municipalityView.highlights.length > 0 && (
             <section class="shell-card p-5 sm:p-6">
-              <p class="eyebrow">Lokale særtrekk og praktiske forskjeller</p>
+              <p class="eyebrow">Dette skiller {municipality} fra andre kommuner</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.highlights.map((highlight) => (
                   <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
@@ -159,7 +157,7 @@ const heroImageSrc = heroImage?.src ? blogPath(heroImage.src.replace(/\.png$/i, 
 
           {municipalityView.curatedLinks.length > 0 && (
             <section class="shell-card p-5 sm:p-6">
-              <p class="eyebrow">Sider i kommunen du bør åpne</p>
+              <p class="eyebrow">Kommunale sider du bør åpne først</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.curatedLinks.map((link) => (
                   <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
@@ -176,7 +174,7 @@ const heroImageSrc = heroImage?.src ? blogPath(heroImage.src.replace(/\.png$/i, 
 
           {municipalityView.checklist.length > 0 && (
             <section class="shell-card p-5 sm:p-6">
-              <p class="eyebrow">Dette bør du kontrollere lokalt</p>
+              <p class="eyebrow">Dette bør du gjøre før du søker eller åpner</p>
               <ul class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
                 {municipalityView.checklist.map((item) => (
                   <li class="flex gap-3">
@@ -188,9 +186,9 @@ const heroImageSrc = heroImage?.src ? blogPath(heroImage.src.replace(/\.png$/i, 
             </section>
           )}
 
-          {municipalityView.usefulSources.length > 0 && (
+          {municipalityView.usefulSources.length >= 2 && (
             <section class="shell-card p-5 sm:p-6">
-              <p class="eyebrow">Offisielle kilder verdt å åpne</p>
+              <p class="eyebrow">Offisielle kilder med nyttig lokal forklaring</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.usefulSources.map((source) => (
                   <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
@@ -230,22 +228,16 @@ const heroImageSrc = heroImage?.src ? blogPath(heroImage.src.replace(/\.png$/i, 
                   <dd class="text-slate-600">{county}</dd>
                 </div>
               )}
-              {publicRecordsPlatform && (
+              {municipalityView.summaryRows.map((row) => (
                 <div>
-                  <dt class="font-bold text-slate-900">Innsyn</dt>
-                  <dd class="text-slate-600">{publicRecordsPlatform}</dd>
+                  <dt class="font-bold text-slate-900">{row.label}</dt>
+                  <dd class="text-slate-600">{row.value}</dd>
                 </div>
-              )}
+              ))}
               {siteLastUpdated?.value && (
                 <div>
                   <dt class="font-bold text-slate-900">Sist oppdatert nettsted</dt>
                   <dd class="text-slate-600">{siteLastUpdated.value}</dd>
-                </div>
-              )}
-              {primaryServingEntry && (
-                <div>
-                  <dt class="font-bold text-slate-900">Skjenking</dt>
-                  <dd class="text-slate-600">{primaryServingEntry.note}</dd>
                 </div>
               )}
             </dl>

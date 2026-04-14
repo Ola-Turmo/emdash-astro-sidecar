@@ -1,7 +1,11 @@
 ﻿#!/usr/bin/env node
 
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import {
+  curatedMunicipalityPublishSet,
+  getMunicipalityEditorialProfile,
+} from './lib/municipality-curation.mjs';
 
 const repoRoot = process.cwd();
 const sourceRepo = path.join(path.dirname(repoRoot), 'kommune.no.apimcp.site');
@@ -9,38 +13,7 @@ const sourceCatalogPath = path.join(sourceRepo, 'kommune_catalog.enriched.json')
 const outputDir = path.join(repoRoot, 'apps', 'blog', 'src', 'content', 'municipalPages');
 const publicImageDir = path.join(repoRoot, 'apps', 'blog', 'public', 'images', 'kommune');
 
-const targetMunicipalities = [
-  'Oslo',
-  'Bergen',
-  'Trondheim',
-  'Stavanger',
-  'Kristiansand',
-  'Tromsø',
-  'Bærum',
-  'Sandnes',
-  'Drammen',
-  'Fredrikstad',
-  'Asker',
-  'Lillestrøm',
-  'Sandefjord',
-  'Alta',
-  'Bodø',
-  'Ålesund',
-  'Tønsberg',
-  'Porsgrunn',
-  'Skien',
-  'Arendal',
-  'Haugesund',
-  'Moss',
-  'Sarpsborg',
-  'Hamar',
-  'Lillehammer',
-  'Harstad',
-  'Narvik',
-  'Gjøvik',
-  'Larvik',
-  'Kongsberg',
-];
+const targetMunicipalities = curatedMunicipalityPublishSet;
 
 const alcoholKeywords = [
   'alkohol',
@@ -91,12 +64,15 @@ async function main() {
     await writeFile(filePath, content, 'utf8');
     console.log(`Wrote ${path.relative(repoRoot, filePath)}`);
   }
+
+  await draftLegacyMunicipalityPages();
 }
 
 async function buildMunicipalPage(row, slug) {
   const normalizedRow = normalizeObjectKeys(row);
   const municipality = normalizeText(normalizedRow.Kommunenavn);
   const county = normalizeText(normalizedRow.Fylke);
+  const editorialProfile = getMunicipalityEditorialProfile(municipality);
   const languageForm = normalizeText(normalizedRow['Målform'] || '');
   const domain = normalizeText(normalizedRow.Domene || '');
   const siteUrl = row.site_url || '';
@@ -108,8 +84,8 @@ async function buildMunicipalPage(row, slug) {
     typeof row.site_platform === 'string' ? row.site_platform : row.site_platform?.name || '',
   );
   const sourceLastChecked = row.last_checked || '';
-  const title = `${municipality}: skjenketider, bevilling og nyttige kommunesider`;
-  const description = `Se skjenketider, lokale regler og sidene i ${municipality} kommune det er verdt å åpne før du søker eller planlegger drift.`;
+  const title = `${municipality}: skjenketider, bevilling og kommunale sider du faktisk trenger`;
+  const description = `Se hva ${municipality} faktisk oppgir om skjenketider, åpningstid, søknad og innsyn før du planlegger drift eller søker bevilling.`;
 
   const serviceLinks = (row.alcohol_restaurant_urls || [])
     .filter((url) => isAlcoholRelevantUrl(url))
@@ -147,8 +123,9 @@ async function buildMunicipalPage(row, slug) {
   }));
 
   const officialSourceCandidates = uniqueSources([
-    { label: 'Kommunens hovedside', url: siteUrl },
-    { label: 'Salg, servering og skjenking', url: serviceLinks[0]?.url || alcoholPolicyPlanUrl },
+    { label: 'Skjenketider eller alkoholpolitisk plan', url: alcoholPolicyPlanUrl },
+    { label: serviceLinks[0]?.label || 'Salg, servering og skjenking', url: serviceLinks[0]?.url },
+    { label: serviceLinks[1]?.label || 'Søknad eller endring', url: serviceLinks[1]?.url },
     { label: 'Skjema og selvbetjening', url: formsUrl },
     { label: 'Innsyn', url: publicRecordsUrl },
   ]).slice(0, 4);
@@ -163,8 +140,8 @@ async function buildMunicipalPage(row, slug) {
   ).map((source) => ({
     ...source,
     title: source.title || source.label,
-    summary: '',
-  }));
+    summary: sanitizeOfficialSourceSummary(source.label, source.summary),
+  })).filter((source) => source.url);
 
   const localChecklist = buildLocalChecklist({
     municipality,
@@ -174,10 +151,12 @@ async function buildMunicipalPage(row, slug) {
     openingHoursRules,
     alcoholServingRules,
     officialSources,
+    editorialProfile,
   });
 
   const municipalityQuality = assessMunicipalityQuality({
     municipality,
+    editorialProfile,
     alcoholPolicyPlanUrl,
     formsUrl,
     publicRecordsUrl,
@@ -209,6 +188,14 @@ async function buildMunicipalPage(row, slug) {
     },
   ];
 
+  const editorialTakeaways = editorialProfile?.editorialTakeaways ?? [];
+  const editorialLead = buildEditorialLead({
+    municipality,
+    openingHoursRules,
+    alcoholServingRules,
+    editorialProfile,
+  });
+
   const frontmatter = [
     '---',
     'siteKey: kurs-ing',
@@ -234,6 +221,9 @@ async function buildMunicipalPage(row, slug) {
     buildLinkArray('regulationsLinks', regulationsLinks),
     buildLinkArray('bylawLinks', bylawLinks),
     buildOfficialSourcesArray('officialSources', officialSources),
+    buildStringArray('editorialTakeaways', editorialTakeaways),
+    buildStringArray('practicalSteps', localChecklist),
+    `editorialLead: "${escapeDoubleQuotes(editorialLead)}"`,
     buildStringArray('localChecklist', localChecklist),
     buildLinkArray('relatedGuideLinks', relatedGuideLinks),
     buildRuleArray('openingHoursRules', openingHoursRules),
@@ -249,80 +239,15 @@ async function buildMunicipalPage(row, slug) {
   ].filter(Boolean);
 
   const body = [
-    `Her finner du skjenketider, nyttige kommunesider og kontrollpunkter for ${municipality} når du skal jobbe med salg, servering eller skjenking.`,
+    editorialLead,
     '',
-    buildMunicipalityOverview({
-      municipality,
-      county,
-      publicRecordsPlatform,
-      sitePlatform,
-      officialSources,
-      alcoholServingRules,
-      openingHoursRules,
-    }),
+    ...buildSpecificRuleBullets({ municipality, openingHoursRules, alcoholServingRules }),
     '',
-    '## Start her hvis du jobber mot denne kommunen',
-    '',
-    siteUrl ? `- Åpne [kommunens nettsted](${siteUrl}) for lokale innganger og praktisk informasjon.` : null,
-    formsUrl ? `- Finn [skjema og selvbetjening](${formsUrl}) hvis du skal sende noe inn eller trenger kommunens veiledere.` : null,
-    publicRecordsUrl ? `- Bruk [innsynsløsningen](${publicRecordsUrl}) hvis du vil se postlister, tidligere saker eller offentlig dokumentasjon.` : null,
-    row.alcohol_policy_plan_url
-      ? `- Les [alkoholpolitisk plan eller skjenketider](${row.alcohol_policy_plan_url}) hvis kommunen har publisert dette direkte.`
-      : null,
-    '',
-    '## Dette bør du merke deg i denne kommunen',
-    '',
-    buildMunicipalitySpecifics({
-      municipality,
-      officialSources,
-      alcoholServingRules,
-      openingHoursRules,
-      publicRecordsPlatform,
-      formsUrl,
-    }),
-    '',
-    '## Sider i kommunen det er verdt å åpne',
-    '',
-    ...buildBodySourceBullets({
-      municipality,
-      officialSources,
-      serviceLinks,
-      regulationsLinks,
-      bylawLinks,
-      publicRecordsPlatform,
-      sitePlatform,
-    }),
-    '',
-    '## Lokale temaer kommunen faktisk omtaler',
-    '',
-    ...buildLocalTopicBullets({
-      municipality,
-      serviceLinks,
-      regulationsLinks,
-      bylawLinks,
-    }),
-    '',
-    '## Hva du bør kontrollere før du går videre',
+    ...editorialTakeaways.map((item) => `- ${item}`),
     '',
     ...localChecklist.map((item) => `- ${item}`),
     '',
-    officialSources.length > 0 ? '## Det kommunen selv fremhever' : '',
-    '',
-    ...officialSources.map((source) =>
-      [`### ${source.label}`, source.title ? `**${source.title}**` : '', source.summary || '', source.url ? `[Åpne kilden](${source.url})` : '']
-        .filter(Boolean)
-        .join('\n\n'),
-    ),
-    '',
-    '## Når du bør gå videre til guide eller kurs',
-    '',
-    `Denne siden hjelper deg med lokale regler og kommunale kilder. Når du vil forstå kravene bak salgsbevilling, skjenkebevilling eller etablererprøven bedre, finner du forklarte guider videre på kurs.ing.`,
-    '',
     ...relatedGuideLinks.map((link) => `- [${link.label}](${link.url})`),
-    '',
-    '## Kort oppsummert',
-    '',
-    `Bruk ${municipality}-siden når du trenger lokale regler og riktige kommunesider. Gå videre til guidene når du vil forstå kravene bedre. Bruk kurspakken når du er klar for pensum, oppgaver og eksamentrening.`,
   ].filter(Boolean);
 
   return `${frontmatter.join('\n')}\n\n${body.join('\n')}\n`;
@@ -339,6 +264,25 @@ async function resolveMunicipalityHeroImage(slug, municipality, county) {
     };
   } catch {
     return null;
+  }
+}
+
+async function draftLegacyMunicipalityPages() {
+  const entries = await readdir(outputDir, { withFileTypes: true });
+  const allowedSlugs = new Set(targetMunicipalities.map((value) => slugify(value)));
+
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.mdx')) continue;
+    const slug = entry.name.replace(/\.mdx$/i, '');
+    if (allowedSlugs.has(slug)) continue;
+
+    const filePath = path.join(outputDir, entry.name);
+    const source = await readFile(filePath, 'utf8');
+    if (!/draft:\s*false/.test(source)) continue;
+
+    const updated = source.replace(/draft:\s*false/, 'draft: true');
+    await writeFile(filePath, updated, 'utf8');
+    console.log(`Drafted legacy municipality page ${path.relative(repoRoot, filePath)}`);
   }
 }
 
@@ -496,6 +440,10 @@ function uniqueSources(sources) {
   });
 }
 
+function uniqueValues(values) {
+  return [...new Set(values.map((value) => normalizeText(value)).filter(Boolean))];
+}
+
 function isAlcoholRelevantUrl(value) {
   try {
     const pathname = new URL(value).pathname.toLowerCase();
@@ -543,9 +491,9 @@ function classifyMunicipalLinkKind(value, fallbackKind = 'general') {
     if (/fornyelse|fornye/.test(source)) return 'renewal';
     if (/kontroll/.test(source)) return 'controls';
     if (/prove|prøve|kunnskap|etablerer/.test(source)) return 'exam';
-    if (/salgsbevilling|salg/.test(source)) return 'sales';
     if (/serveringsbevilling|servering/.test(source)) return 'servering';
     if (/skjenkebevilling|skjenking|alkohol/.test(source)) return 'serving';
+    if (/salgsbevilling|salg/.test(source)) return 'sales';
   } catch {
     return fallbackKind;
   }
@@ -608,32 +556,149 @@ function buildLocalChecklist({
   openingHoursRules,
   alcoholServingRules,
   officialSources,
+  editorialProfile,
 }) {
-  const checklist = [
-    `Start med kommunens hovedside og les den kommunale informasjonen om servering og skjenking for ${municipality} før du tolker regelverket selv.`,
-  ];
+  const checklist = [...(editorialProfile?.practicalSteps ?? [])];
 
-  if (formsUrl) {
+  if (!checklist.length) {
+    checklist.push(`Start på kommunens egne sider for skjenking og søknad før du begynner å tolke regelverket selv i ${municipality}.`);
+  }
+
+  if (!editorialProfile && formsUrl) {
     checklist.push('Åpne skjema- eller selvbetjeningssiden tidlig, slik at du ser hvilke opplysninger kommunen faktisk ber om.');
   }
 
-  if (publicRecordsPlatform) {
+  if (!editorialProfile && publicRecordsPlatform) {
     checklist.push(`Bruk ${publicRecordsPlatform} hvis du vil se hvordan kommunen publiserer saker, dokumenter eller tidligere behandling.`);
   }
 
-  if (alcoholPolicyPlanUrl) {
+  if (!editorialProfile && alcoholPolicyPlanUrl) {
     checklist.push('Sjekk alkoholpolitisk plan eller skjenketider før du legger opp drift, åpningstider eller konsept.');
   }
 
-  if (alcoholServingRules.length > 0 || openingHoursRules.length > 0) {
+  if (!editorialProfile && (alcoholServingRules.length > 0 || openingHoursRules.length > 0)) {
     checklist.push('Sammenlign tidene oppsummert her med kommunens egne sider før du sender søknad eller planlegger åpningstid.');
   }
 
-  if (officialSources.length > 0) {
+  if (!editorialProfile && officialSources.length > 0) {
     checklist.push('Les oppsummeringene fra de offisielle kildene under og åpne originalsidene når du trenger detaljene.');
   }
 
-  return checklist;
+  return uniqueValues(checklist).slice(0, 6);
+}
+
+function buildEditorialLead({
+  municipality,
+  openingHoursRules,
+  alcoholServingRules,
+  editorialProfile,
+}) {
+  const parts = [];
+  const firstServingRule = alcoholServingRules.find((rule) => rule.endTime || rule.note);
+  const firstOpeningRule = openingHoursRules.find((rule) => rule.endTime || rule.note);
+  if (firstServingRule) {
+    const groups = firstServingRule.groups?.length ? `gruppe ${firstServingRule.groups.join(', ')}` : 'skjenking';
+    const timeWindow =
+      firstServingRule.startTime && firstServingRule.endTime
+        ? `${firstServingRule.startTime}-${firstServingRule.endTime}`
+        : firstServingRule.endTime
+          ? `til ${firstServingRule.endTime}`
+          : '';
+    if (timeWindow) {
+      parts.push(`Her ser du hva ${municipality} oppgir om ${groups} ${normalizeText(firstServingRule.days || 'alle dager')} ${timeWindow}.`);
+    }
+  }
+
+  if (firstOpeningRule?.note) {
+    parts.push(normalizeLeadSentence(firstOpeningRule.note));
+  }
+
+  if (editorialProfile?.editorialTakeaways?.[0]) {
+    parts.push(editorialProfile.editorialTakeaways[0]);
+  }
+
+  return uniqueValues(parts).slice(0, 3).join(' ');
+}
+
+function buildSpecificRuleBullets({ municipality, openingHoursRules, alcoholServingRules }) {
+  const bullets = [];
+
+  for (const rule of alcoholServingRules) {
+    const label = buildServingRuleBullet(rule);
+    if (label) {
+      bullets.push(`- ${label}`);
+    }
+  }
+
+  for (const rule of openingHoursRules) {
+    const label = buildOpeningRuleBullet(rule);
+    if (label) {
+      bullets.push(`- ${label}`);
+    }
+  }
+
+  if (!bullets.length) {
+    bullets.push(`- ${municipality} har for lite bekreftet regeldata til at siden bør stå åpen for publikum enda.`);
+  }
+
+  return uniqueValues(bullets).slice(0, 6);
+}
+
+function buildServingRuleBullet(rule) {
+  const days = normalizeText(rule.days || 'alle dager');
+  const groups = rule.groups?.length ? `gruppe ${rule.groups.join(', ')}` : 'skjenking';
+  const area = rule.area && !['all', 'unspecified'].includes(rule.area) ? ` (${normalizeText(rule.area)})` : '';
+  if (/konsum/i.test(rule.note || '')) {
+    return normalizeRuleNote(rule.note);
+  }
+  if (rule.startTime && rule.endTime) {
+    return `${capitalizeGroups(groups)}${area}: ${days} ${rule.startTime}-${rule.endTime}.`;
+  }
+  if (rule.endTime) {
+    return `${capitalizeGroups(groups)}${area}: ${days} til ${rule.endTime}. ${normalizeRuleNote(rule.note)}`;
+  }
+  return normalizeRuleNote(rule.note);
+}
+
+function buildOpeningRuleBullet(rule) {
+  const appliesTo = normalizeText(rule.appliesTo || '');
+  const label = appliesTo === 'outdoor_area'
+    ? 'Uteservering'
+    : appliesTo === 'serving_place'
+      ? 'Serveringssted'
+      : 'Åpningstid';
+  const days = normalizeText(rule.days || '');
+  if (rule.startTime && rule.endTime) {
+    return `${label}: ${days} ${rule.startTime}-${rule.endTime}. ${normalizeRuleNote(rule.note)}`;
+  }
+  if (rule.endTime) {
+    return `${label}: ${days} til ${rule.endTime}. ${normalizeRuleNote(rule.note)}`;
+  }
+  return `${label}: ${normalizeRuleNote(rule.note)}`;
+}
+
+function normalizeLeadSentence(value) {
+  const text = normalizeRuleNote(value);
+  if (!text) return '';
+  const sentence = text.endsWith('.') ? text : `${text}.`;
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+}
+
+function normalizeRuleNote(value) {
+  return normalizeText(value)
+    .replace(/\bUtledet fra skjenketider:\s*/i, '')
+    .replace(/\bkommunen\.$/i, 'kommunen.')
+    .replace(/\bmaa\b/gi, 'må')
+    .replace(/\bdoegnet\b/gi, 'døgnet')
+    .replace(/\bomraader\b/gi, 'områder')
+    .replace(/\bomraade\b/gi, 'område')
+    .replace(/\bsaerskilt\b/gi, 'særskilt')
+    .replace(/\bsoeke\b/gi, 'søke');
+}
+
+function capitalizeGroups(value) {
+  const text = normalizeText(value);
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function buildLinkArray(name, links) {
@@ -712,6 +777,7 @@ function decodeCommonMojibake(value) {
   }
 
   return normalized
+    .replace(/â€“/g, '-')
     .replace(/aapaingstider/gi, 'åpningstider')
     .replace(/saerskilt/gi, 'særskilt')
     .replace(/\baapent\b/gi, 'åpent')
@@ -793,6 +859,7 @@ function isLowQualitySummary(value) {
   if (/\bskjenking\s+\w+,\s+\w+\s+\w+/iu.test(text)) return true;
   if (/stedet for å finne tjenester og informasjon/iu.test(text)) return true;
   if (/postboks|telefon|e-post|epost|postmottak@/iu.test(text)) return true;
+  if (/organisasjonsnummer|bankkontonummer|ehf|for leverandører|faktura til kommunen/iu.test(text)) return true;
   if (/innsyn i offentlig saksbehandling\. søk i offentlig journal/iu.test(text)) return true;
   if (/skriv til oss|send sikker digital post|meld feil|sifra/iu.test(text)) return true;
   return false;
@@ -806,6 +873,7 @@ function isBoilerplateParagraph(value) {
   if (/cookie|personvern|tilgjengelighet/iu.test(text)) return true;
   if (/stedet for å finne tjenester og informasjon/iu.test(text)) return true;
   if (/postboks|telefon|e-post|epost|postmottak@/iu.test(text)) return true;
+  if (/organisasjonsnummer|bankkontonummer|ehf|for leverandører|faktura til kommunen/iu.test(text)) return true;
   if (/skriv til oss|send sikker digital post|meld feil|sifra/iu.test(text)) return true;
   return text.length < 40;
 }
@@ -831,6 +899,7 @@ function sanitizeOfficialSourceSummary(label, summary) {
 
 function assessMunicipalityQuality({
   municipality,
+  editorialProfile,
   alcoholPolicyPlanUrl,
   formsUrl,
   publicRecordsUrl,
@@ -843,7 +912,6 @@ function assessMunicipalityQuality({
 }) {
   let score = 0;
   const reasons = [];
-  const timelineCount = openingHoursRules.length + alcoholServingRules.length;
   const allLinks = [
     ...serviceLinks,
     ...regulationsLinks,
@@ -857,13 +925,17 @@ function assessMunicipalityQuality({
       .map((link) => classifyMunicipalLinkKind(link.url, link.label))
       .filter((kind) => ['plan', 'application', 'rules', 'serviceHub', 'forms', 'publicRecords', 'sales', 'serving', 'servering', 'exam', 'fees', 'renewal', 'controls', 'outdoor', 'singleEvent'].includes(kind)),
   );
+  const operationalRuleCount = [...openingHoursRules, ...alcoholServingRules].filter(
+    (rule) => rule.endTime || rule.startTime || /\bkl\.|\d{1,2}[:.]\d{2}|midnatt|døgnet|30 minutter|ute/i.test(rule.note || ''),
+  ).length;
+
   if (alcoholPolicyPlanUrl) score += 2;
   else reasons.push(`${municipality} mangler tydelig plan- eller skjenketidsside.`);
 
-  if (alcoholServingRules.length >= 2) score += 3;
-  else reasons.push(`${municipality} har for få bekreftede skjenketider.`);
+  if (operationalRuleCount >= 3) score += 3;
+  else reasons.push(`${municipality} har for få tydelige lokale driftspunkter.`);
 
-  if (openingHoursRules.length >= 1) score += 2;
+  if (openingHoursRules.length >= 1 || alcoholServingRules.length >= 2) score += 2;
   else reasons.push(`${municipality} har for få bekreftede lokale tidsregler.`);
 
   if (formsUrl) score += 1;
@@ -875,14 +947,23 @@ function assessMunicipalityQuality({
   if (linkKinds.size >= 4) score += 2;
   else reasons.push(`${municipality} har for få tydelige kommunale kildetyper.`);
 
+  if ((editorialProfile?.editorialTakeaways?.length || 0) >= 3) score += 1;
+  else reasons.push(`${municipality} mangler nok kommune-spesifikke tolkninger.`);
+
+  if ((editorialProfile?.practicalSteps?.length || 0) >= 4) score += 1;
+  else reasons.push(`${municipality} mangler nok praktiske lokale neste steg.`);
+
   const publishable =
+    curatedMunicipalityPublishSet.includes(municipality) &&
     Boolean(alcoholPolicyPlanUrl) &&
-    alcoholServingRules.length >= 2 &&
-    openingHoursRules.length >= 1 &&
+    operationalRuleCount >= 3 &&
+    (openingHoursRules.length >= 1 || alcoholServingRules.length >= 2) &&
     Boolean(formsUrl) &&
     Boolean(publicRecordsUrl) &&
-    linkKinds.size >= 4 &&
-    score >= 8;
+    linkKinds.size >= 3 &&
+    (editorialProfile?.editorialTakeaways?.length || 0) >= 3 &&
+    (editorialProfile?.practicalSteps?.length || 0) >= 4 &&
+    score >= 10;
 
   return {
     score,

@@ -29,6 +29,7 @@ const stopWords = new Set([
 
 const files = await walkFiles(municipalityRoot, (filePath) => filePath.endsWith('.mdx'));
 const entries = [];
+let publishedCount = 0;
 
 for (const filePath of files) {
   const relative = path.relative(repoRoot, filePath);
@@ -41,6 +42,8 @@ for (const filePath of files) {
   const title = capture(frontmatter, /^title:\s*"(.+)"$/m);
   const description = capture(frontmatter, /^description:\s*"(.+)"$/m);
   const officialSourceCount = countYamlArrayItems(frontmatter, 'officialSources');
+  const editorialTakeawayCount = countYamlArrayItems(frontmatter, 'editorialTakeaways');
+  const practicalStepCount = countYamlArrayItems(frontmatter, 'practicalSteps');
   const serviceLinkCount = countYamlArrayItems(frontmatter, 'serviceLinks');
   const regulationLinkCount = countYamlArrayItems(frontmatter, 'regulationsLinks');
   const bylawLinkCount = countYamlArrayItems(frontmatter, 'bylawLinks');
@@ -52,12 +55,16 @@ for (const filePath of files) {
   const draft = capture(frontmatter, /^draft:\s*(true|false)$/m) === 'true';
   const qualityScore = Number(capture(frontmatter, /^  score:\s*([0-9]+)$/m) || '0');
   const publishable = capture(frontmatter, /^  publishable:\s*(true|false)$/m) === 'true';
+  const editorialLead = capture(frontmatter, /^editorialLead:\s*"(.+)"$/m) ?? '';
 
   entries.push({
     relative,
     draft,
     body: `${body}\n${frontmatter}`,
+    municipality,
   });
+
+  if (!draft) publishedCount += 1;
 
   if (!municipality) {
     findings.push(`${relative} is missing municipality frontmatter`);
@@ -76,6 +83,15 @@ for (const filePath of files) {
   }
   if (officialSourceCount < 2) {
     findings.push(`${relative} must include at least 2 officialSources`);
+  }
+  if (!draft && editorialTakeawayCount < 3) {
+    findings.push(`${relative} must include at least 3 editorialTakeaways when published`);
+  }
+  if (!draft && practicalStepCount < 4) {
+    findings.push(`${relative} must include at least 4 practicalSteps when published`);
+  }
+  if (!draft && editorialLead.length < 90) {
+    findings.push(`${relative} needs a stronger editorialLead for published municipality pages`);
   }
   if (serviceLinkCount + regulationLinkCount + bylawLinkCount < 2 && !frontmatter.includes('alcoholPolicyPlanUrl:')) {
     findings.push(`${relative} must include at least 2 municipality-specific links or a plan URL`);
@@ -106,11 +122,19 @@ for (const filePath of files) {
     'Bankkontonummer:',
     'Skriv til oss',
     'Faktura til kommunen',
+    'Kommunen publiserer stoffet sitt på',
+    'det lønner seg å følge temasidene direkte',
+    'kommunale lenker',
+    'praktiske innganger',
   ]) {
     if (!draft && source.toLowerCase().includes(banned.toLowerCase())) {
       findings.push(`${relative} contains internal or placeholder wording "${banned}"`);
     }
   }
+}
+
+if (publishedCount < 10) {
+  findings.push(`At least 10 municipality pages must be published; found ${publishedCount}`);
 }
 
 for (let index = 0; index < entries.length; index += 1) {

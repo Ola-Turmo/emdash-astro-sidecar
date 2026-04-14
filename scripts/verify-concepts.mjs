@@ -32,9 +32,11 @@ const concepts = [
     expectedFiles: [
       'index.html',
       path.join('arendal', 'index.html'),
-      path.join('kristiansand', 'index.html'),
+      path.join('bergen', 'index.html'),
+      path.join('bjerkreim', 'index.html'),
       path.join('lillehammer', 'index.html'),
       path.join('narvik', 'index.html'),
+      path.join('trysil', 'index.html'),
     ],
     textChecks: [
       {
@@ -44,6 +46,10 @@ const concepts = [
       {
         file: path.join('arendal', 'index.html'),
         snippets: ['Tidslinje for lokale alkoholregler', 'Kilder og kontrollpunkter', 'Se kurspakken'],
+      },
+      {
+        file: path.join('bergen', 'index.html'),
+        snippets: ['Dette skiller Bergen fra andre kommuner', 'Kommunale sider du bør åpne først'],
       },
     ],
   },

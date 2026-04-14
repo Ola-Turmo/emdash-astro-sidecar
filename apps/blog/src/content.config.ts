@@ -121,6 +121,9 @@ const municipalPages = defineCollection({
       title: z.string().optional(),
       summary: z.string().optional(),
     })).default([]),
+    editorialTakeaways: z.array(z.string()).default([]),
+    practicalSteps: z.array(z.string()).default([]),
+    editorialLead: z.string().optional(),
     localChecklist: z.array(z.string()).default([]),
     relatedGuideLinks: z.array(z.object({
       label: z.string(),
