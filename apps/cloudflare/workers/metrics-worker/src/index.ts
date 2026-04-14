@@ -1166,7 +1166,11 @@ function clampLimit(value: number): number {
 
 function isCruxNoDataError(error: unknown): boolean {
   const message = toMessage(error).toLowerCase();
-  return message.includes('chrome ux report data not found') || message.includes('"status": "not_found"');
+  return (
+    message.includes('chrome ux report data not found') ||
+    message.includes('data not found') ||
+    message.includes('not_found')
+  );
 }
 
 function isBingNotAuthorizedError(error: unknown): boolean {

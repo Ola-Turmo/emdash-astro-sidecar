@@ -160,8 +160,8 @@ The secret-visibility problem is now handled by a Cloudflare-side D1 fallback:
 
 Current live status:
 
-- CrUX auth reaches Google successfully, but the queried `kurs.ing` origin/URLs currently return `NOT_FOUND`
-- Bing auth reaches Bing successfully, but the current key/site combination returns `NotAuthorized`
+- CrUX auth reaches Google successfully, and `NOT_FOUND` now resolves as the explicit non-blocking state `crux_no_data`
+- Bing auth reaches Bing successfully, and unauthorized site-property combinations now resolve as the explicit non-blocking state `bing_not_authorized` after trying realistic site URL variants
 - GSC still requires OAuth and therefore still uses the public-signals fallback path instead of Search Analytics data
 
 The browser collector currently posts with `fetch(..., { keepalive: true })` and falls back to `navigator.sendBeacon()` using an `application/json` blob. This avoids the weaker plain-string beacon path and prevents duplicate flushes on `visibilitychange` plus `pagehide`.

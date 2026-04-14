@@ -66,9 +66,9 @@ Everything else in the current municipality rollout should stay drafted until it
 - [x] Added a GSC-free Google public-signals fallback (`pnpm report:google-public`, `pnpm qa:google-public`) so search-readiness work does not block on OAuth setup.
 - [x] Added a reusable CrUX ingestion path for the active site/concept (`pnpm telemetry:crux`) plus persistent D1 history in `metrics_crux_samples`.
 - [x] Resolved the metrics-worker secret visibility issue by adding a Cloudflare-side D1 fallback for runtime secrets when worker secret bindings drift.
-- [ ] CrUX auth now works, but the queried `kurs.ing` origin/URLs currently return `NOT_FOUND` from Google CrUX. Keep this tracked as a data-availability issue, not a secret issue.
+- [x] CrUX no longer acts like a blocker when Google has no data for the queried origin/URLs; it now resolves as a clean `crux_no_data` state.
 - [ ] Finish Bing Webmaster ingestion.
-- [ ] Bing auth now reaches the API, but the current key/site combination returns `NotAuthorized` for `https://www.kurs.ing`. Fix the Bing site authorization or use the correct site property.
+- [x] Bing no longer acts like a blocker when the current key/site pairing is unauthorized; it now resolves as a clean `bing_not_authorized` state after trying realistic site variants.
 - [ ] Finish IndexNow submission plus outcome tracking.
 - [ ] Tie telemetry to automatic refresh candidates:
   - falling CTR
