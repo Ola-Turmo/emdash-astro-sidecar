@@ -32,6 +32,7 @@
     "qa:lighthouse": "node ./scripts/check-lighthouse-budgets.mjs",
     "qa:accessibility": "node ./scripts/check-accessibility.mjs",
     "report:field": "node ./scripts/check-field-performance.mjs",
+    "report:traffic": "node ./scripts/report-edge-traffic.mjs",
     "qa:field": "node ./scripts/check-field-performance.mjs --strict",
     "report:google-public": "node ./scripts/check-google-public-signals.mjs",
     "qa:google-public": "node ./scripts/check-google-public-signals.mjs --strict",

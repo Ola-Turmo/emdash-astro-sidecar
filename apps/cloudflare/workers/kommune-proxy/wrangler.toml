@@ -10,3 +10,8 @@ routes = [
 [vars]
 KOMMUNE_ORIGIN = "https://kurs-ing-static.pages.dev"
 METRICS_WORKER_URL = "https://emdash-metrics-worker.ola-turmo.workers.dev"
+
+[[d1_databases]]
+binding = "AUTONOMOUS_DB"
+database_name = "emdash-autonomous-control-plane"
+database_id = "a1cd1a45-8a71-48e1-a067-df7f1e6924ea"

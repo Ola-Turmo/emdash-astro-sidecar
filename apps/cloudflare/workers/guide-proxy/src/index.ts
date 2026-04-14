@@ -1,5 +1,6 @@
 import { conceptRobotsTxt, conceptRssXml, conceptSitemapXml } from './generated/seo-artifacts';
 import { applySecurityHeaders } from '../../shared/security-headers';
+import { logEdgeRequestTelemetry } from '../../shared/request-telemetry';
 
 interface Env {
   GUIDE_ORIGIN: string;
@@ -74,11 +75,19 @@ function redirectToGuide(incomingUrl: URL): Response | null {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const incomingUrl = new URL(request.url);
 
     const redirectResponse = redirectToGuide(incomingUrl);
     if (redirectResponse) {
+      ctx.waitUntil(
+        logEdgeRequestTelemetry(env, {
+          siteKey: 'kurs-ing',
+          conceptKey: 'guide',
+          request,
+          statusCode: redirectResponse.status,
+        }),
+      );
       return redirectResponse;
     }
 
@@ -130,7 +139,16 @@ export default {
       const edgeArtifact = await findEdgeArticle(env.AUTONOMOUS_DB, incomingUrl, request.url);
       if (edgeArtifact) {
         if (upstreamResponse.status === 404) {
-          return responseWithEdgeArtifact(edgeArtifact.html_content, 'hit-404');
+          const response = responseWithEdgeArtifact(edgeArtifact.html_content, 'hit-404');
+          ctx.waitUntil(
+            logEdgeRequestTelemetry(env, {
+              siteKey: 'kurs-ing',
+              conceptKey: 'guide',
+              request,
+              statusCode: response.status,
+            }),
+          );
+          return response;
         }
 
         const contentType = upstreamResponse.headers.get('content-type') ?? '';
@@ -143,11 +161,20 @@ export default {
           const headers = withSecurityHeaders(upstreamResponse.headers);
           headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=300');
           headers.set('x-emdash-edge-fallback', 'origin-html');
-          return new Response(html, {
+          const response = new Response(html, {
             status: upstreamResponse.status,
             statusText: upstreamResponse.statusText,
             headers,
           });
+          ctx.waitUntil(
+            logEdgeRequestTelemetry(env, {
+              siteKey: 'kurs-ing',
+              conceptKey: 'guide',
+              request,
+              statusCode: response.status,
+            }),
+          );
+          return response;
         }
       }
     }
@@ -156,11 +183,20 @@ export default {
     headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=300');
     headers.set('x-emdash-edge-fallback', 'origin');
 
-    return new Response(upstreamResponse.body, {
+    const response = new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
       statusText: upstreamResponse.statusText,
       headers,
     });
+    ctx.waitUntil(
+      logEdgeRequestTelemetry(env, {
+        siteKey: 'kurs-ing',
+        conceptKey: 'guide',
+        request,
+        statusCode: response.status,
+      }),
+    );
+    return response;
   },
 };
 

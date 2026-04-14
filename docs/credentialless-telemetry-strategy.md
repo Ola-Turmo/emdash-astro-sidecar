@@ -57,6 +57,12 @@ This is the default Google-facing fallback when Search Console OAuth is unavaila
 
 Prefer Cloudflare-native telemetry before asking for third-party search credentials.
 
+This is now implemented in the repo through first-party route-worker logging plus D1 summaries.
+
+Use:
+
+- `pnpm report:traffic`
+
 Use these as the next default sources:
 
 - Cloudflare request analytics
@@ -72,6 +78,14 @@ What to derive:
 - 404/410 crawl waste
 - cache hit/miss patterns
 - route-level latency and error hotspots
+
+The current implementation already captures:
+
+- top referrer types
+- top referrer hosts
+- top landing pages from search
+- crawler-vs-browser request split
+- path/status distributions
 
 ### 4. Crawler Hints + IndexNow
 

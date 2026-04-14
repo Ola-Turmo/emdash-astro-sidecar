@@ -69,8 +69,8 @@ Everything else in the current municipality rollout should stay drafted until it
 - [x] CrUX no longer acts like a blocker when Google has no data for the queried origin/URLs; it now resolves as a clean `crux_no_data` state.
 - [ ] Finish Bing Webmaster ingestion.
 - [x] Bing no longer acts like a blocker when the current key/site pairing is unauthorized; it now resolves as a clean `bing_not_authorized` state after trying realistic site variants.
-- [ ] Add a Cloudflare-native request/referrer telemetry report so organic landings and crawler behavior can be measured without GSC or Bing auth.
-- [ ] Add crawler-detection reporting from first-party traffic/log signals.
+- [x] Added a Cloudflare-native request/referrer telemetry report so organic landings and crawler behavior can be measured without GSC or Bing auth.
+- [x] Added crawler-detection reporting from first-party edge request signals.
 - [x] Codified a credentialless autopilot telemetry strategy in `docs/credentialless-telemetry-strategy.md`.
 - [ ] Finish IndexNow submission plus outcome tracking.
 - [ ] Tie telemetry to automatic refresh candidates:

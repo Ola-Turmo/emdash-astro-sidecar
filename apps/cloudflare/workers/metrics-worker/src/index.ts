@@ -61,6 +61,17 @@ type CruxIngestPayload = {
   formFactors?: CruxFormFactor[];
 };
 type CruxFormFactor = 'PHONE' | 'DESKTOP' | 'TABLET' | 'ALL_FORM_FACTORS';
+type EdgeTrafficRow = {
+  site_key: string;
+  concept_key: string;
+  path: string;
+  page_type: string;
+  referrer_type: string;
+  referrer_host: string;
+  ua_type: string;
+  status_code: number;
+  request_count: number;
+};
 
 const FIELD_TARGETS: Record<RumMetricName, { good: number; poor: number; unit: string }> = {
   LCP: { good: 2500, poor: 4000, unit: 'ms' },
@@ -115,6 +126,15 @@ export default {
         return jsonWithCors(request, { ok: false, error: 'siteKey and conceptKey are required' }, 400);
       }
       return jsonWithCors(request, await buildCruxSummary(env, siteKey, conceptKey));
+    }
+
+    if (request.method === 'GET' && url.pathname === '/traffic/summary') {
+      const siteKey = url.searchParams.get('siteKey');
+      const conceptKey = url.searchParams.get('conceptKey');
+      if (!siteKey || !conceptKey) {
+        return jsonWithCors(request, { ok: false, error: 'siteKey and conceptKey are required' }, 400);
+      }
+      return jsonWithCors(request, await buildEdgeTrafficSummary(env, siteKey, conceptKey));
     }
 
     if (request.method === 'POST' && url.pathname === '/rum') {
@@ -587,6 +607,54 @@ async function buildCruxSummary(env: Env, siteKey: string, conceptKey: string): 
   };
 }
 
+async function buildEdgeTrafficSummary(env: Env, siteKey: string, conceptKey: string): Promise<Record<string, unknown>> {
+  await ensureEdgeMetricsTable(env.AUTONOMOUS_DB);
+  const rows = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT site_key, concept_key, path, page_type, referrer_type, referrer_host, ua_type, status_code, request_count
+        FROM metrics_edge_requests_hourly
+        WHERE site_key = ?1
+          AND concept_key = ?2
+          AND request_date >= date('now', '-7 day')
+      `,
+    )
+    .bind(siteKey, conceptKey)
+    .all<EdgeTrafficRow>();
+
+  const totalRequests = rows.results.reduce((sum, row) => sum + Number(row.request_count || 0), 0);
+  const byReferrerType = sumBy(rows.results, (row) => row.referrer_type);
+  const byCrawlerType = sumBy(rows.results, (row) => row.ua_type);
+  const topReferrers = topBy(rows.results, (row) => row.referrer_host, 12);
+  const topPaths = topBy(rows.results, (row) => row.path, 12);
+  const topOrganicLandingPages = topBy(
+    rows.results.filter((row) => row.referrer_type === 'search'),
+    (row) => row.path,
+    12,
+  );
+  const crawlerPaths = topBy(
+    rows.results.filter((row) => row.ua_type === 'crawler'),
+    (row) => row.path,
+    12,
+  );
+  const topStatusCodes = topBy(rows.results, (row) => String(row.status_code), 10);
+
+  return {
+    ok: true,
+    siteKey,
+    conceptKey,
+    totalRequests,
+    byReferrerType,
+    byCrawlerType,
+    topReferrers,
+    topPaths,
+    topOrganicLandingPages,
+    crawlerPaths,
+    topStatusCodes,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
 async function ingestGsc(
   env: Env,
   host: { id: string; site_url: string },
@@ -946,6 +1014,40 @@ async function ensureRuntimeSecretFallbacksTable(db: D1Database): Promise<void> 
     .run();
 }
 
+async function ensureEdgeMetricsTable(db: D1Database): Promise<void> {
+  await db
+    .prepare(
+      `
+        CREATE TABLE IF NOT EXISTS metrics_edge_requests_hourly (
+          site_key TEXT NOT NULL,
+          concept_key TEXT NOT NULL,
+          request_date TEXT NOT NULL,
+          request_hour TEXT NOT NULL,
+          path TEXT NOT NULL,
+          page_type TEXT NOT NULL,
+          referrer_type TEXT NOT NULL,
+          referrer_host TEXT NOT NULL,
+          ua_type TEXT NOT NULL,
+          status_code INTEGER NOT NULL,
+          request_count INTEGER NOT NULL DEFAULT 0,
+          PRIMARY KEY (
+            site_key,
+            concept_key,
+            request_date,
+            request_hour,
+            path,
+            page_type,
+            referrer_type,
+            referrer_host,
+            ua_type,
+            status_code
+          )
+        )
+      `,
+    )
+    .run();
+}
+
 async function ensureRumTable(db: D1Database): Promise<void> {
   await db
     .prepare(
@@ -1191,4 +1293,19 @@ function buildBingSiteUrlVariants(siteUrl: string): string[] {
   } catch {
     return [siteUrl];
   }
+}
+
+function sumBy<T>(rows: T[], selector: (row: T) => string): Array<{ key: string; count: number }> {
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    const key = selector(row) || '(unknown)';
+    map.set(key, (map.get(key) ?? 0) + Number((row as { request_count?: number }).request_count ?? 0));
+  }
+  return [...map.entries()]
+    .map(([key, count]) => ({ key, count }))
+    .sort((left, right) => right.count - left.count);
+}
+
+function topBy<T>(rows: T[], selector: (row: T) => string, limit: number): Array<{ key: string; count: number }> {
+  return sumBy(rows, selector).slice(0, limit);
 }

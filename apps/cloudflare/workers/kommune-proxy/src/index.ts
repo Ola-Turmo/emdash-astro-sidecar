@@ -1,9 +1,11 @@
 import { conceptRobotsTxt, conceptRssXml, conceptSitemapXml } from './generated/seo-artifacts';
 import { applySecurityHeaders } from '../../shared/security-headers';
+import { logEdgeRequestTelemetry } from '../../shared/request-telemetry';
 
 interface Env {
   KOMMUNE_ORIGIN: string;
   METRICS_WORKER_URL: string;
+  AUTONOMOUS_DB: D1Database;
 }
 
 const PREFIX = '/kommune';
@@ -71,7 +73,7 @@ function responseWithBody(body: string, contentType: string): Response {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const incomingUrl = new URL(request.url);
 
     if (incomingUrl.pathname === `${PREFIX}/rss.xml`) {
@@ -97,7 +99,7 @@ export default {
       !ALLOWED_PATHS.has(normalizedIncomingPath) &&
       !isConceptAssetPath(incomingUrl.pathname)
     ) {
-      return new Response('Not found', {
+      const response = new Response('Not found', {
         status: 404,
         headers: (() => {
           const headers = applySecurityHeaders(new Headers(), { indexable: false });
@@ -106,6 +108,15 @@ export default {
           return headers;
         })(),
       });
+      ctx.waitUntil(
+        logEdgeRequestTelemetry(env, {
+          siteKey: 'kurs-ing',
+          conceptKey: 'kommune',
+          request,
+          statusCode: response.status,
+        }),
+      );
+      return response;
     }
 
     const originPath = toOriginPath(incomingUrl.pathname);
@@ -120,11 +131,20 @@ export default {
     const headers = withSecurityHeaders(upstreamResponse.headers);
     headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=300');
 
-    return new Response(upstreamResponse.body, {
+    const response = new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
       statusText: upstreamResponse.statusText,
       headers,
     });
+    ctx.waitUntil(
+      logEdgeRequestTelemetry(env, {
+        siteKey: 'kurs-ing',
+        conceptKey: 'kommune',
+        request,
+        statusCode: response.status,
+      }),
+    );
+    return response;
   },
 };
 

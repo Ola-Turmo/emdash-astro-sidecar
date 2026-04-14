@@ -1,14 +1,16 @@
 import { applySecurityHeaders } from '../../shared/security-headers';
+import { logEdgeRequestTelemetry } from '../../shared/request-telemetry';
 
 interface Env {
   ROOT_SITE_ORIGIN: string;
+  AUTONOMOUS_DB: D1Database;
 }
 
 const PASSTHROUGH_PREFIXES = ['/guide', '/kommune'];
 const PASSTHROUGH_EXACT = ['/robots.txt', '/sitemap.xml', '/sitemap-index.xml'];
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const incomingUrl = new URL(request.url);
 
     if (shouldPassthrough(incomingUrl.pathname)) {
@@ -26,11 +28,20 @@ export default {
     const headers = applySecurityHeaders(new Headers(upstream.headers));
     headers.set('x-emdash-root-proxy', 'apex-site');
     headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=0, must-revalidate');
-    return new Response(upstream.body, {
+    const response = new Response(upstream.body, {
       status: upstream.status,
       statusText: upstream.statusText,
       headers,
     });
+    ctx.waitUntil(
+      logEdgeRequestTelemetry(env, {
+        siteKey: 'kurs-ing',
+        conceptKey: 'root',
+        request,
+        statusCode: response.status,
+      }),
+    );
+    return response;
   },
 };
 

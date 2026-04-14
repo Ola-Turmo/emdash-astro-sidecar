@@ -8,3 +8,8 @@ routes = [
 
 [vars]
 ROOT_SITE_ORIGIN = "https://new.kurs.ing"
+
+[[d1_databases]]
+binding = "AUTONOMOUS_DB"
+database_name = "emdash-autonomous-control-plane"
+database_id = "a1cd1a45-8a71-48e1-a067-df7f1e6924ea"
