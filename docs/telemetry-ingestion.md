@@ -16,8 +16,10 @@ The autonomous control plane now has a first telemetry-ingestion foundation inst
   D1 tables for `metrics_gsc`, `metrics_crux`, `metrics_bing`, and `indexnow_submissions`.
 - [apps/cloudflare/d1/migrations/0011_rum_metrics.sql](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\cloudflare\d1\migrations\0011_rum_metrics.sql)
   D1 table for first-party `metrics_rum`.
-- [apps/blog/src/scripts/rum.ts](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\blog\src\scripts\rum.ts)
-  Browser-side collection for `LCP`, `INP`, `CLS`, `TTFB`, and `FCP`.
+- [apps/blog/src/layouts/BaseLayout.astro](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\blog\src\layouts\BaseLayout.astro)
+  Injects the first-party RUM bootstrap config into every generated page.
+- [apps/blog/src/scripts/rum-client.inline.js](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\blog\src\scripts\rum-client.inline.js)
+  Inline browser-side collection for `LCP`, `INP`, `CLS`, `TTFB`, and `FCP`, embedded directly into generated HTML so collection does not depend on a separate static asset path.
 
 ## Why This Exists
 

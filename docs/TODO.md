@@ -1,6 +1,6 @@
 # Active TODO
 
-Last updated: 2026-04-13
+Last updated: 2026-04-14
 
 This is the maintained backlog for `emdash-astro-sidecar`.
 
@@ -17,6 +17,7 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 - [x] Kommune quality reporting exists.
 - [x] Kommune hero-image workflow exists for the currently published municipality set.
 - [x] First-party RUM exists for field CWV ingestion, `p50/p75/p95/p99` summaries, device splits, page-type splits, and top-page rollups.
+- [x] The browser RUM client is now embedded directly in generated HTML, removing the fragile external `rum-client.js` delivery path from `guide` and `kommune`.
 
 ## Current Published Kommune Set
 
@@ -72,7 +73,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - publish quality state
   - conversion/funnel signals
 - [ ] Add trustworthy live verification for real browser RUM samples on both `guide` and `kommune`, not just synthetic or manual validation paths.
-- [ ] Debug and prove automatic browser-to-`/__rum` collection on live `guide` and `kommune` pages. The same-origin proxy path is implemented, but a normal browser session still needs explicit end-to-end proof in D1.
+- [ ] Prove automatic browser-to-`/__rum` collection on live `guide` and `kommune` pages after the inline-client fix. The separate asset-delivery failure is removed, but a normal browser session still needs explicit end-to-end proof in D1.
 
 ## P0: Kommune Concept Quality
 
@@ -229,3 +230,4 @@ These are not blockers for generic platform work, but they are needed for specif
 - [x] Re-established and protected the real `kurs.ing` landing page.
 - [x] Added multisite and multi-concept separation.
 - [x] Added live first-party RUM ingestion with percentile summaries, device splits, page-type splits, and top-page rollups.
+- [x] Removed the separate `rum-client.js` dependency by embedding the browser collector directly in generated HTML.

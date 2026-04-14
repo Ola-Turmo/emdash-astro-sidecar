@@ -1,9 +1,14 @@
 ---
 import '../styles/global.css';
+import rumClientScript from '../scripts/rum-client.inline.js?raw';
 import {
   DEFAULT_OG_IMAGE,
   MAIN_SITE_NAME,
   MAIN_SITE_URL,
+  ACTIVE_CONCEPT_KEY,
+  ACTIVE_SITE_KEY,
+  BLOG_BASE_PATH,
+  RUM_ENDPOINT,
   SITE_DESCRIPTION,
   SITE_LANGUAGE,
   SITE_LOCALE,
@@ -56,6 +61,13 @@ const websiteSchema = JSON.stringify({
     url: MAIN_SITE_URL,
   },
 });
+
+const rumConfigScript = JSON.stringify({
+  endpoint: RUM_ENDPOINT,
+  siteKey: ACTIVE_SITE_KEY,
+  conceptKey: ACTIVE_CONCEPT_KEY,
+  basePath: BLOG_BASE_PATH,
+});
 ---
 
 <!doctype html>
@@ -91,8 +103,7 @@ const websiteSchema = JSON.stringify({
   </head>
   <body class="antialiased">
     <slot />
-    <script>
-      import '../scripts/rum';
-    </script>
+    <script is:inline set:html={`window.__EMDASH_RUM__ = ${rumConfigScript};`} />
+    <script is:inline set:html={rumClientScript} />
   </body>
 </html>
