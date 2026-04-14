@@ -152,7 +152,17 @@ CrUX summary:
 curl "https://<metrics-worker-url>/crux/summary?siteKey=kurs-ing&conceptKey=guide"
 ```
 
-At the moment, the code path is live, and the replacement `CRUX_API_KEY` plus Bing API key are stored locally and can be resynced to Cloudflare, but the live metrics worker still reports those secrets as missing at runtime. The remaining work is secret visibility/runtime diagnosis on the worker side, not the D1 pipeline.
+The secret-visibility problem is now handled by a Cloudflare-side D1 fallback:
+
+- the repo stores local operator secrets in `config/secrets.local.json` (gitignored)
+- `sync-cloudflare-worker-secrets.mjs` pushes them to the worker and mirrors selected telemetry secrets into `runtime_secret_fallbacks`
+- `metrics-worker` resolves runtime secrets from normal worker bindings first, then falls back to D1 if Cloudflare secret bindings drift
+
+Current live status:
+
+- CrUX auth reaches Google successfully, but the queried `kurs.ing` origin/URLs currently return `NOT_FOUND`
+- Bing auth reaches Bing successfully, but the current key/site combination returns `NotAuthorized`
+- GSC still requires OAuth and therefore still uses the public-signals fallback path instead of Search Analytics data
 
 The browser collector currently posts with `fetch(..., { keepalive: true })` and falls back to `navigator.sendBeacon()` using an `application/json` blob. This avoids the weaker plain-string beacon path and prevents duplicate flushes on `visibilitychange` plus `pagehide`.
 

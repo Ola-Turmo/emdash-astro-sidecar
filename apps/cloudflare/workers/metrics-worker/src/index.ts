@@ -404,11 +404,12 @@ async function ingestCruxSnapshots(
   payload: Required<CruxIngestPayload>,
 ): Promise<Record<string, unknown>> {
   await ensureCruxSamplesTable(env.AUTONOMOUS_DB);
-  if (!env.CRUX_API_KEY) {
+  const apiKey = await resolveRuntimeSecret(env, 'emdash-metrics-worker', 'CRUX_API_KEY');
+  if (!apiKey) {
     return { ok: false, error: 'missing CRUX_API_KEY' };
   }
 
-  const client = new CruxApiClient(env.CRUX_API_KEY);
+  const client = new CruxApiClient(apiKey);
   const origin = new URL(payload.siteUrl).origin;
   const targetUrls = [...new Set([payload.siteUrl, ...(payload.urls || [])])];
   const formFactors: CruxFormFactor[] = payload.formFactors?.length
@@ -581,12 +582,13 @@ async function ingestGsc(
   host: { id: string; site_url: string },
   metricDate: string,
 ): Promise<TelemetryIngestionResult> {
-  if (!env.GSC_ACCESS_TOKEN) {
+  const accessToken = await resolveRuntimeSecret(env, 'emdash-metrics-worker', 'GSC_ACCESS_TOKEN');
+  if (!accessToken) {
     return { source: 'gsc', status: 'skipped', detail: { reason: 'missing GSC_ACCESS_TOKEN' } };
   }
 
   try {
-    const client = new GoogleSearchConsoleClient(env.GSC_ACCESS_TOKEN);
+    const client = new GoogleSearchConsoleClient(accessToken);
     const response = await client.querySearchAnalytics({
       siteUrl: host.site_url,
       startDate: metricDate,
@@ -634,12 +636,13 @@ async function ingestCrux(
   host: { id: string; site_url: string },
   metricDate: string,
 ): Promise<TelemetryIngestionResult> {
-  if (!env.CRUX_API_KEY) {
+  const apiKey = await resolveRuntimeSecret(env, 'emdash-metrics-worker', 'CRUX_API_KEY');
+  if (!apiKey) {
     return { source: 'crux', status: 'skipped', detail: { reason: 'missing CRUX_API_KEY' } };
   }
 
   try {
-    const client = new CruxApiClient(env.CRUX_API_KEY);
+    const client = new CruxApiClient(apiKey);
     const origin = new URL(host.site_url).origin;
     const response = await client.queryRecord({
       origin,
@@ -679,7 +682,8 @@ async function ingestBing(
   host: { id: string; site_url: string },
   metricDate: string,
 ): Promise<TelemetryIngestionResult> {
-  if (!env.BING_WEBMASTER_API_KEY) {
+  const apiKey = await resolveRuntimeSecret(env, 'emdash-metrics-worker', 'BING_WEBMASTER_API_KEY');
+  if (!apiKey) {
     return {
       source: 'bing',
       status: 'skipped',
@@ -688,7 +692,7 @@ async function ingestBing(
   }
 
   try {
-    const client = new BingWebmasterClient(env.BING_WEBMASTER_API_KEY);
+    const client = new BingWebmasterClient(apiKey);
     const response = await client.getQueryStats({
       siteUrl: host.site_url,
       startDate: metricDate,
@@ -728,7 +732,8 @@ async function submitIndexNow(
   host: { id: string; site_url: string },
   urls: string[],
 ): Promise<TelemetryIngestionResult> {
-  if (!env.INDEXNOW_KEY) {
+  const key = await resolveRuntimeSecret(env, 'emdash-metrics-worker', 'INDEXNOW_KEY');
+  if (!key) {
     return {
       source: 'indexnow',
       status: 'skipped',
@@ -738,7 +743,7 @@ async function submitIndexNow(
 
   try {
     const hostname = new URL(host.site_url).hostname;
-    const client = new IndexNowClient(hostname, env.INDEXNOW_KEY);
+    const client = new IndexNowClient(hostname, key);
     const response = await client.submitUrls(urls);
 
     await ensureIndexNowTable(env.AUTONOMOUS_DB);
@@ -885,6 +890,22 @@ async function ensureCruxSamplesTable(db: D1Database): Promise<void> {
     .run();
 }
 
+async function ensureRuntimeSecretFallbacksTable(db: D1Database): Promise<void> {
+  await db
+    .prepare(
+      `
+        CREATE TABLE IF NOT EXISTS runtime_secret_fallbacks (
+          worker_name TEXT NOT NULL,
+          secret_name TEXT NOT NULL,
+          secret_value TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (worker_name, secret_name)
+        )
+      `,
+    )
+    .run();
+}
+
 async function ensureRumTable(db: D1Database): Promise<void> {
   await db
     .prepare(
@@ -939,6 +960,33 @@ function validateRumPayload(payload: RumPayload): string | null {
   }
 
   return null;
+}
+
+async function resolveRuntimeSecret(
+  env: Env,
+  workerName: string,
+  secretName: 'GSC_ACCESS_TOKEN' | 'CRUX_API_KEY' | 'BING_WEBMASTER_API_KEY' | 'INDEXNOW_KEY',
+): Promise<string | null> {
+  const direct = env[secretName];
+  if (direct && direct.trim()) {
+    return direct.trim();
+  }
+
+  await ensureRuntimeSecretFallbacksTable(env.AUTONOMOUS_DB);
+  const row = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT secret_value
+        FROM runtime_secret_fallbacks
+        WHERE worker_name = ?1
+          AND secret_name = ?2
+        LIMIT 1
+      `,
+    )
+    .bind(workerName, secretName)
+    .first<{ secret_value: string }>();
+
+  return row?.secret_value?.trim() || null;
 }
 
 function validateCruxPayload(payload: CruxIngestPayload): string | null {

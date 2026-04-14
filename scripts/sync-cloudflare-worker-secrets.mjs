@@ -62,6 +62,42 @@ function putSecret({ configPath, workerName, secretName, secretValue, dryRun }) 
   });
 }
 
+function escapeSql(value) {
+  return String(value).replace(/'/g, "''");
+}
+
+function shouldSyncD1Fallback(worker, secretName) {
+  return (
+    worker.name === 'metrics-worker' &&
+    ['GSC_ACCESS_TOKEN', 'CRUX_API_KEY', 'BING_WEBMASTER_API_KEY', 'INDEXNOW_KEY'].includes(secretName)
+  );
+}
+
+function syncD1FallbackSecret({ worker, secretName, secretValue, dryRun }) {
+  const workerName = readWranglerName(worker.wranglerConfig);
+  const command = [
+    "CREATE TABLE IF NOT EXISTS runtime_secret_fallbacks (",
+    'worker_name TEXT NOT NULL,',
+    'secret_name TEXT NOT NULL,',
+    'secret_value TEXT NOT NULL,',
+    'updated_at TEXT NOT NULL,',
+    'PRIMARY KEY (worker_name, secret_name)',
+    ');',
+    `INSERT INTO runtime_secret_fallbacks (worker_name, secret_name, secret_value, updated_at) VALUES ('${escapeSql(workerName)}', '${escapeSql(secretName)}', '${escapeSql(secretValue)}', datetime('now'))`,
+    "ON CONFLICT(worker_name, secret_name) DO UPDATE SET secret_value = excluded.secret_value, updated_at = excluded.updated_at;",
+  ].join(' ');
+
+  if (dryRun) {
+    console.log(`[dry-run] Would sync ${secretName} fallback into D1 for ${workerName}`);
+    return;
+  }
+
+  runWrangler(['d1', 'execute', 'AUTONOMOUS_DB', '--config', worker.wranglerConfig, '--remote', '--command', command], {
+    cwd: repoRoot,
+    stdio: 'inherit',
+  });
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const workers = resolveWorkers(options);
@@ -98,6 +134,16 @@ async function main() {
       });
 
       console.log(`Set ${secretName} on ${workerName}`);
+
+      if (shouldSyncD1Fallback(worker, secretName)) {
+        syncD1FallbackSecret({
+          worker,
+          secretName,
+          secretValue,
+          dryRun: options.dryRun,
+        });
+        console.log(`Synced ${secretName} fallback into D1 for ${workerName}`);
+      }
 
       if (secretName === 'CONTENT_API_TOKEN' && options.rotateContentApiToken) {
         generatedSecrets.push(secretName);
