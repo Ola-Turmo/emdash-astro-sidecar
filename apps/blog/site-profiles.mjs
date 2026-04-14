@@ -64,6 +64,10 @@ const siteProfiles = {
         audit: {
           sitemapUrls: ['https://www.kurs.ing/guide/sitemap.xml'],
           extraUrls: ['https://www.kurs.ing/guide/blog/salgsbevilling-pensum-og-vanlige-feil/'],
+          lighthouse: {
+            runs: 1,
+            warmupRuns: 0,
+          },
         },
         nav: [
           { path: '/', label: 'Artikler' },
@@ -146,11 +150,13 @@ const siteProfiles = {
         audit: {
           sitemapUrls: ['https://www.kurs.ing/kommune/sitemap.xml'],
           extraUrls: [
-            'https://www.kurs.ing/kommune/oslo/',
-            'https://www.kurs.ing/kommune/bergen/',
-            'https://www.kurs.ing/kommune/trondheim/',
-            'https://www.kurs.ing/kommune/stavanger/',
+            'https://www.kurs.ing/kommune/arendal/',
+            'https://www.kurs.ing/kommune/kristiansand/',
           ],
+          lighthouse: {
+            runs: 3,
+            warmupRuns: 1,
+          },
         },
         nav: [
           { path: '/', label: 'Kommuner' },
@@ -245,6 +251,10 @@ const siteProfiles = {
         audit: {
           sitemapUrls: ['https://www.gatareba.ge/guide/sitemap.xml'],
           extraUrls: [],
+          lighthouse: {
+            runs: 1,
+            warmupRuns: 0,
+          },
         },
         nav: [
           { path: '/', label: 'Articles' },

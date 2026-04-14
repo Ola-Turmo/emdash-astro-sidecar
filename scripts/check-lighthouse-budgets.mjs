@@ -34,6 +34,8 @@ function parseArgs(argv) {
   const options = {
     urls: [],
     strategy: 'mobile',
+    runs: 1,
+    warmupRuns: 0,
     thresholds: { ...DEFAULT_THRESHOLDS },
   };
 
@@ -46,6 +48,17 @@ function parseArgs(argv) {
     }
     if (arg === '--strategy' && argv[index + 1]) {
       options.strategy = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg === '--runs' && argv[index + 1]) {
+      options.runs = Math.max(1, Number(argv[index + 1]) || 1);
+      index += 1;
+      continue;
+    }
+    if (arg === '--warmup-runs' && argv[index + 1]) {
+      options.warmupRuns = Math.max(0, Number(argv[index + 1]) || 0);
+      index += 1;
     }
   }
 
@@ -94,7 +107,11 @@ async function ensureLocalLighthouseCli() {
 async function loadDefaultUrls() {
   const siteConfigModule = await import(pathToFileURL(path.join(repoRoot, 'apps/blog/src/site-config.ts')).href);
   const urls = [siteConfigModule.SITE_URL, ...(siteConfigModule.DEPLOY_AUDIT_EXTRA_URLS || [])].filter(Boolean);
-  return [...new Set(urls)];
+  return {
+    urls: [...new Set(urls)],
+    runs: Number(siteConfigModule.LIGHTHOUSE_AUDIT_RUNS || 1),
+    warmupRuns: Number(siteConfigModule.LIGHTHOUSE_AUDIT_WARMUP_RUNS || 0),
+  };
 }
 
 async function runLighthouse(url, strategy) {
@@ -155,6 +172,16 @@ function toScore(score) {
   return typeof score === 'number' ? Math.round(score * 100) : null;
 }
 
+function median(values) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) {
+    return sorted[middle];
+  }
+  return Math.round((sorted[middle - 1] + sorted[middle]) / 2);
+}
+
 function evaluateBudgets(url, strategy, lighthouseResult, thresholds) {
   const categories = lighthouseResult.report?.categories || {};
   const audits = lighthouseResult.report?.audits || {};
@@ -191,20 +218,75 @@ function evaluateBudgets(url, strategy, lighthouseResult, thresholds) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const urls = options.urls.length ? options.urls : await loadDefaultUrls();
+  if (!options.urls.length) {
+    const defaults = await loadDefaultUrls();
+    options.urls = defaults.urls;
+    if (!process.argv.slice(2).includes('--runs')) {
+      options.runs = Math.max(1, defaults.runs);
+    }
+    if (!process.argv.slice(2).includes('--warmup-runs')) {
+      options.warmupRuns = Math.max(0, defaults.warmupRuns);
+    }
+  }
+  const urls = options.urls;
   if (!urls.length) {
     throw new Error('No URLs to audit. Provide --url or configure concept audit URLs.');
   }
 
   const results = [];
   for (const url of urls) {
-    const result = await runLighthouse(url, options.strategy);
-    results.push(evaluateBudgets(url, options.strategy, result, options.thresholds));
+    for (let warmupIndex = 0; warmupIndex < options.warmupRuns; warmupIndex += 1) {
+      await runLighthouse(url, options.strategy);
+    }
+
+    const measuredRuns = [];
+    for (let runIndex = 0; runIndex < options.runs; runIndex += 1) {
+      const result = await runLighthouse(url, options.strategy);
+      measuredRuns.push(evaluateBudgets(url, options.strategy, result, options.thresholds));
+    }
+
+    if (measuredRuns.length === 1) {
+      results.push(measuredRuns[0]);
+      continue;
+    }
+
+    const aggregated = {
+      url,
+      strategy: options.strategy,
+      performance: median(measuredRuns.map((run) => run.performance).filter((value) => value !== null)),
+      accessibility: median(measuredRuns.map((run) => run.accessibility).filter((value) => value !== null)),
+      seo: median(measuredRuns.map((run) => run.seo).filter((value) => value !== null)),
+      bestPractices: median(measuredRuns.map((run) => run.bestPractices).filter((value) => value !== null)),
+      tbt: median(measuredRuns.map((run) => run.tbt)),
+      warning: measuredRuns.map((run) => run.warning).filter(Boolean).join(' | ') || null,
+      findings: [],
+      runs: measuredRuns,
+    };
+
+    if ((aggregated.performance ?? 0) < options.thresholds.performance) {
+      aggregated.findings.push(`Performance ${aggregated.performance} < ${options.thresholds.performance}`);
+    }
+    if ((aggregated.accessibility ?? 0) < options.thresholds.accessibility) {
+      aggregated.findings.push(`Accessibility ${aggregated.accessibility} < ${options.thresholds.accessibility}`);
+    }
+    if ((aggregated.seo ?? 0) < options.thresholds.seo) {
+      aggregated.findings.push(`SEO ${aggregated.seo} < ${options.thresholds.seo}`);
+    }
+    if ((aggregated.bestPractices ?? 0) < options.thresholds.bestPractices) {
+      aggregated.findings.push(`Best Practices ${aggregated.bestPractices} < ${options.thresholds.bestPractices}`);
+    }
+    if ((aggregated.tbt ?? 0) > options.thresholds.tbt) {
+      aggregated.findings.push(`TBT ${aggregated.tbt}ms > ${options.thresholds.tbt}ms`);
+    }
+
+    results.push(aggregated);
   }
 
   const summary = {
     generatedAt: new Date().toISOString(),
     strategy: options.strategy,
+    runs: options.runs,
+    warmupRuns: options.warmupRuns,
     thresholds: options.thresholds,
     results,
   };

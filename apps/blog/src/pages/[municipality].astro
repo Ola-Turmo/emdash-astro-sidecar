@@ -9,6 +9,7 @@ import {
   PRIMARY_CTA,
   SECONDARY_CTA,
   SHELL_COPY,
+  blogPath,
 } from '../consts';
 import { deriveMunicipalityView } from '../lib/municipality-view';
 import { getPublishedMunicipalPages } from '../lib/published-content';
@@ -55,6 +56,7 @@ const {
 } = page.data;
 const municipalityView = deriveMunicipalityView(page.data);
 const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind === 'serving');
+const heroImageSrc = heroImage?.src ? blogPath(heroImage.src.replace(/\.png$/i, '.webp')) : null;
 ---
 
 <BaseLayout title={title} description={description} pubDate={pubDate}>
@@ -88,7 +90,7 @@ const primaryServingEntry = municipalityView.timeline.find((entry) => entry.kind
           {heroImage && (
             <section class="shell-card overflow-hidden p-2">
               <img
-                src={heroImage.src}
+                src={heroImageSrc}
                 alt={heroImage.alt}
                 class="h-[240px] w-full rounded-[1.35rem] object-cover sm:h-[320px]"
                 loading="eager"

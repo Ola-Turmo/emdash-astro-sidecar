@@ -35,6 +35,14 @@ function normalizeConceptPath(pathname: string): string {
   return stripped || PREFIX;
 }
 
+function isConceptAssetPath(pathname: string): boolean {
+  if (pathname.startsWith(`${PREFIX}/_astro/`) || pathname.startsWith(`${PREFIX}/fonts/`)) {
+    return true;
+  }
+
+  return /\.[a-z0-9]+$/i.test(pathname);
+}
+
 function buildUpstreamHeaders(request: Request): Headers {
   const headers = new Headers();
   const passthrough = [
@@ -91,7 +99,8 @@ export default {
     if (
       normalizedIncomingPath.startsWith(`${PREFIX}/`) &&
       normalizedIncomingPath !== PREFIX &&
-      !ALLOWED_PATHS.has(normalizedIncomingPath)
+      !ALLOWED_PATHS.has(normalizedIncomingPath) &&
+      !isConceptAssetPath(incomingUrl.pathname)
     ) {
       return new Response('Not found', {
         status: 404,

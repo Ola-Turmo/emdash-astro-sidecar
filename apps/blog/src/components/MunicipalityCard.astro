@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { PRIMARY_CTA, articlePath } from '../consts';
+import { PRIMARY_CTA, articlePath, blogPath } from '../consts';
 import { deriveMunicipalityView } from '../lib/municipality-view';
 
 interface Props {
@@ -18,6 +18,9 @@ const {
 } = page.data;
 const municipalityView = deriveMunicipalityView(page.data);
 const primaryTimeline = municipalityView.timeline.find((entry) => entry.kind === 'serving');
+const heroImageSrc = heroImage?.src
+  ? blogPath(heroImage.src.replace(/-hero\.png$/i, '-hero-thumb.webp').replace(/\.png$/i, '.webp'))
+  : null;
 ---
 
 <article class="shell-card group overflow-hidden p-5 md:p-6">
@@ -25,7 +28,7 @@ const primaryTimeline = municipalityView.timeline.find((entry) => entry.kind ===
     {heroImage && (
       <div class="-mx-5 -mt-5 mb-5 overflow-hidden md:-mx-6 md:-mt-6">
         <img
-          src={heroImage.src}
+          src={heroImageSrc}
           alt={heroImage.alt}
           class="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           loading="lazy"

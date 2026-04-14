@@ -48,6 +48,10 @@ type RuntimeShape = {
     audit: {
       sitemapUrls: string[];
       extraUrls: string[];
+      lighthouse?: {
+        runs?: number;
+        warmupRuns?: number;
+      };
     };
     nav: Array<{
       path: string;
@@ -118,6 +122,8 @@ export const CLOUDFLARE_ROUTE_WORKER = ACTIVE_CONCEPT.cloudflare.routeWorkerName
 export const CLOUDFLARE_ROUTE_WORKER_DIRECTORY = ACTIVE_CONCEPT.cloudflare.routeWorkerDirectory;
 export const DEPLOY_AUDIT_SITEMAPS = ACTIVE_CONCEPT.audit.sitemapUrls;
 export const DEPLOY_AUDIT_EXTRA_URLS = ACTIVE_CONCEPT.audit.extraUrls;
+export const LIGHTHOUSE_AUDIT_RUNS = ACTIVE_CONCEPT.audit.lighthouse?.runs ?? 1;
+export const LIGHTHOUSE_AUDIT_WARMUP_RUNS = ACTIVE_CONCEPT.audit.lighthouse?.warmupRuns ?? 0;
 export const RUM_ENDPOINT = conceptPath('/__rum');
 
 export const PRIMARY_CTA = ACTIVE_CONCEPT.callsToAction.primary;

@@ -16,8 +16,11 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 - [x] Weak kommune pages now fail closed instead of staying published.
 - [x] Kommune quality reporting exists.
 - [x] Kommune hero-image workflow exists for the currently published municipality set.
+- [x] Kommune landing cards now use dedicated thumbnail derivatives instead of loading full hero assets in the listing grid.
 - [x] First-party RUM exists for field CWV ingestion, `p50/p75/p95/p99` summaries, device splits, page-type splits, and top-page rollups.
 - [x] The browser RUM client is now embedded directly in generated HTML, removing the fragile external `rum-client.js` delivery path from `guide` and `kommune`.
+- [x] The current mobile Lighthouse budget gate passes for the active `guide` and `kommune` flagship URLs.
+- [x] Lighthouse audit policy is now concept-specific, so volatile concepts like `kommune` can use warmups plus median-of-runs without slowing all other deployments.
 
 ## Current Published Kommune Set
 
@@ -51,6 +54,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - `Best Practices >= 90`
   - `TBT < 200ms`
 - [x] Added a reusable Lighthouse budget gate entrypoint (`pnpm qa:lighthouse`) for the active concept's flagship URLs.
+- [x] Wired the Lighthouse budget gate into the production deploy path for the active concept.
 - [ ] Add a world-class `flagship` target tier for key landing pages and highest-value articles:
   - `Performance >= 95`
   - tighter LCP target toward `~1.2-1.5s` on hero pages

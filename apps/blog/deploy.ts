@@ -55,6 +55,7 @@ async function main() {
   const skipBuild = args.includes('--skip-build');
   const skipEmdash = args.includes('--skip-emdash');
   const skipRumProof = args.includes('--skip-rum-proof');
+  const skipLighthouse = args.includes('--skip-lighthouse');
   const branchFlag = args.find((arg) => arg.startsWith('--branch='));
   const explicitBranch = branchFlag ? branchFlag.replace('--branch=', '') : undefined;
 
@@ -133,6 +134,16 @@ async function main() {
     log(green('Browser RUM proof passed'));
   } else if (skipRumProof) {
     log(yellow('Skipping browser RUM proof (--skip-rum-proof flag)'));
+  }
+
+  if (!skipLighthouse && isProduction) {
+    logStep(3.3, 'Running Lighthouse budget gate');
+    exec('node ./scripts/check-lighthouse-budgets.mjs', {
+      cwd: process.cwd(),
+    });
+    log(green('Lighthouse budget gate passed'));
+  } else if (skipLighthouse) {
+    log(yellow('Skipping Lighthouse budget gate (--skip-lighthouse flag)'));
   }
 
   logStep(4, 'Fetching Pages project list');
