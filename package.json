@@ -33,6 +33,8 @@
     "qa:accessibility": "node ./scripts/check-accessibility.mjs",
     "report:field": "node ./scripts/check-field-performance.mjs",
     "qa:field": "node ./scripts/check-field-performance.mjs --strict",
+    "report:google-public": "node ./scripts/check-google-public-signals.mjs",
+    "qa:google-public": "node ./scripts/check-google-public-signals.mjs --strict",
     "proof:rum": "node ./scripts/prove-browser-rum.mjs",
     "qa:rum": "node ./scripts/prove-browser-rum.mjs --strict",
     "qa:security": "node ./scripts/check-security-headers.mjs",

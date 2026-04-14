@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { detectCloudflareAuth, runWrangler } from './cloudflare-auth.mjs';
+import { getSecretValue } from './local-secret-store.mjs';
 
 const repoRoot = process.cwd();
 const registryPath = path.join(repoRoot, 'docs', 'autonomous-worker-registry.json');
@@ -36,7 +37,7 @@ function readWranglerName(configPath) {
 }
 
 function buildSecretValue(secretName, options) {
-  const explicit = process.env[secretName];
+  const explicit = getSecretValue(secretName);
   if (explicit) {
     return explicit;
   }

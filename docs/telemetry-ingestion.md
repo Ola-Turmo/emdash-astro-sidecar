@@ -74,6 +74,30 @@ What still needs to be added:
 - stronger release gates tied to the field targets in `docs/world-class-quality-targets.md`
 - a stable sample policy for when `pnpm qa:field` should be considered blocking in CI
 - a stronger operator workflow for collecting enough real `browser_rum` samples before enforcing field gates
+- a full OAuth-based GSC path if you want real query/click/impression data from Google Search Console
+
+## GSC Workaround
+
+Because Search Console Search Analytics requires OAuth rather than a simple API key, the repo now supports a public-signal fallback path instead of blocking all Google-facing quality work on GSC setup.
+
+Use:
+
+```bash
+pnpm report:google-public
+pnpm qa:google-public
+```
+
+This fallback checks:
+
+- `robots.txt`
+- `sitemap.xml`
+- canonical self-consistency
+- no unexpected `noindex`
+- `h1` presence on tracked URLs
+- current first-party RUM summary availability
+- current CrUX history availability
+
+It is not a replacement for real GSC query data, but it gives a usable Google-facing readiness signal without OAuth.
 
 ## Worker Secrets
 
@@ -128,7 +152,7 @@ CrUX summary:
 curl "https://<metrics-worker-url>/crux/summary?siteKey=kurs-ing&conceptKey=guide"
 ```
 
-At the moment, the code path is live but the currently configured `CRUX_API_KEY` returns `API_KEY_INVALID` from Google. The missing work is secret replacement, not the worker or D1 pipeline.
+At the moment, the code path is live, and the replacement `CRUX_API_KEY` plus Bing API key are stored locally and can be resynced to Cloudflare, but the live metrics worker still reports those secrets as missing at runtime. The remaining work is secret visibility/runtime diagnosis on the worker side, not the D1 pipeline.
 
 The browser collector currently posts with `fetch(..., { keepalive: true })` and falls back to `navigator.sendBeacon()` using an `application/json` blob. This avoids the weaker plain-string beacon path and prevents duplicate flushes on `visibilitychange` plus `pagehide`.
 

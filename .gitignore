@@ -16,3 +16,4 @@ dist/
 .wrangler/
 packages/theme-core/theme-output/
 output/
+config/secrets.local.json
