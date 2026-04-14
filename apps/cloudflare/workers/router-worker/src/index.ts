@@ -1,3 +1,5 @@
+import { applySecurityHeaders } from '../../shared/security-headers';
+
 interface Env {
   ROOT_SITE_ORIGIN: string;
 }
@@ -21,7 +23,7 @@ export default {
       redirect: 'manual',
     });
 
-    const headers = new Headers(upstream.headers);
+    const headers = applySecurityHeaders(new Headers(upstream.headers));
     headers.set('x-emdash-root-proxy', 'router-worker');
     headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=0, must-revalidate');
     return new Response(upstream.body, {

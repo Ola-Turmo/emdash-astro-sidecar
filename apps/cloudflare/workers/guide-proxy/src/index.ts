@@ -1,4 +1,5 @@
 import { conceptRobotsTxt, conceptRssXml, conceptSitemapXml } from './generated/seo-artifacts';
+import { applySecurityHeaders } from '../../shared/security-headers';
 
 interface Env {
   GUIDE_ORIGIN: string;
@@ -11,11 +12,7 @@ const LEGACY_GUIDE_PREFIXES = ['/blog', '/category', '/author'];
 const GUIDE_RUM_PATH = `${GUIDE_PREFIX}/__rum`;
 
 function withSecurityHeaders(headers: Headers): Headers {
-  const next = new Headers(headers);
-  next.set('x-robots-tag', 'index, follow');
-  next.set('x-content-type-options', 'nosniff');
-  next.set('referrer-policy', 'strict-origin-when-cross-origin');
-  return next;
+  return applySecurityHeaders(headers);
 }
 
 function toOriginPath(pathname: string): string {
@@ -49,13 +46,12 @@ function buildUpstreamHeaders(request: Request): Headers {
 }
 
 function responseWithBody(body: string, contentType: string): Response {
+  const headers = applySecurityHeaders(new Headers(), { indexable: true });
+  headers.set('content-type', `${contentType}; charset=utf-8`);
+  headers.set('cache-control', 'public, max-age=300');
+
   return new Response(body, {
-    headers: {
-      'content-type': `${contentType}; charset=utf-8`,
-      'cache-control': 'public, max-age=300',
-      'x-content-type-options': 'nosniff',
-      'x-robots-tag': 'index, follow',
-    },
+    headers,
   });
 }
 
@@ -107,12 +103,12 @@ export default {
     if (incomingUrl.pathname.startsWith(`${GUIDE_PREFIX}/preview/`)) {
       return new Response('Not Found', {
         status: 404,
-        headers: {
-          'cache-control': 'public, max-age=300',
-          'content-type': 'text/plain; charset=utf-8',
-          'x-content-type-options': 'nosniff',
-          'x-robots-tag': 'noindex, nofollow',
-        },
+        headers: (() => {
+          const headers = applySecurityHeaders(new Headers(), { indexable: false });
+          headers.set('cache-control', 'public, max-age=300');
+          headers.set('content-type', 'text/plain; charset=utf-8');
+          return headers;
+        })(),
       });
     }
 
@@ -210,15 +206,13 @@ async function proxyRumRequest(request: Request, metricsWorkerUrl: string): Prom
 }
 
 function responseWithEdgeArtifact(html: string, mode: string): Response {
+  const headers = applySecurityHeaders(new Headers(), { indexable: true });
+  headers.set('content-type', 'text/html; charset=utf-8');
+  headers.set('cache-control', 'public, max-age=300');
+  headers.set('x-emdash-edge-fallback', mode);
   return new Response(html, {
     status: 200,
-    headers: {
-      'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'public, max-age=300',
-      'x-content-type-options': 'nosniff',
-      'x-robots-tag': 'index, follow',
-      'x-emdash-edge-fallback': mode,
-    },
+    headers,
   });
 }
 

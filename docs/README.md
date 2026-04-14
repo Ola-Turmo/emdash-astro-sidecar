@@ -26,8 +26,10 @@ Use these docs as the operational runbook for the sidecar.
   Conservative runtime budgets and worker-level limits to avoid overusing Cloudflare services during continuous operation.
 - [provider-runtime.md](./provider-runtime.md)
   Provider runtime, secret contract, routing defaults, and health-check workflow for TheClawBay and MiniMax.
-- [telemetry-ingestion.md](./telemetry-ingestion.md)
-  Search Console, CrUX, Bing, and IndexNow ingestion foundation for the autonomous control plane.
+- [accessibility-review-checklist.md](./accessibility-review-checklist.md)
+  Manual review checklist for flagship pages on top of the automated accessibility gate.
+- [security-checklist.md](./security-checklist.md)
+  Reusable security and ASVS-oriented checklist for the public app and worker surfaces.
 - [TODO.md](./TODO.md)
   Maintained backlog including the latest learning, review, taxonomy, and observability work.
 - [world-class-quality-targets.md](./world-class-quality-targets.md)

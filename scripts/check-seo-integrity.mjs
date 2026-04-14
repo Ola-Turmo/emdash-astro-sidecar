@@ -2,15 +2,27 @@
 
 import path from 'node:path';
 import { readUtf8, walkFiles, failIfFindings } from './lib/repo-utils.mjs';
+import { getConceptOutputDir, resolveActiveSiteRuntime } from '../apps/blog/site-profiles.mjs';
 
 const repoRoot = process.cwd();
 const findings = [];
+const { siteKey, conceptKey, concept } = resolveActiveSiteRuntime(process.env);
+const conceptDistDir = path.join(
+  repoRoot,
+  'apps/blog',
+  getConceptOutputDir(siteKey, conceptKey).replace(/^\.\//, ''),
+);
 
-const rssPath = path.join(repoRoot, 'apps/blog/dist/rss.xml');
-const sitemapPath = path.join(repoRoot, 'apps/blog/dist/sitemap.xml');
-const robotsPath = path.join(repoRoot, 'apps/blog/dist/robots.txt');
-const distDir = path.join(repoRoot, 'apps/blog/dist');
-const artifactsPath = path.join(repoRoot, 'apps/cloudflare/workers/guide-proxy/src/generated/seo-artifacts.ts');
+const rssPath = path.join(conceptDistDir, 'rss.xml');
+const sitemapPath = path.join(conceptDistDir, 'sitemap.xml');
+const robotsPath = path.join(conceptDistDir, 'robots.txt');
+const distDir = conceptDistDir;
+const artifactsPath = path.join(
+  repoRoot,
+  'apps/cloudflare/workers',
+  concept.cloudflare.routeWorkerDirectory,
+  'src/generated/seo-artifacts.ts',
+);
 
 const [rssXml, sitemapXml, robotsTxt, artifactModule, distHtmlFiles] = await Promise.all([
   readUtf8(rssPath),
@@ -21,30 +33,33 @@ const [rssXml, sitemapXml, robotsTxt, artifactModule, distHtmlFiles] = await Pro
 ]);
 
 const rssExpectations = [
-  'Kurs.ing Blogg',
-  'https://www.kurs.ing/guide/',
+  concept.siteName,
+  `${concept.siteUrl}/`,
   '<language>nb-no</language>',
 ];
 
 for (const expected of rssExpectations) {
   if (!rssXml.includes(expected)) {
-    findings.push(`apps/blog/dist/rss.xml is missing expected value: ${expected}`);
+    findings.push(`${path.relative(repoRoot, rssPath)} is missing expected value: ${expected}`);
   }
 }
 
 const bannedRssValues = ['EmDash Blog', 'Thoughtful articles on web development', '<language>en-us</language>'];
 for (const banned of bannedRssValues) {
   if (rssXml.includes(banned)) {
-    findings.push(`apps/blog/dist/rss.xml still contains stale value: ${banned}`);
+    findings.push(`${path.relative(repoRoot, rssPath)} still contains stale value: ${banned}`);
   }
 }
 
 if (sitemapXml.includes('undefined')) {
-  findings.push('apps/blog/dist/sitemap.xml contains undefined paths');
+  findings.push(`${path.relative(repoRoot, sitemapPath)} contains undefined paths`);
 }
 
-if (!sitemapXml.includes('https://www.kurs.ing/guide/category/etablererproven/')) {
-  findings.push('apps/blog/dist/sitemap.xml is missing expected category URLs');
+if (concept.routes.categoryPrefix && concept.routes.categoryPrefix !== '/') {
+  const expectedCategoryUrl = `${concept.siteUrl}${concept.routes.categoryPrefix}/etablererproven/`;
+  if (!sitemapXml.includes(expectedCategoryUrl)) {
+    findings.push(`${path.relative(repoRoot, sitemapPath)} is missing expected category URLs`);
+  }
 }
 
 const bannedSitemapValues = [
@@ -57,12 +72,12 @@ const bannedSitemapValues = [
 
 for (const banned of bannedSitemapValues) {
   if (sitemapXml.includes(banned)) {
-    findings.push(`apps/blog/dist/sitemap.xml still exposes banned public route: ${banned}`);
+    findings.push(`${path.relative(repoRoot, sitemapPath)} still exposes banned public route: ${banned}`);
   }
 }
 
-if (!robotsTxt.includes('Sitemap: https://www.kurs.ing/guide/sitemap.xml')) {
-  findings.push('apps/blog/dist/robots.txt does not point to the guide sitemap');
+if (!robotsTxt.includes(`Sitemap: ${concept.siteUrl}/sitemap.xml`)) {
+  findings.push(`${path.relative(repoRoot, robotsPath)} does not point to the concept sitemap`);
 }
 
 const distRoutes = distHtmlFiles
@@ -85,20 +100,20 @@ const bannedDistRoutes = [
 
 for (const banned of bannedDistRoutes) {
   if (distRoutes.some((route) => route.startsWith(banned))) {
-    findings.push(`apps/blog/dist still contains banned public route: ${banned}`);
+    findings.push(`${path.relative(repoRoot, distDir)} still contains banned public route: ${banned}`);
   }
 }
 
 const artifactChecks = [
-  { names: ['guideRssXml', 'conceptRssXml'], content: rssXml },
-  { names: ['guideSitemapXml', 'conceptSitemapXml'], content: sitemapXml },
-  { names: ['guideRobotsTxt', 'conceptRobotsTxt'], content: robotsTxt },
+  { names: ['conceptRssXml'], content: rssXml },
+  { names: ['conceptSitemapXml'], content: sitemapXml },
+  { names: ['conceptRobotsTxt'], content: robotsTxt },
 ];
 
 for (const { names, content } of artifactChecks) {
   const matched = names.some((name) => artifactModule.includes(`export const ${name} = ${JSON.stringify(content)};`));
   if (!matched) {
-    findings.push(`guide worker SEO artifacts are out of sync for ${names[0]}. Run pnpm sync:guide-seo`);
+    findings.push(`${concept.cloudflare.routeWorkerDirectory} SEO artifacts are out of sync for ${names[0]}. Run pnpm sync:concept-seo`);
   }
 }
 

@@ -107,18 +107,18 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P0: Accessibility
 
-- [ ] Treat `WCAG 2.2 AA` as the standard target for key templates and flows.
-- [ ] Add automated accessibility regression checks for:
+- [x] Treat `WCAG 2.2 AA` as the standard target for key templates and flows.
+- [x] Added automated accessibility regression checks for:
   - contrast
   - alt text
   - form labels
   - keyboard reachability on core surfaces
-- [ ] Add a manual accessibility review checklist for flagship pages and landing pages.
+- [x] Added a manual accessibility review checklist for flagship pages and landing pages.
 - [ ] Surface accessibility trend reporting in dashboards instead of only per-run CLI output.
 
 ## P0: Security And Transport
 
-- [ ] Add an explicit header-quality gate for:
+- [x] Added an explicit header-quality gate for:
   - `HSTS`
   - `CSP`
   - `Referrer-Policy`
@@ -126,7 +126,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - `X-Content-Type-Options`
 - [ ] Tighten CSP toward a reusable strict baseline and document allowed exceptions.
 - [ ] Add passive vulnerability scanning into normal verification or scheduled audits.
-- [ ] Add an `OWASP ASVS`-aligned checklist for the app + worker surfaces that are exposed publicly.
+- [x] Added an `OWASP ASVS`-aligned checklist for the app + worker surfaces that are exposed publicly.
 
 ## P0: Reliability And Operations
 

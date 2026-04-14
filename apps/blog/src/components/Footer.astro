@@ -19,7 +19,7 @@ const currentYear = new Date().getFullYear();
       <h2 class="display-title text-2xl font-bold text-white sm:text-3xl md:text-4xl">
         {SHELL_COPY.footerTitle}
       </h2>
-      <p class="max-w-2xl text-sm leading-6 text-slate-400 sm:leading-7">
+      <p class="max-w-2xl text-sm leading-6 text-slate-300 sm:leading-7">
         {SHELL_COPY.footerDescription}
       </p>
       <div class="flex flex-wrap gap-3">
@@ -39,7 +39,7 @@ const currentYear = new Date().getFullYear();
           {COURSE_LINKS.map((link: (typeof COURSE_LINKS)[number]) => (
             <a href={link.href} class="block transition-colors hover:text-white">
               <span class="block text-sm font-semibold">{link.label}</span>
-              <span class="block text-sm text-slate-500">{link.description}</span>
+              <span class="block text-sm text-slate-300">{link.description}</span>
             </a>
           ))}
         </div>
@@ -58,7 +58,7 @@ const currentYear = new Date().getFullYear();
   </div>
 
   <div class="border-t border-slate-800/80">
-    <div class="mx-auto flex max-w-6xl flex-col gap-3 px-3 py-5 text-sm text-slate-500 sm:px-4 md:flex-row md:items-center md:justify-between">
+    <div class="mx-auto flex max-w-6xl flex-col gap-3 px-3 py-5 text-sm text-slate-300 sm:px-4 md:flex-row md:items-center md:justify-between">
       <p>&copy; {currentYear} {SITE_WORDMARK}. {SHELL_COPY.footerCopyright}</p>
       <p>{SHELL_COPY.footerNote}</p>
     </div>

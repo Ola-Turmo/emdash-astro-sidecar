@@ -1,4 +1,5 @@
 import { conceptRobotsTxt, conceptRssXml, conceptSitemapXml } from './generated/seo-artifacts';
+import { applySecurityHeaders } from '../../shared/security-headers';
 
 interface Env {
   KOMMUNE_ORIGIN: string;
@@ -14,11 +15,7 @@ const ALLOWED_PATHS = new Set(
 );
 
 function withSecurityHeaders(headers: Headers): Headers {
-  const next = new Headers(headers);
-  next.set('x-robots-tag', 'index, follow');
-  next.set('x-content-type-options', 'nosniff');
-  next.set('referrer-policy', 'strict-origin-when-cross-origin');
-  return next;
+  return applySecurityHeaders(headers);
 }
 
 function toOriginPath(pathname: string): string {
@@ -65,13 +62,11 @@ function buildUpstreamHeaders(request: Request): Headers {
 }
 
 function responseWithBody(body: string, contentType: string): Response {
+  const headers = applySecurityHeaders(new Headers(), { indexable: true });
+  headers.set('content-type', `${contentType}; charset=utf-8`);
+  headers.set('cache-control', 'public, max-age=300');
   return new Response(body, {
-    headers: {
-      'content-type': `${contentType}; charset=utf-8`,
-      'cache-control': 'public, max-age=300',
-      'x-content-type-options': 'nosniff',
-      'x-robots-tag': 'index, follow',
-    },
+    headers,
   });
 }
 
@@ -104,12 +99,12 @@ export default {
     ) {
       return new Response('Not found', {
         status: 404,
-        headers: {
-          'content-type': 'text/plain; charset=utf-8',
-          'cache-control': 'no-store',
-          'x-content-type-options': 'nosniff',
-          'x-robots-tag': 'noindex, nofollow',
-        },
+        headers: (() => {
+          const headers = applySecurityHeaders(new Headers(), { indexable: false });
+          headers.set('content-type', 'text/plain; charset=utf-8');
+          headers.set('cache-control', 'no-store');
+          return headers;
+        })(),
       });
     }
 
