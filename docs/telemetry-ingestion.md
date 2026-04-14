@@ -66,7 +66,7 @@ What still needs to be added:
 - URL Inspection or sitemap health follow-up for Google
 - deploy and dashboard gating tied to the field targets in `docs/world-class-quality-targets.md`
 - a stricter operator/CI gate on top of the live browser proof path
-- integration of the strict browser proof gate into the normal deployment/reporting workflow
+- recurring scheduled reporting around the strict browser proof gate between deploys
 - stronger release gates tied to the field targets in `docs/world-class-quality-targets.md`
 - a stable sample policy for when `pnpm qa:field` should be considered blocking in CI
 - a stronger operator workflow for collecting enough real `browser_rum` samples before enforcing field gates
@@ -121,6 +121,8 @@ The route workers now expose same-origin collection endpoints at `/guide/__rum` 
 `pnpm proof:rum -- --concept guide` and `pnpm proof:rum -- --concept kommune` now exercise a real headless browser visit, wait long enough for the in-page collector to flush, and then fetch the live `browser_rum` summary back from the metrics worker.
 
 The metrics worker also exposes `GET /rum/recent` so proof tooling can verify fresh browser rows for a specific `pagePath`, instead of relying only on cumulative percentile summaries.
+
+Production deploys now run the strict browser proof for the active site/concept unless `--skip-rum-proof` is passed to the deploy helper.
 
 Optional IndexNow submission:
 

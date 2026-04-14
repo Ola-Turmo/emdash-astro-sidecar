@@ -75,7 +75,8 @@ Everything else in the current municipality rollout should stay drafted until it
 - [x] Added trustworthy live verification for real browser RUM samples on both `guide` and `kommune`, not just synthetic or manual validation paths.
 - [x] Proved automatic browser-to-`/__rum` collection on live `guide` and `kommune` pages after the inline-client fix.
 - [x] Turned `pnpm proof:rum` into a stricter operator gate that can fail when fresh browser samples do not appear.
-- [ ] Wire `pnpm qa:rum` into recurring operator checks and deployment summaries so fresh browser samples stay continuously verified.
+- [x] Wired browser RUM freshness proof into the production deploy path for the active concept.
+- [ ] Add recurring scheduled/browser-proof reporting outside deploys so fresh browser samples stay continuously verified between releases.
 
 ## P0: Kommune Concept Quality
 

@@ -54,6 +54,7 @@ async function main() {
   const isPreview = args.includes('--preview');
   const skipBuild = args.includes('--skip-build');
   const skipEmdash = args.includes('--skip-emdash');
+  const skipRumProof = args.includes('--skip-rum-proof');
   const branchFlag = args.find((arg) => arg.startsWith('--branch='));
   const explicitBranch = branchFlag ? branchFlag.replace('--branch=', '') : undefined;
 
@@ -122,6 +123,16 @@ async function main() {
     logStep(3.1, 'Running live root routing guard');
     exec('pnpm qa:root-routing -- --live', { cwd: process.cwd() });
     log(green('Root routing guard passed'));
+  }
+
+  if (!skipRumProof && isProduction) {
+    logStep(3.2, 'Running live browser RUM proof');
+    exec(`node ./scripts/prove-browser-rum.mjs --strict --site ${site.key} --concept ${concept.key}`, {
+      cwd: process.cwd(),
+    });
+    log(green('Browser RUM proof passed'));
+  } else if (skipRumProof) {
+    log(yellow('Skipping browser RUM proof (--skip-rum-proof flag)'));
   }
 
   logStep(4, 'Fetching Pages project list');
