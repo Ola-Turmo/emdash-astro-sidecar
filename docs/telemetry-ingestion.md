@@ -53,6 +53,7 @@ What it does now:
 - feed field summaries into the Cloudflare observability UI
 - support reusable local reporting through `pnpm report:field`
 - support a strict field gate entrypoint through `pnpm qa:field`
+- support a reusable browser proof path through `pnpm proof:rum`
 - distinguish `browser_rum` from synthetic or manual verification samples
 
 What still needs to be added:
@@ -63,7 +64,7 @@ What still needs to be added:
 - dashboards and alerting
 - URL Inspection or sitemap health follow-up for Google
 - deploy and dashboard gating tied to the field targets in `docs/world-class-quality-targets.md`
-- trustworthy live proof paths for automatic browser beacons on every concept surface
+- a stricter operator/CI gate on top of the live browser proof path
 - stronger release gates tied to the field targets in `docs/world-class-quality-targets.md`
 - a stable sample policy for when `pnpm qa:field` should be considered blocking in CI
 - a stronger operator workflow for collecting enough real `browser_rum` samples before enforcing field gates
@@ -114,6 +115,8 @@ The browser collector currently posts with `fetch(..., { keepalive: true })` and
 The summary endpoint now accepts `sampleSource`, and the field report defaults to `browser_rum` so synthetic/manual test inserts do not silently count as production field quality.
 
 The route workers now expose same-origin collection endpoints at `/guide/__rum` and `/kommune/__rum`, and forward those to the metrics worker. That removes the long-term dependency on cross-origin unload behavior for browser-side collection.
+
+`pnpm proof:rum -- --concept guide` and `pnpm proof:rum -- --concept kommune` now exercise a real headless browser visit, wait long enough for the in-page collector to flush, and then fetch the live `browser_rum` summary back from the metrics worker.
 
 Optional IndexNow submission:
 

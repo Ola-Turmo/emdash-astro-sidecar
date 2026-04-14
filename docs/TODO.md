@@ -72,8 +72,9 @@ Everything else in the current municipality rollout should stay drafted until it
   - crawl/index state
   - publish quality state
   - conversion/funnel signals
-- [ ] Add trustworthy live verification for real browser RUM samples on both `guide` and `kommune`, not just synthetic or manual validation paths.
-- [ ] Prove automatic browser-to-`/__rum` collection on live `guide` and `kommune` pages after the inline-client fix. The separate asset-delivery failure is removed, but a normal browser session still needs explicit end-to-end proof in D1.
+- [x] Added trustworthy live verification for real browser RUM samples on both `guide` and `kommune`, not just synthetic or manual validation paths.
+- [x] Proved automatic browser-to-`/__rum` collection on live `guide` and `kommune` pages after the inline-client fix.
+- [ ] Turn `pnpm proof:rum` into a stricter operator gate that checks for fresh browser samples on flagship URLs and fails when summaries stay empty.
 
 ## P0: Kommune Concept Quality
 
@@ -231,3 +232,4 @@ These are not blockers for generic platform work, but they are needed for specif
 - [x] Added multisite and multi-concept separation.
 - [x] Added live first-party RUM ingestion with percentile summaries, device splits, page-type splits, and top-page rollups.
 - [x] Removed the separate `rum-client.js` dependency by embedding the browser collector directly in generated HTML.
+- [x] Added a reusable Playwright-based browser proof for first-party RUM on both `guide` and `kommune`.

@@ -29,6 +29,7 @@
     "qa:mobile": "node ./scripts/check-mobile-layout.mjs",
     "report:field": "node ./scripts/check-field-performance.mjs",
     "qa:field": "node ./scripts/check-field-performance.mjs --strict",
+    "proof:rum": "node ./scripts/prove-browser-rum.mjs",
     "qa:cloudflare": "node ./scripts/check-cloudflare-guardrails.mjs",
     "qa:root-routing": "node ./scripts/check-root-routing.mjs",
     "qa:config": "node ./scripts/check-host-config.mjs",
