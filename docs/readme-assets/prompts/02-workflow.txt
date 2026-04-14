@@ -1,8 +1,8 @@
-Create an image for a GitHub README workflow section.
-Audience: developers who need to understand how the project works at a glance.
-Subject: a three-stage visual pipeline that starts with host-site analysis, moves through design-cloning and content shaping, and ends with Cloudflare deployment under a mounted path.
-Composition: wide 16:9 frame, three connected panels flowing from left to right, each panel represented by elegant product cards and browser windows rather than text labels, subtle arrows or motion cues connecting them, enough empty space that the composition feels premium.
-Style: refined technical illustration, product design system aesthetic, soft white backgrounds with deep teal and slate accents, minimal but high-end.
-Lighting/Camera: orthographic or near-orthographic product shot, gentle shadows, bright neutral lighting.
-Constraints: no people, no watermark, no giant unreadable UI text, no clutter, no terminal wall of text, no purple, no cheap infographic look.
-Output: 16:9 README image that visually communicates analyze -> clone -> write -> deploy.
+Create an image for a GitHub README workflow section that explains the product visually at a glance.
+Audience: developers and operators evaluating whether this repo can onboard a site, generate content, and ship it safely.
+Subject: a clear left-to-right operational pipeline with three premium product scenes: discovery, shaping, and live deployment, communicated only through objects, panels, cards, and arrows, not through readable words.
+Composition: wide 16:9 frame, three visually distinct but connected stages, browser windows and clean UI cards with abstract placeholder bars only, subtle arrows and motion bridges, visible shift from discovery to build to live verification, generous whitespace and strong rhythm.
+Style: premium technical illustration, software launch visual, abstract product panels, deep teal and slate with off-white surfaces, calm gradient atmosphere, no loud infographic treatment.
+Lighting/Camera: near-orthographic camera, bright neutral product lighting, soft layered shadows.
+Constraints: absolutely no readable text, no letters, no numbers, no labels, no people, no watermark, no fake code paragraphs, no clutter, no purple, no cartoon style. Use purely visual symbolism and abstract UI blocks.
+Output: 16:9 workflow image that communicates analyze -> shape -> deploy -> verify.

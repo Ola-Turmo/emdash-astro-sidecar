@@ -1,8 +1,8 @@
-Create an image for a GitHub README quality and deploy-audit section.
-Audience: developers who care about live verification, screenshots, feeds, route correctness, and launch quality.
-Subject: a composed audit desk showing a live article page, a mobile screenshot, a sitemap or RSS card, and clean performance or quality gauges, all arranged like a trustworthy release-review board.
-Composition: wide 16:9 frame, layered board or dashboard layout, one large article screenshot area, one smaller mobile phone mockup, one panel for XML or routing checks, one panel for quality scores, all balanced and visually calm.
-Style: premium product illustration with realistic UI panels, editorial color palette, technical but approachable, no exaggerated cyber aesthetics.
-Lighting/Camera: top-down angled product shot with soft daylight and gentle shadows.
-Constraints: no people, no watermark, no dense readable paragraphs, no fake brand names unrelated to the repo, no purple, keep the scene credible for a README.
-Output: 16:9 README image that communicates deploy, screenshot, audit, and verify on live URLs.
+Create an image for a GitHub README quality and telemetry section that makes the system feel trustworthy and production-safe.
+Audience: operators and developers who care about shipping live content with evidence, not guesswork.
+Subject: a premium release-review board showing content preview surfaces, a municipality-style page, a mobile device preview, clean metric tiles, route and telemetry indicators, and audit panels, all arranged as one coherent launch validation workspace.
+Composition: wide 16:9 frame, elegant control-plane board layout, one dominant content screen, one smaller phone, several structured metric cards around it, use abstract bars, icons, gauges, and blocks only, subtle hierarchy that suggests screenshots, telemetry, and release gates all working together.
+Style: realistic product illustration, modern operations dashboard aesthetic, refined editorial software feel, deep teal, slate, muted sand, soft white, no cyberpunk, no gaudy neon.
+Lighting/Camera: top-down angled product shot with clear edges, soft daylight, gentle reflections, controlled shadows.
+Constraints: absolutely no readable text, no letters, no numbers, no people, no watermark, no noisy fake metrics, no purple, no random unrelated brand cues. All panels must use abstract layout elements, glyphs, bars, and icon shapes instead of wording.
+Output: 16:9 README image that communicates verify, monitor, and ship with confidence.

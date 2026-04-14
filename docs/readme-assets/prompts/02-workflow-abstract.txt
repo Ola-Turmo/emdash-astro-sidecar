@@ -1,0 +1,8 @@
+﻿Create an abstract product illustration for a GitHub README workflow section.
+Audience: developers and operators evaluating a system that analyzes a site, shapes content, and deploys safely.
+Subject: three floating modules connected left to right, representing discovery, shaping, and live verification, but shown only through abstract browser frames, cards, arrows, charts, blocks, and icon-like geometry.
+Composition: wide 16:9 frame, three balanced clusters with strong visual progression from left to right, clear movement cues, no labels, no UI copy, lots of whitespace, elegant hierarchy.
+Style: premium technical illustration, modern SaaS launch art direction, deep teal, slate, warm sand accents, off-white surfaces, crisp edges, calm atmosphere.
+Lighting/Camera: near-orthographic camera, bright neutral studio lighting, soft layered shadows.
+Constraints: absolutely no readable text, no letters, no numbers, no words, no logos, no people, no code, no dashboards with labels. Use only abstract bars, shapes, arrows, charts, and blank cards.
+Output: 16:9 workflow image that communicates analyze, shape, deploy, verify through pure visual structure.

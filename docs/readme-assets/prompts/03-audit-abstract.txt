@@ -1,0 +1,8 @@
+﻿Create an abstract product illustration for a GitHub README audit and telemetry section.
+Audience: operators and developers who want confidence that a content system is safe to ship.
+Subject: an elegant release review board made from abstract panels, cards, a mobile device, browser frames, line charts, gauges, route diagrams, and signal tiles arranged around one main content preview.
+Composition: wide 16:9 frame, one central device cluster, surrounding metric cards and route diagrams, visual feeling of monitoring and verification, but without any text or labels.
+Style: premium product marketing illustration, refined operations aesthetic, deep teal, slate, soft white, muted sand, calm and trustworthy.
+Lighting/Camera: top-down angled product shot, clear geometry, gentle reflections, controlled shadows.
+Constraints: absolutely no readable text, no letters, no numbers, no logos, no people, no watermark, no fake tables with words. Use only abstract UI bars, charts, icons, and neutral blocks.
+Output: 16:9 audit image that communicates monitor, validate, and ship with confidence.

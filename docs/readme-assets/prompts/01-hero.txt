@@ -1,8 +1,8 @@
-Create an image for a GitHub README hero section.
-Audience: developers, operators, and founders evaluating an Astro sidecar that adds a knowledge layer to an existing site.
-Subject: one polished desktop workspace showing an existing commercial site on the left and a matching mounted guide or blog on the right, clearly related in visual style but serving different jobs.
-Composition: wide 16:9 frame, cinematic product-marketing composition, one large screen in front view, a subtle split between host site and /guide content, soft abstract depth elements around the screen, strong focal point in the center.
-Style: premium editorial SaaS illustration, realistic UI mockup blended with refined 3D shapes, Scandinavian restraint, clean typography rhythm, crisp edges, modern product-shot feel.
-Lighting/Camera: soft studio daylight, front-facing, gentle reflections, high clarity.
-Constraints: no people, no watermark, no code editor, no purple palette, no dense readable UI text, no fake dashboard numbers, keep the interface believable and calm.
-Output: 16:9 repository hero image that communicates "mount a blog sidecar onto an existing site without rebuilding the main product site."
+Create an image for a GitHub README hero section that sells a production-ready search sidecar for existing websites.
+Audience: technical founders, operators, growth teams, and developers who want more organic traffic and better explainers without rebuilding their revenue pages.
+Subject: a polished premium product scene where an established commercial website surface and a matching editorial content surface coexist as part of one system, optimized for conversion on one side and search education on the other.
+Composition: wide 16:9 frame, hero-style product marketing layout, one dominant large monitor centered in frame, left half visually suggests a conversion-focused homepage, right half visually suggests an editorial guide hub, use blocks, cards, image placeholders, charts, and navigation rails but keep all content abstract and unreadable, subtle connective visual thread between the two halves, refined depth objects and ambient interface cards around the hero, strong focal hierarchy.
+Style: premium SaaS campaign image, abstract product UI language, modern Nordic editorial direction, deep teal, slate, off-white, restrained warm accent, no purple bias, crisp geometry, high-end software launch aesthetic.
+Lighting/Camera: front-facing studio setup, clean daylight, soft shadows, glass-and-metal reflections, sharp but calm.
+Constraints: absolutely no readable text, no letters, no numbers, no logos, no people, no code editor, no terminal wall, no noisy dashboard clutter, no fake analytics numbers, no watermark, no generic AI slop. All interface areas must use simple abstract bars, neutral blocks, and icon-like shapes only.
+Output: 16:9 hero image that communicates "grow search traffic and knowledge content on top of an existing site without replacing the site."

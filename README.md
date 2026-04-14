@@ -1,29 +1,35 @@
 # EmDash Astro Sidecar
 
-Add a search-ready Astro guide or blog to an existing site without rebuilding the main product experience.
+Launch a search-growth layer on top of your existing site without rebuilding the pages that already make money.
 
-`emdash-astro-sidecar` is built for teams that want to:
+`emdash-astro-sidecar` is for teams that want to:
 
-- keep the host site's landing pages and checkout in place
-- publish reader-first articles, explainers, and GEO/SEO content under a mounted path like `/guide`
-- match the host site's visual language instead of dropping in a generic blog
-- deploy on Cloudflare Pages and verify the live result with screenshots, feeds, route checks, and local Lighthouse reports
+- keep the real landing pages, checkout, and core product flows exactly where they are
+- add high-quality guides, explainers, local pages, and GEO/SEO content under paths like `/guide` or `/kommune`
+- make that content look like part of the real brand, not like a bolted-on blog
+- ship with hard proof: routing, screenshots, performance, accessibility, security, feeds, and telemetry
 
 <p align="center">
   <img src="docs/readme-assets/hero.png" alt="EmDash Astro Sidecar hero illustration showing a host site and a mounted guide with a matching visual system." width="960" />
 </p>
 
-## Why Use It
+## What Problem It Solves
 
-Most content stacks force a full site rebuild, a disconnected subdomain, or a blog that looks like it belongs to another company.
+Most content systems ask you to choose one of three bad options:
 
-This repo solves the more practical job:
+1. rebuild the whole site around the blog
+2. publish on a disconnected subdomain
+3. accept a generic content layer that weakens trust and conversion
 
-1. analyze the existing host site
-2. clone the brand and layout signals
-3. publish clear support content for real readers
-4. mount the sidecar under the host path
-5. verify the deployed URLs instead of guessing
+This repo solves the more commercially useful problem:
+
+1. keep the existing site intact
+2. add a mounted search/content surface beside it
+3. match the brand and UX closely
+4. publish content that can rank, explain, and convert
+5. verify the live output like an operator, not like a copywriter
+
+The result is a sidecar content system that can drive organic growth without forcing a risky site migration.
 
 ## What You Get
 
@@ -33,10 +39,23 @@ This repo solves the more practical job:
   The host-site analysis pipeline that extracts theme signals and generates reusable output.
 - `apps/cloudflare/workers/guide-proxy`
   The route worker that mounts the Pages deployment under a host path such as `/guide`.
+- `apps/cloudflare/workers/metrics-worker`
+  The telemetry surface for first-party field metrics, credentialless public-signal reporting, and Cloudflare-native edge traffic summaries.
 - `scripts/audit-deployed-urls.mjs`
   The live deploy audit that captures screenshots, metadata, redirect chains, and Lighthouse category scores.
 - `packages/skills`
   Repo-local rollout and quality skills for future site onboardings.
+
+## Why It Sells
+
+This setup is valuable when the main site already has commercial intent and you do not want a content project to destabilize it.
+
+Use it when you need to:
+
+- grow non-brand traffic without touching checkout or onboarding
+- publish educational content that answers pre-sale questions
+- add local or regulated-information sections like `/kommune`
+- keep search content operationally measurable instead of “blog-shaped and unverified”
 
 ## How It Works
 
@@ -44,17 +63,17 @@ This repo solves the more practical job:
   <img src="docs/readme-assets/workflow.png" alt="Workflow illustration showing host-site analysis, design cloning and content shaping, then Cloudflare deployment under a mounted path." width="960" />
 </p>
 
-### 1. Analyze The Host Site
+### 1. Analyze The Existing Site
 
-Run the design-clone workflow against the production site you want to support. The analyzer fetches the page, follows linked stylesheets, and extracts usable design signals for colors, spacing, typography, borders, and layout.
+Run the design-clone workflow against the production site you want to support. The analyzer fetches the page, follows stylesheets, and extracts usable brand signals for layout, spacing, color, borders, and typography.
 
-### 2. Shape The Sidecar Around The Host
+### 2. Shape A Mounted Content Surface
 
-Update the host profile in [`apps/blog/src/site-config.ts`](apps/blog/src/site-config.ts), replace demo content with real articles, and keep the reader-facing copy plain and specific. The sidecar should sound like part of the host product, not like an internal SEO experiment.
+Configure the site and concept profile, then publish content that is specific, useful, and commercially aligned. The sidecar should help users move from questions to trust to action.
 
-### 3. Mount It On Cloudflare
+### 3. Deploy Under A Controlled Path
 
-Build the Astro app, deploy it to Pages, and mount it with the guide worker so the live URLs resolve under the host path you choose. The current repo includes a production-grade `kurs.ing` rollout as a working example.
+Build to Cloudflare Pages and mount through route workers so the content resolves cleanly under the chosen path. The repo already supports multiple sites and multiple concepts per site.
 
 ## Ship With Proof
 
@@ -62,7 +81,9 @@ Build the Astro app, deploy it to Pages, and mount it with the guide worker so t
   <img src="docs/readme-assets/audit.png" alt="Deploy audit illustration showing live article screenshots, routing and feed checks, and local Lighthouse score panels." width="960" />
 </p>
 
-The deploy audit is meant to answer the question that usually gets skipped: "What are the live URLs actually serving right now?"
+The deploy and telemetry stack is meant to answer the question most content projects never answer clearly:
+
+`What is live right now, how good is it, and what signals are we actually getting back from the real web?`
 
 It checks:
 
@@ -71,6 +92,9 @@ It checks:
 - redirect chains on legacy paths
 - RSS, sitemap, and robots correctness
 - local Lighthouse category scores with raw JSON artifacts, without depending on Google PSI rate limits
+- first-party RUM for real users
+- Cloudflare-native referrer and landing-page telemetry
+- public Google-facing telemetry fallbacks when GSC/Bing auth is unavailable
 
 Commands:
 
@@ -90,7 +114,7 @@ pnpm audit:deployed
 pnpm audit:deployed:lighthouse
 ```
 
-Then edit:
+Then configure:
 
 - [`apps/blog/src/site-config.ts`](apps/blog/src/site-config.ts)
 - [`apps/blog/site-profiles.mjs`](apps/blog/site-profiles.mjs)
@@ -99,9 +123,9 @@ Then edit:
 
 ## Release Standard
 
-Do not treat the sidecar as ready just because the local build passed.
+Do not ship because the app “builds.”
 
-Use this baseline:
+Ship because the live system clears the full quality bar:
 
 ```bash
 pnpm verify
@@ -119,6 +143,29 @@ That workflow gives you:
 - copy-quality and host-config gates
 - live screenshots and URL analytics
 - local Lighthouse artifacts for deployed pages
+- accessibility and security gates
+- credentialless public telemetry fallbacks
+
+## Telemetry Without Provider Lock-In
+
+The repo now supports a practical autopilot telemetry baseline even when you do not have:
+
+- GSC OAuth
+- Bing site authorization
+- public CrUX data for the site yet
+
+That means you can still run:
+
+- first-party RUM
+- public Google readiness checks
+- Cloudflare-native referrer and landing-page telemetry
+- best-effort search-query capture from search referrers
+- public PageSpeed reporting
+
+Read:
+
+- [`docs/credentialless-telemetry-strategy.md`](docs/credentialless-telemetry-strategy.md)
+- [`docs/telemetry-ingestion.md`](docs/telemetry-ingestion.md)
 
 ## Read Next
 
@@ -151,11 +198,11 @@ For repeatable future rollouts, start from:
 
 ## Kommune Content
 
-The repo can now generate kommune concept pages from the structured municipality dataset in `Ola-Turmo/kommune.no.apimcp.site`.
+The repo also supports a second mounted concept for municipality-specific pages.
 
-The kommune generator now also enriches those pages with summaries from official municipality URLs when available, plus municipality-specific checklists and direct guide handoffs into the main `kurs.ing/guide` concept.
+That matters when you need local or regulated information architecture that should not be mixed into the main guide/blog structure.
 
-The starter rollout now covers a broader municipality set, not just a few examples, so the legal/municipality source can drive a substantial `kommune` section from the same pipeline.
+The current `kurs.ing/kommune` concept is driven from the structured municipality dataset in `Ola-Turmo/kommune.no.apimcp.site`, then filtered through stricter quality gates so weak municipality pages fail closed instead of shipping.
 
 Run:
 
