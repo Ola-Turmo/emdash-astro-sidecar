@@ -53,6 +53,14 @@ type RecentRumRow = {
   device_class: string | null;
   collected_at: string;
 };
+type CruxIngestPayload = {
+  siteKey?: string;
+  conceptKey?: string;
+  siteUrl?: string;
+  urls?: string[];
+  formFactors?: CruxFormFactor[];
+};
+type CruxFormFactor = 'PHONE' | 'DESKTOP' | 'TABLET' | 'ALL_FORM_FACTORS';
 
 const FIELD_TARGETS: Record<RumMetricName, { good: number; poor: number; unit: string }> = {
   LCP: { good: 2500, poor: 4000, unit: 'ms' },
@@ -100,6 +108,15 @@ export default {
       return jsonWithCors(request, await listRecentRumRows(env, siteKey, conceptKey, sampleSource, pagePath, limit));
     }
 
+    if (request.method === 'GET' && url.pathname === '/crux/summary') {
+      const siteKey = url.searchParams.get('siteKey');
+      const conceptKey = url.searchParams.get('conceptKey');
+      if (!siteKey || !conceptKey) {
+        return jsonWithCors(request, { ok: false, error: 'siteKey and conceptKey are required' }, 400);
+      }
+      return jsonWithCors(request, await buildCruxSummary(env, siteKey, conceptKey));
+    }
+
     if (request.method === 'POST' && url.pathname === '/rum') {
       const payload = (await request.json().catch(() => ({}))) as RumPayload;
       const validationError = validateRumPayload(payload);
@@ -108,6 +125,15 @@ export default {
       }
       await ingestRum(env, payload as Required<RumPayload>);
       return jsonWithCors(request, { ok: true });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/crux/ingest') {
+      const payload = (await request.json().catch(() => ({}))) as CruxIngestPayload;
+      const validationError = validateCruxPayload(payload);
+      if (validationError) {
+        return jsonWithCors(request, { ok: false, error: validationError }, 400);
+      }
+      return jsonWithCors(request, await ingestCruxSnapshots(env, payload as Required<CruxIngestPayload>));
     }
 
     if (request.method !== 'POST') {
@@ -369,6 +395,183 @@ async function listRecentRumRows(
     pagePath,
     limit,
     rows: rows.results,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+async function ingestCruxSnapshots(
+  env: Env,
+  payload: Required<CruxIngestPayload>,
+): Promise<Record<string, unknown>> {
+  await ensureCruxSamplesTable(env.AUTONOMOUS_DB);
+  if (!env.CRUX_API_KEY) {
+    return { ok: false, error: 'missing CRUX_API_KEY' };
+  }
+
+  const client = new CruxApiClient(env.CRUX_API_KEY);
+  const origin = new URL(payload.siteUrl).origin;
+  const targetUrls = [...new Set([payload.siteUrl, ...(payload.urls || [])])];
+  const formFactors: CruxFormFactor[] = payload.formFactors?.length
+    ? payload.formFactors
+    : ['PHONE', 'DESKTOP', 'ALL_FORM_FACTORS'];
+
+  const results: Array<Record<string, unknown>> = [];
+  for (const formFactor of formFactors) {
+    results.push(
+      await storeCruxSample(env, client, {
+        siteKey: payload.siteKey,
+        conceptKey: payload.conceptKey,
+        targetKind: 'origin',
+        targetValue: origin,
+        formFactor,
+    request: { origin, formFactor },
+      }),
+    );
+
+    for (const targetUrl of targetUrls) {
+      results.push(
+        await storeCruxSample(env, client, {
+          siteKey: payload.siteKey,
+          conceptKey: payload.conceptKey,
+          targetKind: 'url',
+          targetValue: targetUrl,
+          formFactor,
+          request: { url: targetUrl, formFactor },
+        }),
+      );
+    }
+  }
+
+  return {
+    ok: true,
+    siteKey: payload.siteKey,
+    conceptKey: payload.conceptKey,
+    origin,
+    targetUrlCount: targetUrls.length,
+    formFactors,
+    results,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+async function storeCruxSample(
+  env: Env,
+  client: CruxApiClient,
+  input: {
+    siteKey: string;
+    conceptKey: string;
+    targetKind: 'origin' | 'url';
+    targetValue: string;
+    formFactor: 'PHONE' | 'DESKTOP' | 'TABLET' | 'ALL_FORM_FACTORS';
+    request: { origin?: string; url?: string; formFactor: CruxFormFactor };
+  },
+): Promise<Record<string, unknown>> {
+  try {
+    const response = await client.queryRecord(input.request);
+    const metrics = extractCruxMetrics(response as Record<string, unknown>);
+    const collectedAt = new Date().toISOString();
+
+    await env.AUTONOMOUS_DB.prepare(
+      `
+        INSERT INTO metrics_crux_samples (
+          id, site_key, concept_key, target_kind, target_value, form_factor, collected_at,
+          lcp_p75, inp_p75, cls_p75, raw_json
+        )
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+      `,
+    )
+      .bind(
+        crypto.randomUUID(),
+        input.siteKey,
+        input.conceptKey,
+        input.targetKind,
+        input.targetValue,
+        input.formFactor,
+        collectedAt,
+        metrics.lcpP75,
+        metrics.inpP75,
+        metrics.clsP75,
+        JSON.stringify(response),
+      )
+      .run();
+
+    return {
+      targetKind: input.targetKind,
+      targetValue: input.targetValue,
+      formFactor: input.formFactor,
+      status: 'ingested',
+      metrics,
+    };
+  } catch (error) {
+    return {
+      targetKind: input.targetKind,
+      targetValue: input.targetValue,
+      formFactor: input.formFactor,
+      status: 'failed',
+      error: toMessage(error),
+    };
+  }
+}
+
+async function buildCruxSummary(env: Env, siteKey: string, conceptKey: string): Promise<Record<string, unknown>> {
+  await ensureCruxSamplesTable(env.AUTONOMOUS_DB);
+  const rows = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT target_kind, target_value, form_factor, collected_at, lcp_p75, inp_p75, cls_p75
+        FROM metrics_crux_samples
+        WHERE site_key = ?1
+          AND concept_key = ?2
+        ORDER BY collected_at DESC
+        LIMIT 200
+      `,
+    )
+    .bind(siteKey, conceptKey)
+    .all<{
+      target_kind: 'origin' | 'url';
+      target_value: string;
+      form_factor: string;
+      collected_at: string;
+      lcp_p75: number | null;
+      inp_p75: number | null;
+      cls_p75: number | null;
+    }>();
+
+  const latestByTarget = new Map<string, Record<string, unknown>>();
+  const trends: Array<Record<string, unknown>> = [];
+  for (const row of rows.results) {
+    const key = `${row.target_kind}:${row.target_value}:${row.form_factor}`;
+    if (!latestByTarget.has(key)) {
+      latestByTarget.set(key, {
+        targetKind: row.target_kind,
+        targetValue: row.target_value,
+        formFactor: row.form_factor,
+        collectedAt: row.collected_at,
+        lcpP75: row.lcp_p75,
+        inpP75: row.inp_p75,
+        clsP75: row.cls_p75,
+      });
+    }
+
+    if (row.target_kind === 'url') {
+      trends.push({
+        targetValue: row.target_value,
+        formFactor: row.form_factor,
+        collectedAt: row.collected_at,
+        lcpP75: row.lcp_p75,
+        inpP75: row.inp_p75,
+        clsP75: row.cls_p75,
+      });
+    }
+  }
+
+  return {
+    ok: true,
+    siteKey,
+    conceptKey,
+    latest: [...latestByTarget.values()],
+    recentUrlTrend: trends.slice(0, 30),
+    sampleCount: rows.results.length,
     generatedAt: new Date().toISOString(),
   };
 }
@@ -642,6 +845,46 @@ async function ensureIndexNowTable(db: D1Database): Promise<void> {
     .run();
 }
 
+async function ensureCruxSamplesTable(db: D1Database): Promise<void> {
+  await db
+    .prepare(
+      `
+        CREATE TABLE IF NOT EXISTS metrics_crux_samples (
+          id TEXT PRIMARY KEY,
+          site_key TEXT NOT NULL,
+          concept_key TEXT NOT NULL,
+          target_kind TEXT NOT NULL,
+          target_value TEXT NOT NULL,
+          form_factor TEXT NOT NULL,
+          collected_at TEXT NOT NULL,
+          lcp_p75 REAL,
+          inp_p75 REAL,
+          cls_p75 REAL,
+          raw_json TEXT NOT NULL
+        )
+      `,
+    )
+    .run();
+
+  await db
+    .prepare(
+      `
+        CREATE INDEX IF NOT EXISTS idx_metrics_crux_samples_scope_time
+        ON metrics_crux_samples(site_key, concept_key, collected_at DESC)
+      `,
+    )
+    .run();
+
+  await db
+    .prepare(
+      `
+        CREATE INDEX IF NOT EXISTS idx_metrics_crux_samples_target
+        ON metrics_crux_samples(site_key, concept_key, target_kind, target_value, form_factor, collected_at DESC)
+      `,
+    )
+    .run();
+}
+
 async function ensureRumTable(db: D1Database): Promise<void> {
   await db
     .prepare(
@@ -692,6 +935,28 @@ function validateRumPayload(payload: RumPayload): string | null {
     }
     if (!Number.isFinite(metric.value) || metric.value <= 0) {
       return `Invalid value for ${metric.name}`;
+    }
+  }
+
+  return null;
+}
+
+function validateCruxPayload(payload: CruxIngestPayload): string | null {
+  if (!payload.siteKey || !payload.conceptKey || !payload.siteUrl) {
+    return 'siteKey, conceptKey, and siteUrl are required';
+  }
+
+  try {
+    new URL(payload.siteUrl);
+  } catch {
+    return 'siteUrl must be a valid absolute URL';
+  }
+
+  for (const targetUrl of payload.urls ?? []) {
+    try {
+      new URL(targetUrl);
+    } catch {
+      return `Invalid CrUX url target: ${targetUrl}`;
     }
   }
 

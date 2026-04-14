@@ -16,6 +16,7 @@ const siteProfiles = {
     },
     telemetry: {
       rumEndpoint: 'https://emdash-metrics-worker.ola-turmo.workers.dev/rum',
+      metricsWorkerUrl: 'https://emdash-metrics-worker.ola-turmo.workers.dev',
     },
     rootRouting: {
       rootOrigin: 'https://new.kurs.ing',
@@ -220,6 +221,7 @@ const siteProfiles = {
     },
     telemetry: {
       rumEndpoint: '',
+      metricsWorkerUrl: 'https://emdash-metrics-worker.ola-turmo.workers.dev',
     },
     rootRouting: {
       rootOrigin: 'https://www.gatareba.ge',

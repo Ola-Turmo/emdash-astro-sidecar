@@ -24,6 +24,7 @@
     "cloudflare:sync-secrets": "node ./scripts/sync-cloudflare-worker-secrets.mjs",
     "materialize:publications": "node ./scripts/materialize-publications.mjs",
     "providers:health": "node ./scripts/provider-healthcheck.mjs",
+    "telemetry:crux": "node ./scripts/ingest-crux.mjs",
     "qa:copy": "node ./scripts/check-copy-quality.mjs",
     "qa:municipality": "node ./scripts/check-municipality-content.mjs",
     "qa:encoding": "node ./scripts/check-text-encoding.mjs",

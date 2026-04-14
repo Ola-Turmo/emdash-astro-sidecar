@@ -63,7 +63,8 @@ Everything else in the current municipality rollout should stay drafted until it
 ## P0: Telemetry And Feedback Loop
 
 - [ ] Finish live Google Search Console activation and ingestion.
-- [ ] Finish live CrUX ingestion using the available API key and store trend history.
+- [x] Added a reusable CrUX ingestion path for the active site/concept (`pnpm telemetry:crux`) plus persistent D1 history in `metrics_crux_samples`.
+- [ ] Replace the invalid live `CRUX_API_KEY` secret so the new CrUX ingestion path can store real data instead of `API_KEY_INVALID` failures.
 - [ ] Finish Bing Webmaster ingestion.
 - [ ] Finish IndexNow submission plus outcome tracking.
 - [ ] Tie telemetry to automatic refresh candidates:

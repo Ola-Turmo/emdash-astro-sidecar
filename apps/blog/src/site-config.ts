@@ -19,6 +19,7 @@ type RuntimeShape = {
     };
     telemetry?: {
       rumEndpoint?: string;
+      metricsWorkerUrl?: string;
     };
     courseLinks: Array<{
       path: string;
@@ -125,6 +126,7 @@ export const DEPLOY_AUDIT_EXTRA_URLS = ACTIVE_CONCEPT.audit.extraUrls;
 export const LIGHTHOUSE_AUDIT_RUNS = ACTIVE_CONCEPT.audit.lighthouse?.runs ?? 1;
 export const LIGHTHOUSE_AUDIT_WARMUP_RUNS = ACTIVE_CONCEPT.audit.lighthouse?.warmupRuns ?? 0;
 export const RUM_ENDPOINT = conceptPath('/__rum');
+export const METRICS_WORKER_URL = ACTIVE_SITE.telemetry?.metricsWorkerUrl ?? '';
 
 export const PRIMARY_CTA = ACTIVE_CONCEPT.callsToAction.primary;
 export const SECONDARY_CTA = ACTIVE_CONCEPT.callsToAction.secondary;

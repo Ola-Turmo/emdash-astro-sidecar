@@ -16,6 +16,8 @@ The autonomous control plane now has a first telemetry-ingestion foundation inst
   D1 tables for `metrics_gsc`, `metrics_crux`, `metrics_bing`, and `indexnow_submissions`.
 - [apps/cloudflare/d1/migrations/0011_rum_metrics.sql](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\cloudflare\d1\migrations\0011_rum_metrics.sql)
   D1 table for first-party `metrics_rum`.
+- [apps/cloudflare/d1/migrations/0013_crux_history.sql](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\cloudflare\d1\migrations\0013_crux_history.sql)
+  D1 history table for concept-scoped CrUX snapshots.
 - [apps/blog/src/layouts/BaseLayout.astro](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\blog\src\layouts\BaseLayout.astro)
   Injects the first-party RUM bootstrap config into every generated page.
 - [apps/blog/src/scripts/rum-client.inline.js](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\apps\blog\src\scripts\rum-client.inline.js)
@@ -41,6 +43,7 @@ What it does now:
 
 - fetch data for a single host
 - store raw telemetry payloads in D1
+- ingest concept-scoped CrUX snapshots for the active site/concept plus flagship URLs
 - support optional IndexNow submissions for a set of URLs
 - expose a host summary endpoint through `metrics-worker` at `GET /summary?hostId=<host-id>`
 - feed those summaries into the Cloudflare observability dashboard in `content-api`
@@ -53,6 +56,7 @@ What it does now:
 - feed field summaries into the Cloudflare observability UI
 - support reusable local reporting through `pnpm report:field`
 - support a strict field gate entrypoint through `pnpm qa:field`
+- support reusable CrUX ingestion through `pnpm telemetry:crux`
 - support a reusable browser proof path through `pnpm proof:rum`
 - support a strict browser proof gate through `pnpm qa:rum`
 - distinguish `browser_rum` from synthetic or manual verification samples
@@ -111,6 +115,20 @@ RUM summary:
 ```bash
 curl "https://<metrics-worker-url>/rum/summary?siteKey=kurs-ing&conceptKey=guide"
 ```
+
+CrUX ingest:
+
+```bash
+pnpm telemetry:crux
+```
+
+CrUX summary:
+
+```bash
+curl "https://<metrics-worker-url>/crux/summary?siteKey=kurs-ing&conceptKey=guide"
+```
+
+At the moment, the code path is live but the currently configured `CRUX_API_KEY` returns `API_KEY_INVALID` from Google. The missing work is secret replacement, not the worker or D1 pipeline.
 
 The browser collector currently posts with `fetch(..., { keepalive: true })` and falls back to `navigator.sendBeacon()` using an `application/json` blob. This avoids the weaker plain-string beacon path and prevents duplicate flushes on `visibilitychange` plus `pagehide`.
 
