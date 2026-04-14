@@ -27,6 +27,7 @@
     "qa:municipality": "node ./scripts/check-municipality-content.mjs",
     "qa:encoding": "node ./scripts/check-text-encoding.mjs",
     "qa:mobile": "node ./scripts/check-mobile-layout.mjs",
+    "qa:lighthouse": "node ./scripts/check-lighthouse-budgets.mjs",
     "report:field": "node ./scripts/check-field-performance.mjs",
     "qa:field": "node ./scripts/check-field-performance.mjs --strict",
     "proof:rum": "node ./scripts/prove-browser-rum.mjs",

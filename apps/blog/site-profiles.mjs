@@ -63,7 +63,7 @@ const siteProfiles = {
         },
         audit: {
           sitemapUrls: ['https://www.kurs.ing/guide/sitemap.xml'],
-          extraUrls: ['https://www.kurs.ing/blog/salgsbevilling-pensum-og-vanlige-feil/'],
+          extraUrls: ['https://www.kurs.ing/guide/blog/salgsbevilling-pensum-og-vanlige-feil/'],
         },
         nav: [
           { path: '/', label: 'Artikler' },

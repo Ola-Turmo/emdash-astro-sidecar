@@ -50,6 +50,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - `SEO >= 90`
   - `Best Practices >= 90`
   - `TBT < 200ms`
+- [x] Added a reusable Lighthouse budget gate entrypoint (`pnpm qa:lighthouse`) for the active concept's flagship URLs.
 - [ ] Add a world-class `flagship` target tier for key landing pages and highest-value articles:
   - `Performance >= 95`
   - tighter LCP target toward `~1.2-1.5s` on hero pages

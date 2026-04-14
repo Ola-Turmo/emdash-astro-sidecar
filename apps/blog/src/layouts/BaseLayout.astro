@@ -9,6 +9,7 @@ import {
   ACTIVE_SITE_KEY,
   BLOG_BASE_PATH,
   RUM_ENDPOINT,
+  blogPath,
   SITE_DESCRIPTION,
   SITE_LANGUAGE,
   SITE_LOCALE,
@@ -95,9 +96,8 @@ const rumConfigScript = JSON.stringify({
     {pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
     {author && <meta property="article:author" content={author} />}
     <title>{fullTitle}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="preload" href={blogPath('/fonts/manrope.woff2')} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={blogPath('/fonts/playfair-display.woff2')} as="font" type="font/woff2" crossorigin />
     <script is:inline type="application/ld+json" set:html={organizationSchema} />
     <script is:inline type="application/ld+json" set:html={websiteSchema} />
   </head>
