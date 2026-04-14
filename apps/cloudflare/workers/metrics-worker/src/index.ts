@@ -504,6 +504,16 @@ async function storeCruxSample(
       metrics,
     };
   } catch (error) {
+    if (isCruxNoDataError(error)) {
+      return {
+        targetKind: input.targetKind,
+        targetValue: input.targetValue,
+        formFactor: input.formFactor,
+        status: 'skipped',
+        reason: 'crux_no_data',
+      };
+    }
+
     return {
       targetKind: input.targetKind,
       targetValue: input.targetValue,
@@ -673,6 +683,9 @@ async function ingestCrux(
       detail: { hasRecord: Boolean(response.record) },
     };
   } catch (error) {
+    if (isCruxNoDataError(error)) {
+      return { source: 'crux', status: 'skipped', detail: { reason: 'crux_no_data' } };
+    }
     return { source: 'crux', status: 'failed', detail: { error: toMessage(error) } };
   }
 }
@@ -693,11 +706,38 @@ async function ingestBing(
 
   try {
     const client = new BingWebmasterClient(apiKey);
-    const response = await client.getQueryStats({
-      siteUrl: host.site_url,
-      startDate: metricDate,
-      endDate: metricDate,
-    });
+    const siteUrlVariants = buildBingSiteUrlVariants(host.site_url);
+    let response: Record<string, unknown> | null = null;
+    const attempted: Array<{ siteUrl: string; outcome: string }> = [];
+
+    for (const siteUrl of siteUrlVariants) {
+      try {
+        response = await client.getQueryStats({
+          siteUrl,
+          startDate: metricDate,
+          endDate: metricDate,
+        });
+        attempted.push({ siteUrl, outcome: 'ok' });
+        break;
+      } catch (error) {
+        const message = toMessage(error);
+        attempted.push({ siteUrl, outcome: message });
+        if (!isBingNotAuthorizedError(error)) {
+          throw error;
+        }
+      }
+    }
+
+    if (!response) {
+      return {
+        source: 'bing',
+        status: 'skipped',
+        detail: {
+          reason: 'bing_not_authorized',
+          attempted,
+        },
+      };
+    }
 
     const summary = summarizeBingResponse(response);
     await env.AUTONOMOUS_DB.prepare(
@@ -1122,4 +1162,29 @@ function truncateValue(value: string, maxLength: number): string {
 function clampLimit(value: number): number {
   if (!Number.isFinite(value)) return 20;
   return Math.max(1, Math.min(50, Math.round(value)));
+}
+
+function isCruxNoDataError(error: unknown): boolean {
+  const message = toMessage(error).toLowerCase();
+  return message.includes('chrome ux report data not found') || message.includes('"status": "not_found"');
+}
+
+function isBingNotAuthorizedError(error: unknown): boolean {
+  const message = toMessage(error).toLowerCase();
+  return message.includes('notauthorized') || message.includes('errorcode":14');
+}
+
+function buildBingSiteUrlVariants(siteUrl: string): string[] {
+  try {
+    const url = new URL(siteUrl);
+    const host = url.hostname.replace(/^www\./i, '');
+    return [...new Set([
+      `https://www.${host}`,
+      `https://${host}`,
+      `http://www.${host}`,
+      `http://${host}`,
+    ])];
+  } catch {
+    return [siteUrl];
+  }
 }
