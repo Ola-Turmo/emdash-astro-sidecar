@@ -84,6 +84,7 @@ The current implementation already captures:
 - top referrer types
 - top referrer hosts
 - top landing pages from search
+- best-effort search queries from referrer URLs when engines expose them
 - crawler-vs-browser request split
 - path/status distributions
 
@@ -118,6 +119,19 @@ These are not search-console data, but they cover the things that most often bre
 - accessibility
 - headers
 - canonical integrity
+
+### 6. Public PageSpeed API
+
+Use:
+
+- `pnpm report:pagespeed-public`
+
+This works without a Search Console login and gives:
+
+- public Lighthouse category results from Google's API surface
+- field-data presence when Google has public data for the URL or origin
+
+It is still not a replacement for Search Console query data, but it is useful as a public Google-facing quality signal.
 
 ## What Still Requires Provider Authorization
 

@@ -72,6 +72,12 @@ type EdgeTrafficRow = {
   status_code: number;
   request_count: number;
 };
+type EdgeSearchQueryRow = {
+  query_term: string;
+  search_engine: string;
+  request_count: number;
+  path: string;
+};
 
 const FIELD_TARGETS: Record<RumMetricName, { good: number; poor: number; unit: string }> = {
   LCP: { good: 2500, poor: 4000, unit: 'ms' },
@@ -632,6 +638,21 @@ async function buildEdgeTrafficSummary(env: Env, siteKey: string, conceptKey: st
     (row) => row.path,
     12,
   );
+  const queryRows = await env.AUTONOMOUS_DB
+    .prepare(
+      `
+        SELECT query_term, search_engine, path, SUM(request_count) AS request_count
+        FROM metrics_edge_search_queries_hourly
+        WHERE site_key = ?1
+          AND concept_key = ?2
+          AND request_date >= date('now', '-7 day')
+        GROUP BY query_term, search_engine, path
+        ORDER BY request_count DESC
+        LIMIT 20
+      `,
+    )
+    .bind(siteKey, conceptKey)
+    .all<EdgeSearchQueryRow>();
   const crawlerPaths = topBy(
     rows.results.filter((row) => row.ua_type === 'crawler'),
     (row) => row.path,
@@ -649,6 +670,12 @@ async function buildEdgeTrafficSummary(env: Env, siteKey: string, conceptKey: st
     topReferrers,
     topPaths,
     topOrganicLandingPages,
+    topSearchQueries: queryRows.results.map((row) => ({
+      query: row.query_term,
+      engine: row.search_engine,
+      path: row.path,
+      count: Number(row.request_count),
+    })),
     crawlerPaths,
     topStatusCodes,
     generatedAt: new Date().toISOString(),

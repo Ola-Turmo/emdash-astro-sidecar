@@ -52,6 +52,33 @@ export async function logEdgeRequestTelemetry(
       input.statusCode,
     )
     .run();
+
+  const searchQuery = extractSearchQuery(input.request.headers.get('referer'));
+  if (referrer.type === 'search' && searchQuery?.query) {
+    await ensureEdgeSearchQueryTable(env.AUTONOMOUS_DB);
+    await env.AUTONOMOUS_DB.prepare(
+      `
+        INSERT INTO metrics_edge_search_queries_hourly (
+          site_key, concept_key, request_date, request_hour, path, search_engine, query_term, request_count
+        )
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 1)
+        ON CONFLICT (
+          site_key, concept_key, request_date, request_hour, path, search_engine, query_term
+        )
+        DO UPDATE SET request_count = request_count + 1
+      `,
+    )
+      .bind(
+        input.siteKey,
+        input.conceptKey,
+        requestDate,
+        requestHour,
+        normalizePath(url.pathname),
+        searchQuery.engine,
+        searchQuery.query,
+      )
+      .run();
+  }
 }
 
 function shouldLogRequest(request: Request): boolean {
@@ -194,4 +221,63 @@ async function ensureEdgeMetricsTable(db: D1Database): Promise<void> {
       `,
     )
     .run();
+}
+
+async function ensureEdgeSearchQueryTable(db: D1Database): Promise<void> {
+  await db
+    .prepare(
+      `
+        CREATE TABLE IF NOT EXISTS metrics_edge_search_queries_hourly (
+          site_key TEXT NOT NULL,
+          concept_key TEXT NOT NULL,
+          request_date TEXT NOT NULL,
+          request_hour TEXT NOT NULL,
+          path TEXT NOT NULL,
+          search_engine TEXT NOT NULL,
+          query_term TEXT NOT NULL,
+          request_count INTEGER NOT NULL DEFAULT 0,
+          PRIMARY KEY (
+            site_key,
+            concept_key,
+            request_date,
+            request_hour,
+            path,
+            search_engine,
+            query_term
+          )
+        )
+      `,
+    )
+    .run();
+}
+
+function extractSearchQuery(referrerValue: string | null): { engine: string; query: string } | null {
+  if (!referrerValue) return null;
+  try {
+    const referrerUrl = new URL(referrerValue);
+    const host = referrerUrl.hostname.toLowerCase();
+    const queryParamNames = ['q', 'query', 'p', 'text'];
+    const query = queryParamNames
+      .map((name) => referrerUrl.searchParams.get(name)?.trim() || '')
+      .find(Boolean);
+    if (!query) return null;
+
+    const engine =
+      host.includes('google.') ? 'google'
+      : host.includes('bing.com') ? 'bing'
+      : host.includes('duckduckgo.com') ? 'duckduckgo'
+      : host.includes('search.yahoo.com') ? 'yahoo'
+      : host.includes('search.brave.com') ? 'brave'
+      : host.includes('perplexity.ai') ? 'perplexity'
+      : host.includes('chatgpt.com') ? 'chatgpt'
+      : host;
+
+    return { engine, query: normalizeQuery(query) };
+  } catch {
+    return null;
+  }
+}
+
+function normalizeQuery(value: string): string {
+  return value.replace(/\s+/g, ' ').trim().slice(0, 160);
 }
