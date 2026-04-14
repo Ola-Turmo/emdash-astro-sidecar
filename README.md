@@ -133,6 +133,7 @@ That workflow gives you:
 - [`docs/quality-gates.md`](docs/quality-gates.md)
 - [`docs/accessibility-review-checklist.md`](docs/accessibility-review-checklist.md)
 - [`docs/security-checklist.md`](docs/security-checklist.md)
+- [`docs/credentialless-telemetry-strategy.md`](docs/credentialless-telemetry-strategy.md)
 - [`docs/multisite-and-multi-concept.md`](docs/multisite-and-multi-concept.md)
 - [`docs/municipality-content-quality.md`](docs/municipality-content-quality.md)
 - [`docs/TODO.md`](docs/TODO.md)

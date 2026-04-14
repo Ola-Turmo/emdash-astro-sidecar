@@ -30,6 +30,8 @@ Use these docs as the operational runbook for the sidecar.
   Manual review checklist for flagship pages on top of the automated accessibility gate.
 - [security-checklist.md](./security-checklist.md)
   Reusable security and ASVS-oriented checklist for the public app and worker surfaces.
+- [credentialless-telemetry-strategy.md](./credentialless-telemetry-strategy.md)
+  Default telemetry strategy for autopilot operation without GSC OAuth or Bing site authorization.
 - [TODO.md](./TODO.md)
   Maintained backlog including the latest learning, review, taxonomy, and observability work.
 - [world-class-quality-targets.md](./world-class-quality-targets.md)
