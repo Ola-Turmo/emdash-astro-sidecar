@@ -18,14 +18,15 @@ for (const filePath of files) {
   const frontmatter = frontmatterMatch?.[1] ?? '';
 
   const municipality = capture(frontmatter, /^municipality:\s*"(.+)"$/m) ?? path.basename(filePath, '.mdx');
-  const title = capture(frontmatter, /^title:\s*"(.+)"$/m) ?? municipality;
+  const normalizedMunicipality = normalizeText(municipality);
+  const title = normalizeText(capture(frontmatter, /^title:\s*"(.+)"$/m) ?? municipality);
   const qualityScore = Number(capture(frontmatter, /^  score:\s*([0-9]+)$/m) || '0');
   const publishable = capture(frontmatter, /^  publishable:\s*(true|false)$/m) === 'true';
   const draft = capture(frontmatter, /^draft:\s*(true|false)$/m) === 'true';
   const reasons = extractReasons(frontmatter, draft, publishable);
 
   entries.push({
-    municipality,
+    municipality: normalizedMunicipality,
     title,
     qualityScore,
     publishable,
@@ -88,9 +89,34 @@ function capture(source, regex) {
 
 function extractReasons(frontmatter, draft, publishable) {
   const match = frontmatter.match(/^  reasons:\r?\n([\s\S]*?)(?:\r?\n[a-zA-Z]|$)/m);
-  const reasons = match ? [...match[1].matchAll(/^\s*-\s*"(.+)"$/gm)].map((value) => value[1].trim()) : [];
+  const reasons = match ? [...match[1].matchAll(/^\s*-\s*"(.+)"$/gm)].map((value) => normalizeText(value[1].trim())) : [];
   if (draft && publishable) {
     return ['DRAFTED_OUTSIDE_CURATED_PUBLISH_SET'];
   }
   return reasons;
+}
+
+function normalizeText(value) {
+  let normalized = String(value ?? '');
+  for (let index = 0; index < 2; index += 1) {
+    if (!/[ÃƒÃ‚]/.test(normalized)) break;
+    const repaired = Buffer.from(normalized, 'latin1').toString('utf8');
+    if (countMarkers(repaired) > countMarkers(normalized)) break;
+    normalized = repaired;
+  }
+  return normalized
+    .replace(/â€“/g, '-')
+    .replace(/aapaingstider/gi, 'åpningstider')
+    .replace(/aapaingstid/gi, 'åpningstid')
+    .replace(/aapent/gi, 'åpent')
+    .replace(/aapen/gi, 'åpen')
+    .replace(/saerskilt/gi, 'særskilt')
+    .replace(/soeke/gi, 'søke')
+    .replace(/loesning/gi, 'løsning')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function countMarkers(value) {
+  return [...String(value || '')].filter((character) => character === 'Ãƒ' || character === 'Ã‚').length;
 }

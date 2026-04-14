@@ -16,6 +16,7 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 - [x] Weak kommune pages now fail closed instead of staying published.
 - [x] Kommune quality reporting exists.
 - [x] Kommune hero-image workflow exists for the currently published municipality set.
+- [x] All 10 currently published municipality pages now have text-free municipality-specific hero images plus derivative assets.
 - [x] Kommune landing cards now use dedicated thumbnail derivatives instead of loading full hero assets in the listing grid.
 - [x] Kommune publishing is now driven by a curated municipality set with structured editorial takeaways and practical steps instead of the old generic 30-page generator.
 - [x] First-party RUM exists for field CWV ingestion, `p50/p75/p95/p99` summaries, device splits, page-type splits, and top-page rollups.
@@ -110,7 +111,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - local exceptions or seasonal distinctions
   - consumption-stop rules and enforcement nuances
 - [ ] Make `Kort oppsummert` more decision-useful and less repetitive across all 10 published pages.
-- [ ] Add hero images for the rest of the curated municipality set where they improve trust and visual balance without hurting performance.
+- [x] Added hero images for the full current curated municipality set without regressing the kommune gate.
 - [ ] Add a cache-purge or explicit invalidation path for kommune slugs that are drafted out, so stale live 200s disappear without relying on query-string cache busting.
 - [ ] Add a municipality-specific release gate that blocks publishing if:
   - source cards are too generic

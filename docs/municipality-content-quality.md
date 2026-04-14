@@ -167,6 +167,7 @@ Allowed:
 - municipality-specific hero images with a calm editorial look
 - coastal, urban, inland, or fjord context that fits the municipality
 - visual negative space that works with the page layout
+- one reusable prompt file per published municipality so visual work can be regenerated intentionally instead of improvised
 
 Not allowed:
 
