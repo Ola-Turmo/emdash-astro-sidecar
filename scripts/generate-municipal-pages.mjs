@@ -478,7 +478,16 @@ function classifyMunicipalLink(value, fallbackLabel = 'Salg, servering og skjenk
 
 function classifyMunicipalLinkKind(value, fallbackKind = 'general') {
   try {
-    const source = `${String(value).toLowerCase()} ${String(fallbackKind).toLowerCase()}`;
+    const rawUrl = String(value).toLowerCase();
+    const source = `${rawUrl} ${String(fallbackKind).toLowerCase()}`;
+    const pathname = new URL(rawUrl).pathname;
+    if (/\/salgsbevilling(\/|$)/.test(pathname)) return 'sales';
+    if (/\/skjenkebevilling/.test(pathname)) return 'serving';
+    if (/\/serveringsbevilling/.test(pathname)) return 'servering';
+    if (/\/alkohol-servering-og-tobakk\/?$/.test(pathname)) return 'serviceHub';
+    if (/\/soke-om-bevillinger\/?$|\/soke-om-eller-endre-bevillinger\/?$|\/søke-om-bevillinger\/?$|\/søke-om-eller-endre-bevillinger\/?$/.test(pathname)) return 'application';
+    if (/\/regelverk-for-salgs-og-skjenkesteder\/?$|\/regler-for-salg-og-skjenking\/?$|\/kontroll-og-prikktildeling\/?$/.test(pathname)) return 'rules';
+    if (/\/omsetningsoppgave\/?$/.test(pathname)) return 'controls';
     if (/handlingsplan|alkoholpolitisk|plan|retningslinje|skjenketider/.test(source)) return 'plan';
     if (/soke-bevilling|søke-bevilling|gjore-endringer|gjøre-endringer/.test(source)) return 'application';
     if (/regler-for|lokale-regler|skjenketider/.test(source)) return 'rules';

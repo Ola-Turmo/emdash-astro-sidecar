@@ -9,6 +9,7 @@ import {
   PRIMARY_CTA,
   SECONDARY_CTA,
   SHELL_COPY,
+  SITE_URL,
   blogPath,
 } from '../consts';
 import { deriveMunicipalityView } from '../lib/municipality-view';
@@ -55,9 +56,10 @@ const {
 } = page.data;
 const municipalityView = deriveMunicipalityView(page.data);
 const heroImageSrc = heroImage?.src ? blogPath(heroImage.src.replace(/\.png$/i, '.webp')) : null;
+const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
 ---
 
-<BaseLayout title={title} description={description} pubDate={pubDate}>
+<BaseLayout title={title} description={description} pubDate={pubDate} ogImage={ogImage}>
   <Header />
 
   <main class="mx-auto max-w-6xl px-3 py-8 sm:px-4 md:py-14">
