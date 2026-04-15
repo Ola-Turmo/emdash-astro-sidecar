@@ -70,7 +70,7 @@ function isHtmlPagePath(pathname: string): boolean {
 function responseWithBody(body: string, contentType: string): Response {
   const headers = applySecurityHeaders(new Headers(), { indexable: true });
   headers.set('content-type', `${contentType}; charset=utf-8`);
-  headers.set('cache-control', 'public, max-age=300');
+  headers.set('cache-control', 'no-store');
   return new Response(body, {
     headers,
   });

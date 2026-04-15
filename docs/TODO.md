@@ -16,7 +16,7 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 - [x] Weak kommune pages now fail closed instead of staying published.
 - [x] Kommune quality reporting exists.
 - [x] Kommune hero-image workflow exists for the currently published municipality set.
-- [x] All 10 currently published municipality pages now have text-free municipality-specific hero images plus derivative assets.
+- [x] The current evidence-backed published municipality set has text-free municipality-specific hero images plus derivative assets.
 - [x] Kommune landing cards now use dedicated thumbnail derivatives instead of loading full hero assets in the listing grid.
 - [x] Kommune publishing is now driven by a curated municipality set with structured editorial takeaways and practical steps instead of the old generic 30-page generator.
 - [x] First-party RUM exists for field CWV ingestion, `p50/p75/p95/p99` summaries, device splits, page-type splits, and top-page rollups.
@@ -27,17 +27,9 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 ## Current Published Kommune Set
 
 - [x] `Arendal`
-- [x] `Bergen`
 - [x] `Bjerkreim`
-- [x] `Bremanger`
-- [x] `Farsund`
-- [x] `Halden`
-- [x] `Lillehammer`
-- [x] `Narvik`
-- [x] `Nord-Aurdal`
-- [x] `Trysil`
 
-Everything else in the current municipality rollout should stay drafted until it clears the quality threshold.
+Everything else in the current municipality rollout should stay drafted until it clears the evidence gate and quality threshold.
 
 ## P0: Measurable World-Class Baseline
 
@@ -101,9 +93,9 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P0: Kommune Concept Quality
 
-- [x] Raised `/kommune` from 4 weakly mixed pages to a curated 10-page published set with municipality-specific takeaways and practical next steps.
-- [x] Legacy published municipalities outside the curated set are now drafted out automatically by the municipality generator.
-- [x] The `/kommune` nav and audit URLs now point to the current curated municipality set instead of stale municipalities.
+- [x] `/kommune` now fails closed on an evidence basis and only keeps municipalities that still have verified source coverage.
+- [x] Legacy or previously published municipalities outside the current evidence-backed set are drafted out automatically by the municipality generator.
+- [ ] The `/kommune` nav and audit URLs should be updated to reflect the current evidence-backed set instead of the earlier 10-page rollout.
 - [x] Added a Bergen-specific hero image to stabilize the last major Lighthouse outlier in the current `/kommune` audit set.
 - [ ] Extract more concrete local signals from municipality sources:
   - application flow differences
@@ -117,6 +109,7 @@ Everything else in the current municipality rollout should stay drafted until it
 - [x] Kommune link classification now prioritizes arrangement, kontroll, prøver and other specific local paths before generic skjenking/service-hub buckets.
 - [x] Added hero images for the full current curated municipality set without regressing the kommune gate.
 - [x] Kommune HTML responses now force upstream revalidation plus `no-store` on the proxy layer to reduce stale page deploys.
+- [x] Added a separate municipality evidence gate that validates published links against real page content and blocks inferred rules from being published as confirmed facts.
 - [ ] Add a cache-purge or explicit invalidation path for kommune slugs that are drafted out, so stale live 200s disappear without relying on query-string cache busting.
 - [ ] Add a municipality-specific release gate that blocks publishing if:
   - source cards are too generic

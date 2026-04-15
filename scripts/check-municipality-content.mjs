@@ -87,7 +87,7 @@ for (const filePath of files) {
   if (!draft && (!publishable || qualityScore < 8)) {
     findings.push(`${relative} is published without clearing the municipality quality threshold`);
   }
-  if (officialSourceCount < 2) {
+  if (!draft && officialSourceCount < 2) {
     findings.push(`${relative} must include at least 2 officialSources`);
   }
   if (!draft && editorialTakeawayCount < 3) {
@@ -102,19 +102,22 @@ for (const filePath of files) {
   if (!draft && /^her ser du hva /i.test(editorialLead)) {
     findings.push(`${relative} uses a generic editorialLead pattern and needs a stronger opening`);
   }
-  if (serviceLinkCount + regulationLinkCount + bylawLinkCount < 2 && !frontmatter.includes('alcoholPolicyPlanUrl:')) {
+  if (!draft && openingRuleCount === 0 && /åpent til|åpningstid for serveringssted|serveringsstedet kan holde åpent|serveringssteder kan holde åpent/i.test(source)) {
+    findings.push(`${relative} mentions unsupported opening-time claims without a confirmed openingHoursRules source`);
+  }
+  if (!draft && serviceLinkCount + regulationLinkCount + bylawLinkCount < 2 && !frontmatter.includes('alcoholPolicyPlanUrl:')) {
     findings.push(`${relative} must include at least 2 municipality-specific links or a plan URL`);
   }
-  if (checklistCount < 4) {
+  if (!draft && checklistCount < 4) {
     findings.push(`${relative} must include at least 4 localChecklist items`);
   }
-  if (relatedGuideCount < 3) {
+  if (!draft && relatedGuideCount < 3) {
     findings.push(`${relative} must include at least 3 relatedGuideLinks`);
   }
-  if (servingRuleCount + openingRuleCount < 1) {
+  if (!draft && servingRuleCount + openingRuleCount < 1) {
     findings.push(`${relative} must include at least 1 local time rule`);
   }
-  if (bodyWordCount < 40) {
+  if (!draft && bodyWordCount < 40) {
     findings.push(`${relative} body is too short for a kommune page (${bodyWordCount} words)`);
   }
 
@@ -140,10 +143,6 @@ for (const filePath of files) {
       findings.push(`${relative} contains internal or placeholder wording "${banned}"`);
     }
   }
-}
-
-if (publishedCount < 10) {
-  findings.push(`At least 10 municipality pages must be published; found ${publishedCount}`);
 }
 
 for (let index = 0; index < entries.length; index += 1) {

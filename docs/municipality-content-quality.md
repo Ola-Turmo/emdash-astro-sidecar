@@ -15,6 +15,12 @@ It is a local decision-support page built from:
 
 If those elements are missing, the page should not ship.
 
+Published municipality pages must also pass an evidence gate:
+
+- no inferred opening or serving facts presented as confirmed local rules
+- no municipality links that only return a fake 200 page with missing-page content
+- no municipality links whose page content does not actually match the expected topic
+
 ## What A Good Municipality Page Must Do
 
 Every municipality page should:
