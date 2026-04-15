@@ -113,6 +113,7 @@ Everything else in the current municipality rollout should stay drafted until it
 - [ ] Make `Kort oppsummert` more decision-useful and less repetitive across all 10 published pages.
 - [x] Replaced the old generic municipality title/description/lead pattern with a stricter end-user-focused generator and gate.
 - [x] `Kort oppsummert` now prioritizes operator decisions like øl og vin, brennevin, åpningstid, søknad, kontroll and innsyn instead of echoing raw timeline rows.
+- [x] Added a derived `Driftsprofil` summary signal so the sidebar surfaces whether the municipality is oriented around sen nattdrift, strammere spritgrense, arrangementsløp, ute/inne split, or explicit kontrollspor.
 - [x] Kommune link classification now prioritizes arrangement, kontroll, prøver and other specific local paths before generic skjenking/service-hub buckets.
 - [x] Added hero images for the full current curated municipality set without regressing the kommune gate.
 - [x] Kommune HTML responses now force upstream revalidation plus `no-store` on the proxy layer to reduce stale page deploys.

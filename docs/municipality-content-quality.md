@@ -191,6 +191,7 @@ Good direction:
 - labels that name the action or source plainly
 - interpretation that helps the reader decide what to open first
 - summary boxes that help the reader decide:
+  - what type of local operating profile they are dealing with
   - how late øl og vin can be served
   - how late brennevin can be served
   - when the venue itself must close

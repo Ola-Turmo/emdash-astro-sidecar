@@ -479,6 +479,10 @@ function buildSummaryRows(
   salesNote: string,
 ) {
   const rows: Array<{ label: string; value: string }> = [];
+  const operatingProfile = deriveOperatingProfile(timeline, curatedLinks);
+  if (operatingProfile) {
+    rows.push({ label: 'Driftsprofil', value: operatingProfile });
+  }
   const primaryServing = timeline.find((entry) => entry.kind === 'serving' && /gruppe 1, 2/i.test(entry.label))
     || timeline.find((entry) => entry.kind === 'serving' && entry.startTime && entry.endTime);
   const spiritServing = timeline.find((entry) => entry.kind === 'serving' && /gruppe 3/i.test(entry.label));
@@ -518,6 +522,42 @@ function mapSummaryLabel(label: string) {
   if (/gruppe 1, 2/i.test(label)) return 'Øl og vin';
   if (/gruppe 3/i.test(label)) return 'Brennevin';
   return capitalize(label);
+}
+
+function deriveOperatingProfile(
+  timeline: MunicipalityTimelineEntry[],
+  curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>,
+) {
+  const descriptors: string[] = [];
+  const wineBeer = timeline.find((entry) => entry.kind === 'serving' && /gruppe 1, 2/i.test(entry.label));
+  const spirits = timeline.find((entry) => entry.kind === 'serving' && /gruppe 3/i.test(entry.label));
+  const opening = timeline.find((entry) => entry.kind === 'opening' && /serveringssted/i.test(entry.label))
+    || timeline.find((entry) => entry.kind === 'opening');
+  const outdoor = timeline.find((entry) => /ute/i.test(entry.label) || /ute/i.test(entry.note));
+
+  if (opening && toTimeMinutes(opening.endTime) >= toTimeMinutes('03:00')) {
+    descriptors.push('Sen nattdrift');
+  } else if (opening && toTimeMinutes(opening.endTime) > -1 && toTimeMinutes(opening.endTime) <= toTimeMinutes('02:00')) {
+    descriptors.push('Tidligere stenging');
+  }
+
+  if (wineBeer && spirits && wineBeer.endTime && spirits.endTime && wineBeer.endTime !== spirits.endTime) {
+    descriptors.push('Strammere spritgrense');
+  }
+
+  if (outdoor) {
+    descriptors.push('Skiller ute og inne');
+  }
+
+  if (curatedLinks.some((entry) => entry.kind === 'singleEvent')) {
+    descriptors.push('Har arrangementsløp');
+  }
+
+  if (curatedLinks.some((entry) => entry.kind === 'controls')) {
+    descriptors.push('Egen kontrollside');
+  }
+
+  return uniqueValues(descriptors).slice(0, 2).join(' · ');
 }
 
 function normalizeLeadSentence(value: string) {
