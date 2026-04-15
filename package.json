@@ -26,7 +26,7 @@
     "providers:health": "node ./scripts/provider-healthcheck.mjs",
     "telemetry:crux": "node ./scripts/ingest-crux.mjs",
     "qa:copy": "node ./scripts/check-copy-quality.mjs",
-    "qa:municipality": "node ./scripts/check-municipality-content.mjs && node ./scripts/check-municipality-evidence.mjs",
+    "qa:municipality": "node ./scripts/check-municipality-content.mjs && node ./scripts/check-municipality-evidence.mjs && node ./scripts/check-municipality-rendered-truth.mjs",
     "qa:encoding": "node ./scripts/check-text-encoding.mjs",
     "qa:mobile": "node ./scripts/check-mobile-layout.mjs",
     "qa:lighthouse": "node ./scripts/check-lighthouse-budgets.mjs",

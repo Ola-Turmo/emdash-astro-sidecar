@@ -20,6 +20,7 @@ Published municipality pages must also pass an evidence gate:
 - no inferred opening or serving facts presented as confirmed local rules
 - no municipality links that only return a fake 200 page with missing-page content
 - no municipality links whose page content does not actually match the expected topic
+- no rendered municipality HTML that reintroduces unsupported facts even if the source file looked correct
 
 ## What A Good Municipality Page Must Do
 
