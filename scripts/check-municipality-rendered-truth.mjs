@@ -27,13 +27,16 @@ for (const filePath of files) {
   const openingRuleCount = countYamlArrayItems(frontmatter, 'openingHoursRules');
   const alcoholPolicyPlanUrl = capture(frontmatter, /^alcoholPolicyPlanUrl:\s*"(.+)"$/m);
   const summaryRows = extractDefinitionTerms(html);
+  const hasRenderedOpeningTimeline =
+    /<p[^>]*>\s*Åpning\s*<\/p>/i.test(html) ||
+    /åpningstid:\s|utvidet åpningstid/i.test(plain);
 
-  if (openingRuleCount === 0 && /åpningstid|utvidet åpningstid|serveringssted/i.test(plain)) {
+  if (openingRuleCount === 0 && hasRenderedOpeningTimeline) {
     findings.push(`${path.relative(repoRoot, htmlPath)} renders opening-time claims without confirmed openingHoursRules`);
   }
 
-  if (!alcoholPolicyPlanUrl && /alkoholpolitisk plan/i.test(plain)) {
-    findings.push(`${path.relative(repoRoot, htmlPath)} still renders an alcohol policy plan reference without a verified plan URL`);
+  if (!alcoholPolicyPlanUrl && /alkoholpolitisk|handlingsplan/i.test(plain)) {
+    findings.push(`${path.relative(repoRoot, htmlPath)} still renders a plan or handlingsplan reference without a verified plan URL`);
   }
 
   if (summaryRows.includes('Åpningstid') && openingRuleCount === 0) {

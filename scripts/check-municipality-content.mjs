@@ -105,6 +105,9 @@ for (const filePath of files) {
   if (!draft && openingRuleCount === 0 && /åpent til|åpningstid for serveringssted|serveringsstedet kan holde åpent|serveringssteder kan holde åpent/i.test(source)) {
     findings.push(`${relative} mentions unsupported opening-time claims without a confirmed openingHoursRules source`);
   }
+  if (!draft && !frontmatter.includes('alcoholPolicyPlanUrl:') && /alkoholpolitisk|handlingsplan/i.test(source)) {
+    findings.push(`${relative} mentions an alcohol policy plan or handlingsplan without a verified alcoholPolicyPlanUrl`);
+  }
   if (!draft && serviceLinkCount + regulationLinkCount + bylawLinkCount < 2 && !frontmatter.includes('alcoholPolicyPlanUrl:')) {
     findings.push(`${relative} must include at least 2 municipality-specific links or a plan URL`);
   }

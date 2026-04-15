@@ -180,6 +180,7 @@ async function buildMunicipalPage(row, slug) {
   const municipalityQuality = assessMunicipalityQuality({
     municipality,
     editorialProfile: resolvedEditorialProfile,
+    localChecklist,
     alcoholPolicyPlanUrl: validatedAlcoholPolicyPlanUrl,
     formsUrl: validatedFormsUrl,
     publicRecordsUrl: validatedPublicRecordsUrl,
@@ -342,7 +343,8 @@ function supportsEditorialStatement(value, { openingHoursRules, formsUrl, public
   const text = normalizeText(value).toLowerCase();
   const hasOpeningSupport = openingHoursRules.length > 0;
   const hasApplicationSupport = Boolean(formsUrl) || serviceLinks.some((link) => classifyMunicipalLinkKind(link.url, link.label) === 'application');
-  const hasPlanSupport = Boolean(alcoholPolicyPlanUrl) || serviceLinks.some((link) => classifyMunicipalLinkKind(link.url, link.label) === 'serviceHub');
+  const hasPlanSupport = Boolean(alcoholPolicyPlanUrl);
+  const hasRulesSupport = serviceLinks.some((link) => ['serviceHub', 'rules', 'controls'].includes(classifyMunicipalLinkKind(link.url, link.label)));
   const hasRecordsSupport = Boolean(publicRecordsUrl);
 
   if (!hasOpeningSupport && /holde åpent|åpningstid for serveringssted|praktisk stengetid|serveringsstedet kan holde åpent|serveringssteder kan holde åpent/.test(text)) {
@@ -354,7 +356,10 @@ function supportsEditorialStatement(value, { openingHoursRules, formsUrl, public
   if (!hasApplicationSupport && /søknad|søke|skjema|endre bevillinger|endre drift/.test(text)) {
     return false;
   }
-  if (!hasPlanSupport && /skjenkesiden|alkoholpolitisk|retningslinjene|skjenketider/.test(text)) {
+  if (!hasPlanSupport && /alkoholpolitisk|handlingsplan|retningslinje/.test(text)) {
+    return false;
+  }
+  if (!(hasPlanSupport || hasRulesSupport || hasOpeningSupport) && /skjenkesiden|skjenketider/.test(text)) {
     return false;
   }
 
@@ -566,7 +571,8 @@ function classifyMunicipalLinkKind(value, fallbackKind = 'general') {
     if (/\/alkohol-servering-og-tobakk\/?$/.test(pathname)) return 'serviceHub';
     if (/\/soke-om-bevillinger\/?$|\/soke-om-eller-endre-bevillinger\/?$|\/søke-om-bevillinger\/?$|\/søke-om-eller-endre-bevillinger\/?$/.test(pathname)) return 'application';
     if (/\/regelverk-for-salgs-og-skjenkesteder\/?$|\/regler-for-salg-og-skjenking\/?$/.test(pathname)) return 'rules';
-    if (/handlingsplan|alkoholpolitisk|plan|retningslinje|skjenketider/.test(source)) return 'plan';
+    if (/handlingsplan|alkoholpolitisk/.test(source)) return 'plan';
+    if (/plan|retningslinje|skjenketider/.test(source)) return 'rules';
     if (/enkelt.?anledning|enkeltarrangement|arrangement/.test(source)) return 'singleEvent';
     if (/kontroll|regelbrudd|prikktildeling|omsetningsoppgave/.test(source)) return 'controls';
     if (/prove|prøve|kunnskap|etablerer/.test(source)) return 'exam';
@@ -651,23 +657,23 @@ function buildLocalChecklist({
     checklist.push(`Start på kommunens egne sider for skjenking og søknad før du begynner å tolke regelverket selv i ${municipality}.`);
   }
 
-  if (!editorialProfile && formsUrl) {
+  if (formsUrl) {
     checklist.push('Åpne skjema- eller selvbetjeningssiden tidlig, slik at du ser hvilke opplysninger kommunen faktisk ber om.');
   }
 
-  if (!editorialProfile && publicRecordsPlatform) {
+  if (publicRecordsPlatform) {
     checklist.push(`Bruk ${publicRecordsPlatform} hvis du vil se hvordan kommunen publiserer saker, dokumenter eller tidligere behandling.`);
   }
 
-  if (!editorialProfile && alcoholPolicyPlanUrl) {
-    checklist.push('Sjekk alkoholpolitisk plan eller skjenketider før du legger opp drift, åpningstider eller konsept.');
+  if (alcoholPolicyPlanUrl) {
+    checklist.push('Sjekk den bekreftede planen eller regelsiden før du legger opp drift, åpningstider eller konsept.');
   }
 
-  if (!editorialProfile && (alcoholServingRules.length > 0 || openingHoursRules.length > 0)) {
+  if (alcoholServingRules.length > 0 || openingHoursRules.length > 0) {
     checklist.push('Sammenlign tidene oppsummert her med kommunens egne sider før du sender søknad eller planlegger åpningstid.');
   }
 
-  if (!editorialProfile && officialSources.length > 0) {
+  if (officialSources.length > 0) {
     checklist.push('Les oppsummeringene fra de offisielle kildene under og åpne originalsidene når du trenger detaljene.');
   }
 
@@ -747,7 +753,7 @@ function buildPageDescription({
   } else if (outdoorRule) {
     parts.push('Tar høyde for at inne- og uteservering kan følge ulike lokale grenser.');
   } else {
-    parts.push('Laget for deg som skal søke, endre eller drifte bevilling i kommunen.');
+    parts.push('Samler søknad, innsyn og lokale regler i én side med lenker tilbake til originalkildene.');
   }
 
   return uniqueValues(parts).slice(0, 2).join(' ');
@@ -1058,6 +1064,7 @@ function sanitizeOfficialSourceSummary(label, summary) {
 function assessMunicipalityQuality({
   municipality,
   editorialProfile,
+  localChecklist,
   alcoholPolicyPlanUrl,
   formsUrl,
   publicRecordsUrl,
@@ -1109,7 +1116,7 @@ function assessMunicipalityQuality({
   if ((editorialProfile?.editorialTakeaways?.length || 0) >= 3) score += 1;
   else reasons.push(`${municipality} mangler nok kommune-spesifikke tolkninger.`);
 
-  if ((editorialProfile?.practicalSteps?.length || 0) >= 4) score += 1;
+  if ((localChecklist?.length || 0) >= 4) score += 1;
   else reasons.push(`${municipality} mangler nok praktiske lokale neste steg.`);
 
   const publishable =
@@ -1120,7 +1127,7 @@ function assessMunicipalityQuality({
     (Boolean(formsUrl) || linkKinds.has('application')) &&
     (linkKinds.size >= 3 || verifiedActionLinkCount >= 3) &&
     (editorialProfile?.editorialTakeaways?.length || 0) >= 3 &&
-    (editorialProfile?.practicalSteps?.length || 0) >= 4 &&
+    (localChecklist?.length || 0) >= 4 &&
     score >= 8;
 
   return {

@@ -73,8 +73,8 @@ export type MunicipalityViewModel = {
 
 const linkKinds: Record<string, { label: string; note: string }> = {
   plan: {
-    label: 'Alkoholpolitisk plan',
-    note: 'Åpne denne for å se hvordan kommunen beskriver skjenketider og lokale prioriteringer.',
+    label: 'Lokale regler og tider',
+    note: 'Åpne denne når kommunen faktisk har en egen plan eller side for lokale tider og prioriteringer.',
   },
   forms: {
     label: 'Skjema og selvbetjening',
@@ -426,7 +426,8 @@ function classifyLinkKind(url: string, label: string) {
   } catch {
     // fall through to source-string matching
   }
-  if (/handlingsplan|alkoholpolitisk|skjenketider|retningslinje/.test(source)) return 'plan';
+  if (/handlingsplan|alkoholpolitisk/.test(source)) return 'plan';
+  if (/skjenketider|retningslinje/.test(source)) return 'rules';
   if (/enkelt.?anledning|enkeltarrangement|arrangement/.test(source)) return 'singleEvent';
   if (/kontroll|regelbrudd|prikktildeling|omsetningsoppgave/.test(source)) return 'controls';
   if (/prove|prøve|kunnskap|etablerer/.test(source)) return 'exam';

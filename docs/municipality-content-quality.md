@@ -67,7 +67,7 @@ For `/kommune`, weak data should fail closed.
 That means the page should stay out of the published set until it has:
 
 - enough confirmed local time rules
-- a clear plan or local alcohol-policy source
+- a clear local rules/time source
 - a real application path
 - a real innsyn path
 - at least one useful local source summary or takeaway
@@ -116,7 +116,8 @@ Each municipality page should prefer a compact set of high-value municipal links
 
 Best link types:
 
-- alcoholpolitisk plan / skjenketider
+- alcoholpolitisk plan when that exact source exists
+- skjenketider or local rules pages when they are the real source
 - main permit hub for sale/servering/skjenking
 - application / change flow
 - rules / local conditions

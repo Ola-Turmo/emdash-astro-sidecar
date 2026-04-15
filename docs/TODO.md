@@ -28,6 +28,8 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 
 - [x] `Arendal`
 - [x] `Bjerkreim`
+- [x] `Bremanger`
+- [x] `Nord-Aurdal`
 
 Everything else in the current municipality rollout should stay drafted until it clears the evidence gate and quality threshold.
 
@@ -111,6 +113,7 @@ Everything else in the current municipality rollout should stay drafted until it
 - [x] Kommune HTML responses now force upstream revalidation plus `no-store` on the proxy layer to reduce stale page deploys.
 - [x] Added a separate municipality evidence gate that validates published links against real page content and blocks inferred rules from being published as confirmed facts.
 - [x] Added a rendered municipality truth gate so the built HTML is also checked for unsupported facts and stale municipality links.
+- [x] Reclassified ambiguous `skjenketider` links as local rules pages instead of automatically treating them as alcohol-policy plans.
 - [ ] Add a cache-purge or explicit invalidation path for kommune slugs that are drafted out, so stale live 200s disappear without relying on query-string cache busting.
 - [ ] Add a municipality-specific release gate that blocks publishing if:
   - source cards are too generic
