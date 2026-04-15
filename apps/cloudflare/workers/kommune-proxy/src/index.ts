@@ -1,4 +1,4 @@
-import { conceptRobotsTxt, conceptRssXml, conceptSitemapXml } from './generated/seo-artifacts';
+import { conceptRobotsTxt } from './generated/seo-artifacts';
 import { applySecurityHeaders } from '../../shared/security-headers';
 import { logEdgeRequestTelemetry } from '../../shared/request-telemetry';
 
@@ -10,11 +10,13 @@ interface Env {
 
 const PREFIX = '/kommune';
 const RUM_PATH = `${PREFIX}/__rum`;
-const ALLOWED_PATHS = new Set(
-  [...conceptSitemapXml.matchAll(/<loc>https:\/\/www\.kurs\.ing(\/kommune(?:\/[^<]*)?)<\/loc>/g)].map((match) =>
-    normalizeConceptPath(match[1] || PREFIX),
-  ),
-);
+let sitemapCache:
+  | {
+      fetchedAt: number;
+      xml: string;
+      allowedPaths: Set<string>;
+    }
+  | null = null;
 
 function withSecurityHeaders(headers: Headers): Headers {
   return applySecurityHeaders(headers);
@@ -79,13 +81,14 @@ function responseWithBody(body: string, contentType: string): Response {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const incomingUrl = new URL(request.url);
+    const sitemapState = await getSitemapState(env.KOMMUNE_ORIGIN);
 
     if (incomingUrl.pathname === `${PREFIX}/rss.xml`) {
-      return responseWithBody(conceptRssXml, 'application/xml');
+      return proxyStaticOriginText('/rss.xml', env.KOMMUNE_ORIGIN, 'application/xml');
     }
 
     if (incomingUrl.pathname === `${PREFIX}/sitemap.xml`) {
-      return responseWithBody(conceptSitemapXml, 'application/xml');
+      return responseWithBody(sitemapState.xml, 'application/xml');
     }
 
     if (incomingUrl.pathname === `${PREFIX}/robots.txt`) {
@@ -100,7 +103,7 @@ export default {
     if (
       normalizedIncomingPath.startsWith(`${PREFIX}/`) &&
       normalizedIncomingPath !== PREFIX &&
-      !ALLOWED_PATHS.has(normalizedIncomingPath) &&
+      !sitemapState.allowedPaths.has(normalizedIncomingPath) &&
       !isConceptAssetPath(incomingUrl.pathname)
     ) {
       const response = new Response('Not found', {
@@ -160,6 +163,47 @@ export default {
     return response;
   },
 };
+
+async function getSitemapState(origin: string) {
+  const now = Date.now();
+  if (sitemapCache && now - sitemapCache.fetchedAt < 60_000) {
+    return sitemapCache;
+  }
+
+  const response = await fetch(new URL('/sitemap.xml', origin).toString(), {
+    headers: {
+      accept: 'application/xml,text/xml',
+      'cache-control': 'no-cache',
+      pragma: 'no-cache',
+    },
+  });
+
+  const xml = await response.text();
+  const allowedPaths = new Set(
+    [...xml.matchAll(/<loc>https:\/\/www\.kurs\.ing(\/kommune(?:\/[^<]*)?)<\/loc>/g)].map((match) =>
+      normalizeConceptPath(match[1] || PREFIX),
+    ),
+  );
+
+  sitemapCache = {
+    fetchedAt: now,
+    xml,
+    allowedPaths,
+  };
+  return sitemapCache;
+}
+
+async function proxyStaticOriginText(pathname: string, origin: string, contentType: string) {
+  const response = await fetch(new URL(pathname, origin).toString(), {
+    headers: {
+      accept: `${contentType},text/plain;q=0.9,*/*;q=0.8`,
+      'cache-control': 'no-cache',
+      pragma: 'no-cache',
+    },
+  });
+  const body = await response.text();
+  return responseWithBody(body, contentType);
+}
 
 async function proxyRumRequest(request: Request, metricsWorkerUrl: string): Promise<Response> {
   if (request.method === 'OPTIONS') {

@@ -95,7 +95,7 @@ Everything else in the current municipality rollout should stay drafted until it
 
 - [x] `/kommune` now fails closed on an evidence basis and only keeps municipalities that still have verified source coverage.
 - [x] Legacy or previously published municipalities outside the current evidence-backed set are drafted out automatically by the municipality generator.
-- [ ] The `/kommune` nav and audit URLs should be updated to reflect the current evidence-backed set instead of the earlier 10-page rollout.
+- [x] The `/kommune` worker now derives sitemap and allowlist from the active Pages origin, so live route exposure follows the actual evidence-backed deploy instead of stale worker artifacts.
 - [x] Added a Bergen-specific hero image to stabilize the last major Lighthouse outlier in the current `/kommune` audit set.
 - [ ] Extract more concrete local signals from municipality sources:
   - application flow differences
