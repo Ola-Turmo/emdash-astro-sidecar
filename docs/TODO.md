@@ -1,6 +1,6 @@
 # Active TODO
 
-Last updated: 2026-04-14
+Last updated: 2026-04-15
 
 This is the maintained backlog for `emdash-astro-sidecar`.
 
@@ -111,7 +111,11 @@ Everything else in the current municipality rollout should stay drafted until it
   - local exceptions or seasonal distinctions
   - consumption-stop rules and enforcement nuances
 - [ ] Make `Kort oppsummert` more decision-useful and less repetitive across all 10 published pages.
+- [x] Replaced the old generic municipality title/description/lead pattern with a stricter end-user-focused generator and gate.
+- [x] `Kort oppsummert` now prioritizes operator decisions like øl og vin, brennevin, åpningstid, søknad, kontroll and innsyn instead of echoing raw timeline rows.
+- [x] Kommune link classification now prioritizes arrangement, kontroll, prøver and other specific local paths before generic skjenking/service-hub buckets.
 - [x] Added hero images for the full current curated municipality set without regressing the kommune gate.
+- [x] Kommune HTML responses now force upstream revalidation plus `no-store` on the proxy layer to reduce stale page deploys.
 - [ ] Add a cache-purge or explicit invalidation path for kommune slugs that are drafted out, so stale live 200s disappear without relying on query-string cache busting.
 - [ ] Add a municipality-specific release gate that blocks publishing if:
   - source cards are too generic

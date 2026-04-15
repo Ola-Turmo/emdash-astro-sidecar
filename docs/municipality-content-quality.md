@@ -186,9 +186,15 @@ The language on municipality pages should read like local guidance, not like AI-
 Good direction:
 
 - short lead paragraphs that explain what the reader gets on the page
+- lead with the operational difference first when the municipality is strict, permissive, seasonal, or otherwise unusual
 - clear wording around what is confirmed and what still must be checked
 - labels that name the action or source plainly
 - interpretation that helps the reader decide what to open first
+- summary boxes that help the reader decide:
+  - how late øl og vin can be served
+  - how late brennevin can be served
+  - when the venue itself must close
+  - where to go for søknad, kontroll, and innsyn
 
 Bad direction:
 
@@ -197,6 +203,8 @@ Bad direction:
 - system-language like `det strukturerte datagrunnlaget`
 - detective-language like `de viktigste sporene du må sjekke`
 - meta phrasing like `praktiske innganger`
+- generic openers like `Her ser du hva kommunen oppgir ...`
+- title patterns like `kommunale sider du faktisk trenger`
 
 If a sentence sounds like internal prompt output instead of a municipal guide written for a Norwegian reader, rewrite it before shipping.
 

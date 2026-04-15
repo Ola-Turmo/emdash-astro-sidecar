@@ -72,8 +72,14 @@ for (const filePath of files) {
   if (!title || !title.includes(municipality ?? '')) {
     findings.push(`${relative} needs a title that includes the municipality name`);
   }
+  if (!draft && /kommunale sider du faktisk trenger/i.test(title || '')) {
+    findings.push(`${relative} uses an over-generic title pattern that should not be published`);
+  }
   if (!description || description.length < 110) {
     findings.push(`${relative} needs a more informative description`);
+  }
+  if (!draft && /^se hva .+ faktisk oppgir /i.test(description || '')) {
+    findings.push(`${relative} uses a generic description pattern and needs a more user-focused summary`);
   }
   if (!frontmatter.includes('municipalityQuality:')) {
     findings.push(`${relative} is missing municipalityQuality frontmatter`);
@@ -92,6 +98,9 @@ for (const filePath of files) {
   }
   if (!draft && editorialLead.length < 90) {
     findings.push(`${relative} needs a stronger editorialLead for published municipality pages`);
+  }
+  if (!draft && /^her ser du hva /i.test(editorialLead)) {
+    findings.push(`${relative} uses a generic editorialLead pattern and needs a stronger opening`);
   }
   if (serviceLinkCount + regulationLinkCount + bylawLinkCount < 2 && !frontmatter.includes('alcoholPolicyPlanUrl:')) {
     findings.push(`${relative} must include at least 2 municipality-specific links or a plan URL`);

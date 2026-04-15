@@ -139,6 +139,24 @@ const linkKinds: Record<string, { label: string; note: string }> = {
 };
 
 const bannedUrlFragments = ['gravplass', 'barnehage', 'skole', 'feiing', 'bal-og-grill', 'bygg', 'anlegg', 'rabattordning'];
+const curatedLinkPriority: Record<string, number> = {
+  plan: 0,
+  application: 1,
+  serving: 2,
+  sales: 3,
+  rules: 4,
+  controls: 5,
+  singleEvent: 6,
+  outdoor: 7,
+  exam: 8,
+  servering: 9,
+  fees: 10,
+  renewal: 11,
+  forms: 12,
+  publicRecords: 13,
+  serviceHub: 14,
+  general: 15,
+};
 
 export function deriveMunicipalityView(data: MunicipalityData): MunicipalityViewModel {
   const curatedLinks = uniqueByKey(
@@ -154,7 +172,9 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
       .filter((entry) => !bannedUrlFragments.some((fragment) => entry.url.toLowerCase().includes(fragment)))
       .filter((entry) => entry.kind !== 'general' || entry.url.toLowerCase().includes('alkohol') || entry.url.toLowerCase().includes('bevilling')),
     (entry) => `${entry.kind}|${entry.displayLabel}`,
-  ).slice(0, 6);
+  )
+    .sort((a, b) => (curatedLinkPriority[a.kind] ?? 999) - (curatedLinkPriority[b.kind] ?? 999))
+    .slice(0, 6);
 
   const timeline = buildTimeline(data);
   const salesNote = buildSalesNote(curatedLinks, timeline);
@@ -185,7 +205,7 @@ export function deriveMunicipalityView(data: MunicipalityData): MunicipalityView
     curatedLinks,
     usefulSources,
     checklist,
-    lead: normalizeText(data.editorialLead || '') || buildLead(data, timeline, curatedLinks, salesNote),
+    lead: !isWeakEditorialLead(data.editorialLead) ? normalizeText(data.editorialLead || '') : buildLead(data, timeline, curatedLinks, salesNote),
     cardSummary: buildCardSummary(data, facts, highlights),
     salesNote,
     summaryRows,
@@ -232,38 +252,44 @@ function buildFacts(
 ) {
   const facts: string[] = [];
 
-  const servingEntries = timeline.filter((entry) => entry.kind === 'serving').slice(0, 3);
-  for (const entry of servingEntries) {
-    const window = formatWindow(entry, ' · ');
-    if (window) {
-      facts.push(`${capitalize(entry.label)}: ${window}.`);
-    }
+  const primaryServing = timeline.find((entry) => entry.kind === 'serving' && /gruppe 1, 2/i.test(entry.label));
+  if (primaryServing) {
+    const window = formatWindow(primaryServing, ' · ');
+    if (window) facts.push(`Øl og vin: ${window}.`);
   }
 
-  const openingEntries = timeline.filter((entry) => entry.kind === 'opening').slice(0, 2);
-  for (const openingEntry of openingEntries) {
+  const spiritServing = timeline.find((entry) => entry.kind === 'serving' && /gruppe 3/i.test(entry.label));
+  if (spiritServing) {
+    const window = formatWindow(spiritServing, ' · ');
+    if (window) facts.push(`Brennevin: ${window}.`);
+  }
+
+  const openingEntry = timeline.find((entry) => entry.kind === 'opening' && /serveringssted/i.test(entry.label))
+    || timeline.find((entry) => entry.kind === 'opening');
+  if (openingEntry) {
     const window = formatWindow(openingEntry, ' · ');
     if (window) {
-      facts.push(`${capitalize(openingEntry.label)}: ${window}.`);
+      facts.push(`${/ute/i.test(openingEntry.label) ? 'Uteservering' : 'Åpningstid'}: ${window}.`);
     }
   }
 
-  const specialKinds = uniqueValues(
-    curatedLinks
-      .map((entry) => entry.kind)
-      .filter((kind) => ['fees', 'renewal', 'controls', 'singleEvent', 'outdoor', 'exam', 'application', 'rules'].includes(kind))
-      .map((kind) => linkKinds[kind].label.toLowerCase()),
-  );
-  if (specialKinds.length) {
-    facts.push(`Du finner egne kommunesider for ${joinHumanList(specialKinds)}.`);
+  const applicationLink = curatedLinks.find((entry) => entry.kind === 'application');
+  if (applicationLink) {
+    facts.push('Egen side for søknad og endringer gjør det enklere ved oppstart, eierskifte eller andre endringer i driften.');
   }
 
-  if (data.publicRecordsPlatform) {
-    facts.push(`Innsyn går via ${normalizeText(data.publicRecordsPlatform)}, så du kan se saker og vedtak der.`);
+  const controlsLink = curatedLinks.find((entry) => entry.kind === 'controls' || entry.kind === 'rules');
+  if (!applicationLink && controlsLink) {
+    facts.push('Kommunen har også en egen side for regler eller kontroll, så du kan lese hva som faktisk følges opp i driften.');
   }
 
-  if (data.municipalitySitePlatform) {
-    facts.push('Det lønner seg å følge kommunens egne temasider når du trenger oppdatert lokal informasjon.');
+  const singleEventLink = curatedLinks.find((entry) => entry.kind === 'singleEvent');
+  if (!applicationLink && !controlsLink && singleEventLink) {
+    facts.push('Kommunen skiller også mellom fast bevilling og enkeltarrangementer, noe som er nyttig hvis du ikke driver helårsservering.');
+  }
+
+  if (facts.length < 4 && data.publicRecordsPlatform) {
+    facts.push(`Tidligere saker kan spores i ${normalizeText(data.publicRecordsPlatform)}, så du kan sammenligne nettsiden med faktisk praksis.`);
   }
 
   return uniqueValues(facts).slice(0, 4);
@@ -342,60 +368,76 @@ function buildLead(
   salesNote: string,
 ) {
   const servingEntry = timeline.find((entry) => entry.kind === 'serving');
+  const spiritEntry = timeline.find((entry) => entry.kind === 'serving' && /gruppe 3/i.test(entry.label));
   const planLink = curatedLinks.find((entry) => entry.kind === 'plan');
-  const applicationLink = curatedLinks.find((entry) => entry.kind === 'application' || entry.kind === 'forms');
+  const applicationLink = curatedLinks.find((entry) => entry.kind === 'application');
+  const controlsLink = curatedLinks.find((entry) => entry.kind === 'controls' || entry.kind === 'rules');
+  const singleEventLink = curatedLinks.find((entry) => entry.kind === 'singleEvent');
   const parts: string[] = [];
 
-  if (servingEntry) {
+  if (data.editorialTakeaways?.[0]) {
+    parts.push(normalizeLeadSentence(data.editorialTakeaways[0]));
+  } else if (servingEntry) {
     const window = formatWindow(servingEntry);
     if (window) {
-      parts.push(`Her ser du hva ${data.municipality} oppgir om skjenking ${window}.`);
+      parts.push(`${data.municipality} oppgir skjenking ${window}.`);
     }
-  } else {
-    parts.push(`Her får du en rask oversikt over lokale regler og nyttige kommunesider i ${data.municipality}.`);
   }
 
-  if (planLink && applicationLink) {
-    parts.push(`Vi peker deg videre til både ${planLink.displayLabel.toLowerCase()} og siden for søknad eller endringer.`);
-  } else if (planLink) {
-    parts.push(`Vi peker deg videre til ${planLink.displayLabel.toLowerCase()} når du trenger originalkilden.`);
+  if (!data.editorialTakeaways?.length && servingEntry && spiritEntry && spiritEntry.endTime && servingEntry.endTime && spiritEntry.endTime !== servingEntry.endTime) {
+    parts.push('Brennevin følger en strammere grense enn øl og vin, så nattdrift og intern opplæring må planlegges deretter.');
+  }
+
+  if (applicationLink && controlsLink) {
+    parts.push('Her finner du både siden for søknad eller endringer og siden som forklarer lokale regler eller kontroll før du åpner.');
+  } else if (applicationLink && planLink) {
+    parts.push('Her finner du både kilden for lokale tider og siden for søknad eller endringer.');
+  } else if (singleEventLink && applicationLink) {
+    parts.push('Kommunen skiller også mellom fast drift og arrangementer, så du kan åpne riktig spor med en gang.');
   } else if (applicationLink) {
-    parts.push('Vi peker deg videre til siden for søknad eller endringer når du skal gjøre noe konkret.');
+    parts.push('Her finner du siden for søknad og endringer når du skal åpne, overta eller justere driften.');
+  } else if (controlsLink) {
+    parts.push('Her finner du også siden som forklarer lokale regler og kontroll før du setter rutiner.');
+  } else if (planLink) {
+    parts.push(`Her finner du også ${planLink.displayLabel.toLowerCase()} når du må kontrollere originalkilden.`);
   }
 
   if (salesNote) {
-    parts.push('Salgstid må fortsatt dobbeltsjekkes mot kommunens egne sider hvis den ikke er tydelig oppgitt.');
+    parts.push('Salgstid er ikke tydelig oppgitt her og må dobbeltsjekkes før du planlegger butikk- eller utsalgssalg.');
   }
 
-  return parts.join(' ');
+  return uniqueValues(parts).slice(0, 3).join(' ');
 }
 
 function classifyLinkKind(url: string, label: string) {
   const source = `${url} ${label}`.toLowerCase();
   try {
     const pathname = new URL(url).pathname.toLowerCase();
+    if (/\/etablerer-og-kunnskapsprovene\/?$|\/kunnskapsprover?\/?$|\/kunnskapsprovene\/?$/.test(pathname)) return 'exam';
+    if (/\/kontroller?-og-regelbrudd\/?$|\/kontroll\/?$|\/kontroll-og-prikktildeling\/?$|\/omsetningsoppgave\/?$/.test(pathname)) return 'controls';
+    if (/\/skjenkebevilling.*enkelt.*arrangement\/?$|\/enkeltarrangement\/?$|\/enkelt-anledning\/?$|\/arrangement\/?$/.test(pathname)) return 'singleEvent';
+    if (/\/uteservering\/?$|\/uteserveringsordning\/?$/.test(pathname)) return 'outdoor';
     if (/\/salgsbevilling(\/|$)/.test(pathname)) return 'sales';
     if (/\/skjenkebevilling/.test(pathname)) return 'serving';
     if (/\/serveringsbevilling/.test(pathname)) return 'servering';
     if (/\/alkohol-servering-og-tobakk\/?$/.test(pathname)) return 'serviceHub';
     if (/\/soke-om-bevillinger\/?$|\/soke-om-eller-endre-bevillinger\/?$|\/søke-om-bevillinger\/?$|\/søke-om-eller-endre-bevillinger\/?$/.test(pathname)) return 'application';
-    if (/\/regelverk-for-salgs-og-skjenkesteder\/?$|\/regler-for-salg-og-skjenking\/?$|\/kontroll-og-prikktildeling\/?$/.test(pathname)) return 'rules';
-    if (/\/omsetningsoppgave\/?$/.test(pathname)) return 'controls';
+    if (/\/regelverk-for-salgs-og-skjenkesteder\/?$|\/regler-for-salg-og-skjenking\/?$/.test(pathname)) return 'rules';
   } catch {
     // fall through to source-string matching
   }
   if (/handlingsplan|alkoholpolitisk|skjenketider|retningslinje/.test(source)) return 'plan';
+  if (/enkelt.?anledning|enkeltarrangement|arrangement/.test(source)) return 'singleEvent';
+  if (/kontroll|regelbrudd|prikktildeling|omsetningsoppgave/.test(source)) return 'controls';
+  if (/prove|prøve|kunnskap|etablerer/.test(source)) return 'exam';
+  if (/uteserver|offentlig-areal/.test(source)) return 'outdoor';
   if (/soke-bevilling|søke-bevilling|gjore-endringer|gjøre-endringer/.test(source)) return 'application';
   if (/regler-for|lokale-regler|skjenketider/.test(source)) return 'rules';
   if (/salg-servering-og-skjenking|alkohol-og-servering/.test(source)) return 'serviceHub';
   if (/skjema|ekstern\/veiledere|\/skjema/.test(source)) return 'forms';
   if (/innsyn|journal|einnsyn/.test(source)) return 'publicRecords';
-  if (/uteserver|offentlig-areal/.test(source)) return 'outdoor';
-  if (/enkelt.?anledning|arrangement/.test(source)) return 'singleEvent';
   if (/gebyr|satser/.test(source)) return 'fees';
   if (/fornyelse|fornye/.test(source)) return 'renewal';
-  if (/kontroll/.test(source)) return 'controls';
-  if (/prove|prøve|kunnskap|etablerer/.test(source)) return 'exam';
   if (/salgsbevilling|salg/.test(source)) return 'sales';
   if (/serveringsbevilling|servering/.test(source)) return 'servering';
   if (/skjenkebevilling|skjenking|alkohol/.test(source)) return 'serving';
@@ -437,25 +479,51 @@ function buildSummaryRows(
   salesNote: string,
 ) {
   const rows: Array<{ label: string; value: string }> = [];
-  const servingEntries = timeline.filter((entry) => entry.kind === 'serving').slice(0, 2);
-  const openingEntries = timeline.filter((entry) => entry.kind === 'opening').slice(0, 2);
-  for (const entry of servingEntries) {
-    rows.push({ label: capitalize(entry.label), value: formatWindow(entry, ' · ') || normalizeText(entry.note) });
+  const primaryServing = timeline.find((entry) => entry.kind === 'serving' && /gruppe 1, 2/i.test(entry.label))
+    || timeline.find((entry) => entry.kind === 'serving' && entry.startTime && entry.endTime);
+  const spiritServing = timeline.find((entry) => entry.kind === 'serving' && /gruppe 3/i.test(entry.label));
+  const openingEntry = timeline.find((entry) => entry.kind === 'opening' && /serveringssted/i.test(entry.label))
+    || timeline.find((entry) => entry.kind === 'opening');
+  const outdoorEntry = timeline.find((entry) => entry.kind === 'opening' && /ute/i.test(entry.label));
+  if (primaryServing) {
+    rows.push({ label: mapSummaryLabel(primaryServing.label), value: formatWindow(primaryServing, ' · ') || normalizeText(primaryServing.note) });
   }
-  for (const entry of openingEntries) {
-    rows.push({ label: capitalize(entry.label), value: formatWindow(entry, ' · ') || normalizeText(entry.note) });
+  if (spiritServing) {
+    rows.push({ label: mapSummaryLabel(spiritServing.label), value: formatWindow(spiritServing, ' · ') || normalizeText(spiritServing.note) });
   }
-  const applicationLink = curatedLinks.find((entry) => ['application', 'forms'].includes(entry.kind));
+  if (openingEntry) {
+    rows.push({ label: /ute/i.test(openingEntry.label) ? 'Uteservering' : 'Åpningstid', value: formatWindow(openingEntry, ' · ') || normalizeText(openingEntry.note) });
+  }
+  if (outdoorEntry && outdoorEntry !== openingEntry) {
+    rows.push({ label: 'Uteservering', value: formatWindow(outdoorEntry, ' · ') || normalizeText(outdoorEntry.note) });
+  }
+  const applicationLink = curatedLinks.find((entry) => entry.kind === 'application') || curatedLinks.find((entry) => entry.kind === 'forms');
   if (applicationLink) {
-    rows.push({ label: 'Søknad', value: applicationLink.displayLabel });
+    rows.push({ label: 'Søknad', value: applicationLink.kind === 'application' ? 'Egen side for søknad og endringer' : applicationLink.displayLabel });
+  }
+  const controlsLink = curatedLinks.find((entry) => entry.kind === 'controls' || entry.kind === 'rules');
+  if (controlsLink) {
+    rows.push({ label: controlsLink.kind === 'controls' ? 'Kontroll' : 'Regelverk', value: controlsLink.displayLabel });
   }
   if (data.publicRecordsPlatform) {
     rows.push({ label: 'Innsyn', value: normalizeText(data.publicRecordsPlatform) });
   }
   if (salesNote) {
-    rows.push({ label: 'Salg', value: 'Må kontrolleres på kommunens egne sider' });
+    rows.push({ label: 'Salgstid', value: 'Ikke tydelig oppgitt' });
   }
   return uniqueByKey(rows, (entry) => `${entry.label}|${entry.value}`).slice(0, 6);
+}
+
+function mapSummaryLabel(label: string) {
+  if (/gruppe 1, 2/i.test(label)) return 'Øl og vin';
+  if (/gruppe 3/i.test(label)) return 'Brennevin';
+  return capitalize(label);
+}
+
+function normalizeLeadSentence(value: string) {
+  const text = normalizeText(value);
+  if (!text) return '';
+  return text.endsWith('.') ? text : `${text}.`;
 }
 
 function buildCardSummary(data: MunicipalityData, facts: string[], highlights: string[]) {
@@ -500,6 +568,12 @@ function buildSalesNote(
   return `Vi fant ikke en tydelig salgstid i kildene vi har kontrollert. Åpne ${salesLink.displayLabel.toLowerCase()} før du fastsetter lokale salgstider.`;
 }
 
+function isWeakEditorialLead(value?: string) {
+  const text = normalizeText(value || '');
+  if (!text) return true;
+  return /^her ser du hva /i.test(text) || /kommunale sider du faktisk trenger/i.test(text);
+}
+
 function normalizeTime(value: string) {
   return normalizeText(value).replace('.', ':');
 }
@@ -514,13 +588,6 @@ function toTimeMinutes(value: string) {
 function capitalize(value: string) {
   const normalized = normalizeText(value);
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-}
-
-function joinHumanList(entries: string[]) {
-  if (!entries.length) return '';
-  if (entries.length === 1) return entries[0];
-  if (entries.length === 2) return `${entries[0]} og ${entries[1]}`;
-  return `${entries.slice(0, -1).join(', ')} og ${entries[entries.length - 1]}`;
 }
 
 function uniqueByUrl<T extends { url: string }>(entries: T[]) {

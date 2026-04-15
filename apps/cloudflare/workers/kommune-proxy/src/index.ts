@@ -63,6 +63,10 @@ function buildUpstreamHeaders(request: Request): Headers {
   return headers;
 }
 
+function isHtmlPagePath(pathname: string): boolean {
+  return pathname === PREFIX || pathname.startsWith(`${PREFIX}/`) && !isConceptAssetPath(pathname) && !pathname.endsWith('.xml') && !pathname.endsWith('.txt');
+}
+
 function responseWithBody(body: string, contentType: string): Response {
   const headers = applySecurityHeaders(new Headers(), { indexable: true });
   headers.set('content-type', `${contentType}; charset=utf-8`);
@@ -121,15 +125,24 @@ export default {
 
     const originPath = toOriginPath(incomingUrl.pathname);
     const targetUrl = new URL(originPath + incomingUrl.search, env.KOMMUNE_ORIGIN);
+    const upstreamHeaders = buildUpstreamHeaders(request);
+    if (isHtmlPagePath(incomingUrl.pathname)) {
+      upstreamHeaders.set('cache-control', 'no-cache');
+      upstreamHeaders.set('pragma', 'no-cache');
+    }
     const upstreamResponse = await fetch(targetUrl.toString(), {
       method: request.method,
-      headers: buildUpstreamHeaders(request),
+      headers: upstreamHeaders,
       body: request.method === 'GET' || request.method === 'HEAD' ? undefined : request.body,
       redirect: 'manual',
     });
 
     const headers = withSecurityHeaders(upstreamResponse.headers);
-    headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=300');
+    if (isHtmlPagePath(incomingUrl.pathname)) {
+      headers.set('cache-control', 'no-store');
+    } else {
+      headers.set('cache-control', headers.get('cache-control') ?? 'public, max-age=300');
+    }
 
     const response = new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
