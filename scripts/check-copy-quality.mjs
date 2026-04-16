@@ -42,7 +42,16 @@ const bannedPlaceholderPhrases = [
   'TBD',
 ];
 
-const mojibakePatterns = [/Ãƒ./, /Ã¢â‚¬/, /Ã‚Â©/, /Ã°Å¸/, /Ã¢Å“/];
+const mojibakePatterns = [
+  /ÃƒÆ’./,
+  /ÃƒÂ¢Ã¢â€šÂ¬/,
+  /Ãƒâ€šÃ‚Â©/,
+  /ÃƒÂ°Ã…Â¸/,
+  /ÃƒÂ¢Ã…â€œ/,
+  /Ã[a-zA-ZæøåÆØÅ0-9]/,
+  /Â·/,
+  /â€“|â€”|â€[\w-]/,
+];
 
 for (const filePath of filesToCheck) {
   const relative = path.relative(repoRoot, filePath);
@@ -68,9 +77,6 @@ for (const filePath of filesToCheck) {
   }
 
   for (const pattern of mojibakePatterns) {
-    if (relative.endsWith(`${path.sep}municipality-view.ts`) && content.includes('decodeCommonMojibake(')) {
-      break;
-    }
     if (pattern.test(content)) {
       findings.push(`${relative} appears to contain mojibake or broken encoding`);
       break;

@@ -27,18 +27,18 @@ const siteProfiles = {
     courseLinks: [
       {
         path: '/etablererproven',
-        label: 'Kurs for etablererprÃ¸ven',
-        description: 'Pensum, oppgaver og rÃ¥d fÃ¸r prÃ¸ven i kommunen.',
+        label: 'Kurs for etablererprøven',
+        description: 'Pensum, oppgaver og råd før prøven i kommunen.',
       },
       {
         path: '/skjenkebevilling',
         label: 'Kurs for skjenkebevilling',
-        description: 'For styrer og stedfortreder som mÃ¥ dokumentere kunnskap om alkoholloven.',
+        description: 'For styrer og stedfortreder som må dokumentere kunnskap om alkoholloven.',
       },
       {
         path: '/salgsbevilling',
         label: 'Kurs for salgsbevilling',
-        description: 'For butikker og utsalgssteder som skal sÃ¸ke eller drifte salgsbevilling.',
+        description: 'For butikker og utsalgssteder som skal søke eller drifte salgsbevilling.',
       },
     ],
     concepts: {
@@ -50,7 +50,7 @@ const siteProfiles = {
         siteUrl: 'https://www.kurs.ing/guide',
         siteName: 'Kurs.ing Blogg',
         description:
-          'Norske guider om etablererprÃ¸ven, skjenkebevilling og salgsbevilling, skrevet for folk som vil bestÃ¥ kommunens prÃ¸ve og komme raskt i gang.',
+          'Norske guider om etablererprøven, skjenkebevilling og salgsbevilling, skrevet for folk som vil bestå kommunens prøve og komme raskt i gang.',
         routes: {
           articlePrefix: '/blog',
           categoryPrefix: '/category',
@@ -72,14 +72,14 @@ const siteProfiles = {
         },
         nav: [
           { path: '/', label: 'Artikler' },
-          { path: '/category/etablererproven', label: 'EtablererprÃ¸ven' },
+          { path: '/category/etablererproven', label: 'Etablererprøven' },
           { path: '/category/skjenkebevilling', label: 'Skjenkebevilling' },
           { path: '/category/salgsbevilling', label: 'Salgsbevilling' },
         ],
         callsToAction: {
           primary: {
             href: 'https://www.kurs.ing/kasse.html',
-            label: 'KjÃ¸p kurset',
+            label: 'Kjøp kurset',
           },
           secondary: {
             href: 'https://www.kurs.ing',
@@ -89,43 +89,43 @@ const siteProfiles = {
         shell: {
           subLabel: 'Blogg',
           homeEyebrow: 'Forklart enkelt',
-          homeTitle: 'Det du mÃ¥ vite om etablererprÃ¸ven, skjenkebevilling og salgsbevilling.',
+          homeTitle: 'Det du må vite om etablererprøven, skjenkebevilling og salgsbevilling.',
           homeDescription:
-            'Her finner du enkle forklaringer pÃ¥ vanlige spÃ¸rsmÃ¥l om krav, pensum og ansvar. MÃ¥let er Ã¥ gjÃ¸re det lettere Ã¥ forstÃ¥ hva du mÃ¥ kunne fÃ¸r du kjÃ¸per kurs eller gÃ¥r opp til prÃ¸ve.',
+            'Her finner du enkle forklaringer på vanlige spørsmål om krav, pensum og ansvar. Målet er å gjøre det lettere å forstå hva du må kunne før du kjøper kurs eller går opp til prøve.',
           homeStats: [
             {
               value: '3',
-              label: 'kurs i Ã©n pakke pÃ¥ hovedsiden',
+              label: 'kurs i én pakke på hovedsiden',
             },
             {
               value: '8 uker',
-              label: 'tilgang etter kjÃ¸p',
+              label: 'tilgang etter kjøp',
             },
             {
               value: 'Norsk',
-              label: 'innhold skrevet for norske krav og kommunale prÃ¸ver',
+              label: 'innhold skrevet for norske krav og kommunale prøver',
             },
           ],
           homeAsideEyebrow: 'Velg riktig kurs',
           homeAsideReasonTitle: 'Derfor finnes disse artiklene',
           homeAsideReasonText:
-            'Her fÃ¥r du raske og tydelige svar pÃ¥ det folk ofte lurer pÃ¥ fÃ¸r de velger kurs eller gÃ¥r opp til kommunens prÃ¸ve.',
+            'Her får du raske og tydelige svar på det folk ofte lurer på før de velger kurs eller går opp til kommunens prøve.',
           listingEyebrow: 'Artikler',
-          listingTitle: 'Dette lurer mange pÃ¥ fÃ¸r de gÃ¥r opp til prÃ¸ve',
+          listingTitle: 'Dette lurer mange på før de går opp til prøve',
           listingDescription: 'Forklaringer av pensum, krav, ansvar og hvordan du forbereder deg best mulig.',
           articleContextLabel: 'Guide',
-          articleLanguageBadge: 'PÃ¥ norsk',
+          articleLanguageBadge: 'På norsk',
           articlePrimaryActionText: 'Les artikkel',
           articleNextStepEyebrow: 'Neste steg',
           articleNextStepText:
-            'NÃ¥r du er klar for pensum, oppgaver og eksamentrening, gÃ¥r du videre til kurspakken pÃ¥ hovedsiden.',
+            'Når du er klar for pensum, oppgaver og eksamentrening, går du videre til kurspakken på hovedsiden.',
           articleAboutPurpose: 'Forklare krav tydelig og lede videre til riktig kurs.',
           footerEyebrow: 'Kurs.ing blogg',
-          footerTitle: 'Artikler som hjelper deg Ã¥ forstÃ¥ kravene fÃ¸r du kjÃ¸per eller gÃ¥r opp til prÃ¸ve.',
+          footerTitle: 'Artikler som hjelper deg å forstå kravene før du kjøper eller går opp til prøve.',
           footerDescription:
-            'Her finner du forklaringer og rÃ¥d som gjÃ¸r det lettere Ã¥ forstÃ¥ kravene rundt etablererprÃ¸ven, skjenkebevilling og salgsbevilling.',
-          footerCopyright: 'Innhold for Norge, skrevet pÃ¥ norsk.',
-          footerNote: 'BestÃ¥ttgaranti og produktinformasjon finner du pÃ¥ hovedsiden.',
+            'Her finner du forklaringer og råd som gjør det lettere å forstå kravene rundt etablererprøven, skjenkebevilling og salgsbevilling.',
+          footerCopyright: 'Innhold for Norge, skrevet på norsk.',
+          footerNote: 'Beståttgaranti og produktinformasjon finner du på hovedsiden.',
         },
       },
       kommune: {
@@ -198,16 +198,16 @@ const siteProfiles = {
           listingTitle: 'Kommuner som er klare til bruk',
           listingDescription: 'Velg kommunen du jobber mot. Hver side er laget for å gi praktisk støtte før søknad, oppstart eller endring i drift.',
           articleContextLabel: 'Kommune',
-          articleLanguageBadge: 'PÃ¥ norsk',
+          articleLanguageBadge: 'På norsk',
           articlePrimaryActionText: 'Les kommunesiden',
           articleNextStepEyebrow: 'Neste steg',
-          articleNextStepText: 'Bruk kommunesiden for lokal oversikt, og gÃ¥ deretter videre til riktig guide eller kurs nÃ¥r du trenger forklaring og trening.',
-          articleAboutPurpose: 'Gi deg raskere tilgang til riktige lokale kilder fÃ¸r du sÃ¸ker eller endrer drift.',
+          articleNextStepText: 'Bruk kommunesiden for lokal oversikt, og gå deretter videre til riktig guide eller kurs når du trenger forklaring og trening.',
+          articleAboutPurpose: 'Gi deg raskere tilgang til riktige lokale kilder før du søker eller endrer drift.',
           footerEyebrow: 'Kurs.ing kommune',
-          footerTitle: 'Finn riktige kommunesider fÃ¸r du sÃ¸ker, Ã¥pner eller endrer drift.',
-          footerDescription: 'MÃ¥let er Ã¥ gjÃ¸re det lettere Ã¥ finne fram til riktige kommunale kilder fÃ¸r du bruker tid pÃ¥ sÃ¸knad, opplÃ¦ring eller planlegging av drift.',
+          footerTitle: 'Finn riktige kommunesider før du søker, åpner eller endrer drift.',
+          footerDescription: 'Målet er å gjøre det lettere å finne fram til riktige kommunale kilder før du bruker tid på søknad, opplæring eller planlegging av drift.',
           footerCopyright: 'Kommunespesifikt innhold for Norge.',
-          footerNote: 'Bruk hovedsiden og guideseksjonen nÃ¥r du trenger mer forklaring, eksamentrening eller kurs.',
+          footerNote: 'Bruk hovedsiden og guideseksjonen når du trenger mer forklaring, eksamentrening eller kurs.',
         },
       },
     },
