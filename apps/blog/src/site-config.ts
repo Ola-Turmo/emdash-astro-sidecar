@@ -1,3 +1,4 @@
+import { getResolvedSiteCopy } from '../site-copy.mjs';
 import { resolveActiveSiteRuntime, siteProfiles } from '../site-profiles.mjs';
 
 type RuntimeShape = {
@@ -21,11 +22,7 @@ type RuntimeShape = {
       rumEndpoint?: string;
       metricsWorkerUrl?: string;
     };
-    courseLinks: Array<{
-      path: string;
-      label: string;
-      description: string;
-    }>;
+    courseLinkSetKey?: string;
   };
   concept: {
     key: string;
@@ -34,7 +31,7 @@ type RuntimeShape = {
     basePath: string;
     siteUrl: string;
     siteName: string;
-    description: string;
+    description?: string;
     routes: {
       articlePrefix: string;
       categoryPrefix: string;
@@ -54,47 +51,20 @@ type RuntimeShape = {
         warmupRuns?: number;
       };
     };
-    nav: Array<{
+    nav?: Array<{
       path: string;
       label: string;
     }>;
-    callsToAction: {
+    callsToAction?: {
       primary: { href: string; label: string };
       secondary: { href: string; label: string };
     };
-    shell: {
-      subLabel: string;
-      homeEyebrow: string;
-      homeTitle: string;
-      homeDescription: string;
-      directorySearchEyebrow?: string;
-      directorySearchTitle?: string;
-      directorySearchDescription?: string;
-      directorySearchPlaceholder?: string;
-      directorySearchEmpty?: string;
-      homeStats: Array<{ value: string; label: string }>;
-      homeAsideEyebrow: string;
-      homeAsideReasonTitle: string;
-      homeAsideReasonText: string;
-      listingEyebrow: string;
-      listingTitle: string;
-      listingDescription: string;
-      articleContextLabel: string;
-      articleLanguageBadge: string;
-      articlePrimaryActionText: string;
-      articleNextStepEyebrow: string;
-      articleNextStepText: string;
-      articleAboutPurpose: string;
-      footerEyebrow: string;
-      footerTitle: string;
-      footerDescription: string;
-      footerCopyright: string;
-      footerNote: string;
-    };
+    shellKey?: string;
   };
 };
 
 const activeRuntime = resolveActiveSiteRuntime(process.env) as RuntimeShape;
+const resolvedCopy = getResolvedSiteCopy(activeRuntime.siteKey, activeRuntime.conceptKey);
 
 export const siteRegistry = siteProfiles;
 export const siteConfig = activeRuntime;
@@ -120,7 +90,7 @@ export const CONCEPT_PAGE_STRUCTURE = ACTIVE_CONCEPT.pageStructure;
 export const BLOG_BASE_PATH = ACTIVE_CONCEPT.basePath;
 export const SITE_URL = ACTIVE_CONCEPT.siteUrl;
 export const SITE_NAME = ACTIVE_CONCEPT.siteName;
-export const SITE_DESCRIPTION = ACTIVE_CONCEPT.description;
+export const SITE_DESCRIPTION = resolvedCopy.description;
 
 export const CLOUDFLARE_PAGES_PROJECT = ACTIVE_CONCEPT.cloudflare.pagesProject;
 export const CLOUDFLARE_PAGES_PREVIEW_ALIAS = ACTIVE_CONCEPT.cloudflare.pagesPreviewAlias;
@@ -133,9 +103,9 @@ export const LIGHTHOUSE_AUDIT_WARMUP_RUNS = ACTIVE_CONCEPT.audit.lighthouse?.war
 export const RUM_ENDPOINT = conceptPath('/__rum');
 export const METRICS_WORKER_URL = ACTIVE_SITE.telemetry?.metricsWorkerUrl ?? '';
 
-export const PRIMARY_CTA = ACTIVE_CONCEPT.callsToAction.primary;
-export const SECONDARY_CTA = ACTIVE_CONCEPT.callsToAction.secondary;
-export const SHELL_COPY = ACTIVE_CONCEPT.shell;
+export const PRIMARY_CTA = resolvedCopy.callsToAction.primary;
+export const SECONDARY_CTA = resolvedCopy.callsToAction.secondary;
+export const SHELL_COPY = resolvedCopy.shell;
 
 export const CONTENT_ROUTES = ACTIVE_CONCEPT.routes;
 
@@ -169,12 +139,12 @@ export function authorPath(slug: string): string {
   return conceptRoutePath(CONTENT_ROUTES.authorPrefix, slug);
 }
 
-export const MAIN_NAV = ACTIVE_CONCEPT.nav.map((item) => ({
+export const MAIN_NAV = resolvedCopy.nav.map((item: (typeof resolvedCopy.nav)[number]) => ({
   href: conceptPath(item.path),
   label: item.label,
 }));
 
-export const COURSE_LINKS = ACTIVE_SITE.courseLinks.map((item) => ({
+export const COURSE_LINKS = resolvedCopy.courseLinks.map((item: (typeof resolvedCopy.courseLinks)[number]) => ({
   href: `${MAIN_SITE_URL}${item.path}`,
   label: item.label,
   description: item.description,

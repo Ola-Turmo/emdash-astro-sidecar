@@ -2,25 +2,31 @@
 interface SearchOption {
   label: string;
   href: string;
-  county?: string;
+  meta?: string;
 }
 
 interface Props {
   options: SearchOption[];
-  eyebrow?: string;
-  title?: string;
+  eyebrow: string;
+  title: string;
   description?: string;
-  placeholder?: string;
-  emptyText?: string;
+  placeholder: string;
+  emptyText: string;
+  ariaLabel: string;
+  actionLabel: string;
+  metaFallback: string;
 }
 
 const {
   options,
-  eyebrow = 'Søk kommune',
-  title = 'Skriv kommunen du jobber mot',
+  eyebrow,
+  title,
   description = '',
-  placeholder = 'Søk etter publisert kommune',
-  emptyText = 'Ingen publisert kommune matcher søket ennå.',
+  placeholder,
+  emptyText,
+  ariaLabel,
+  actionLabel,
+  metaFallback,
 } = Astro.props as Props;
 
 const serializedOptions = JSON.stringify(options);
@@ -28,19 +34,21 @@ const serializedOptions = JSON.stringify(options);
 
 <section
   class="shell-card mt-8 p-5 sm:p-6"
-  data-municipality-search
+  data-directory-search
   data-options={serializedOptions}
   data-empty={emptyText}
+  data-action-label={actionLabel}
+  data-meta-fallback={metaFallback}
 >
   <p class="eyebrow">{eyebrow}</p>
   <h2 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">{title}</h2>
   {description && <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{description}</p>}
 
   <div class="mt-5">
-    <label class="sr-only" for="municipality-search-input">Søk kommune</label>
+    <label class="sr-only" for="directory-search-input">{ariaLabel}</label>
     <div class="relative">
       <input
-        id="municipality-search-input"
+        id="directory-search-input"
         type="search"
         autocomplete="off"
         spellcheck="false"
@@ -60,25 +68,48 @@ const serializedOptions = JSON.stringify(options);
 
 <script>
   (() => {
-    const root = document.querySelector('[data-municipality-search]');
-    if (!root) return;
+    type ClientSearchOption = {
+      label: string;
+      href: string;
+      meta?: string;
+    };
 
-    const input = root.querySelector('#municipality-search-input');
+    const root = document.querySelector('[data-directory-search]');
+    if (!(root instanceof HTMLElement)) return;
+
+    const input = root.querySelector('#directory-search-input');
     const results = root.querySelector('[data-search-results]');
     const list = root.querySelector('[data-search-list]');
     const empty = root.querySelector('[data-search-empty]');
-    if (!(input instanceof HTMLInputElement) || !(results instanceof HTMLDivElement) || !(list instanceof HTMLDivElement) || !(empty instanceof HTMLDivElement)) {
+
+    if (
+      !(input instanceof HTMLInputElement) ||
+      !(results instanceof HTMLDivElement) ||
+      !(list instanceof HTMLDivElement) ||
+      !(empty instanceof HTMLDivElement)
+    ) {
       return;
     }
 
-    const options = JSON.parse(root.getAttribute('data-options') || '[]');
-    const emptyText = root.getAttribute('data-empty') || 'Ingen publisert kommune matcher søket ennå.';
+    const options = JSON.parse(root.getAttribute('data-options') || '[]') as ClientSearchOption[];
+    const emptyText = root.getAttribute('data-empty') || '';
+    const actionLabel = root.getAttribute('data-action-label') || '';
+    const metaFallback = root.getAttribute('data-meta-fallback') || '';
 
-    const render = (query) => {
+    const filterMatches = (query: string) => {
       const normalized = String(query || '').trim().toLocaleLowerCase('nb');
-      const matches = normalized
-        ? options.filter((option) => `${option.label} ${option.county || ''}`.toLocaleLowerCase('nb').includes(normalized))
-        : options.slice(0, 6);
+      if (!normalized) {
+        return options.slice(0, 6);
+      }
+
+      return options.filter((option: ClientSearchOption) =>
+        `${option.label} ${option.meta || ''}`.toLocaleLowerCase('nb').includes(normalized),
+      );
+    };
+
+    const render = (query: string) => {
+      const normalized = String(query || '').trim().toLocaleLowerCase('nb');
+      const matches = filterMatches(query);
 
       list.innerHTML = '';
       empty.textContent = emptyText;
@@ -87,7 +118,8 @@ const serializedOptions = JSON.stringify(options);
       for (const option of matches.slice(0, 8)) {
         const link = document.createElement('a');
         link.href = option.href;
-        link.className = 'flex items-center justify-between gap-4 border-t border-slate-100 px-4 py-3 text-sm transition hover:bg-slate-50 first:border-t-0';
+        link.className =
+          'flex items-center justify-between gap-4 border-t border-slate-100 px-4 py-3 text-sm transition hover:bg-slate-50 first:border-t-0';
 
         const textWrap = document.createElement('span');
         textWrap.className = 'min-w-0';
@@ -98,11 +130,11 @@ const serializedOptions = JSON.stringify(options);
 
         const meta = document.createElement('span');
         meta.className = 'block text-slate-500';
-        meta.textContent = option.county || 'Kommune';
+        meta.textContent = option.meta || metaFallback;
 
         const action = document.createElement('span');
         action.className = 'shrink-0 font-semibold text-teal-700';
-        action.textContent = 'Åpne';
+        action.textContent = actionLabel;
 
         textWrap.append(title, meta);
         link.append(textWrap, action);
@@ -119,17 +151,15 @@ const serializedOptions = JSON.stringify(options);
     input.addEventListener('focus', () => render(input.value));
     input.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter') return;
-      const normalized = input.value.trim().toLocaleLowerCase('nb');
-      const firstMatch = options.find((option) =>
-        `${option.label} ${option.county || ''}`.toLocaleLowerCase('nb').includes(normalized),
-      );
-      if (firstMatch) {
+      const firstMatch = filterMatches(input.value)[0];
+      if (firstMatch?.href) {
         window.location.href = firstMatch.href;
       }
     });
 
     document.addEventListener('click', (event) => {
-      if (!root.contains(event.target)) {
+      const target = event.target;
+      if (!(target instanceof Node) || !root.contains(target)) {
         results.classList.add('hidden');
       }
     });

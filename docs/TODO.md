@@ -1,6 +1,6 @@
 # Active TODO
 
-Last updated: 2026-04-15
+Last updated: 2026-04-16
 
 This is the maintained backlog for `emdash-astro-sidecar`.
 
@@ -23,6 +23,9 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 - [x] The browser RUM client is now embedded directly in generated HTML, removing the fragile external `rum-client.js` delivery path from `guide` and `kommune`.
 - [x] The current mobile Lighthouse budget gate passes for the active `guide` and `kommune` flagship URLs.
 - [x] Lighthouse audit policy is now concept-specific, so volatile concepts like `kommune` can use warmups plus median-of-runs without slowing all other deployments.
+- [x] User-facing concept shell copy is now centralized in a validated copy registry instead of being scattered through site config and components.
+- [x] Landing-page shell copy now has a rendered shell gate that checks visible copy, internal links, and external link intent instead of trusting raw `200 OK`.
+- [x] Municipality-only search was replaced with a reusable directory-search component wired through localized shell copy.
 
 ## Current Published Kommune Set
 
@@ -122,6 +125,19 @@ Everything else in the current municipality rollout should stay drafted until it
   - local differences are too weak
   - hero image is missing for flagship municipality pages
   - page remains too similar to another published municipality page
+
+## P0: Shell And Landing-Page Quality
+
+- [x] Moved user-facing concept shell copy into a reusable registry with validation.
+- [x] Removed hardcoded landing/footer shell strings from the runtime path for `guide` and `kommune`.
+- [x] Added a reusable rendered shell gate that fails on:
+  - mojibake
+  - internal/system language
+  - missing expected shell copy
+  - concept links that do not point to real built outputs
+  - external shell links that resolve to the wrong host/path or soft-404 content
+- [x] Added intent-based external link quality checks for high-value shell links like course pages and primary CTAs.
+- [ ] Extend the shell registry pattern to other user-facing empty/error states outside the landing shell when they become concept-specific.
 
 ## P0: Accessibility
 
@@ -250,6 +266,7 @@ These are not blockers for generic platform work, but they are needed for specif
 ## Recently Completed
 
 - [x] Added a reusable municipality quality report with publish/draft reasons.
+- [x] Centralized shell copy in `apps/blog/site-copy.mjs` and added `pnpm qa:shell` as a rendered shell-quality gate.
 - [x] Added fail-closed kommune publishing so weak municipality pages are drafted out.
 - [x] Rebuilt `/kommune` around a curated 10-page publish set with municipality-specific editorial takeaways and practical steps.
 - [x] Redeployed `/kommune` so the live route worker returns `404` for drafted-out municipalities like `Kristiansand`.

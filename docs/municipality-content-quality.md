@@ -110,6 +110,14 @@ It should not:
 - describe the guide/blog split as if the user cares about repository structure
 - promise breadth the current publish set does not actually support
 
+The shell standard itself should also be reusable:
+
+- all user-facing shell copy should come from a validated copy registry
+- shell copy should avoid unsupported facts unless the fact is intentionally maintained as a verified product fact
+- shell links should be checked for destination quality and intent, not only HTTP status
+- a rendered shell gate should validate the built HTML, not only the source strings
+- directory concepts should use reusable search components rather than one-off concept-specific widgets
+
 ## Timeline Rules
 
 Use the local timeline only for facts supported by the municipality source set.
@@ -265,6 +273,7 @@ Before publishing municipality content, the repo should at minimum pass:
 
 - `pnpm qa:municipality`
 - `pnpm report:municipality`
+- `pnpm qa:shell`
 - concept build for `kurs-ing/kommune`
 - live smoke checks on representative municipality URLs
 

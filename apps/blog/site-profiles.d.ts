@@ -16,6 +16,7 @@ export interface ConceptShellConfig {
   listingEyebrow: string;
   listingTitle: string;
   listingDescription: string;
+  listingEmptyText: string;
   articleContextLabel: string;
   articleLanguageBadge: string;
   articlePrimaryActionText: string;
@@ -25,8 +26,19 @@ export interface ConceptShellConfig {
   footerEyebrow: string;
   footerTitle: string;
   footerDescription: string;
+  footerOffersLabel: string;
+  footerTechnicalLabel: string;
+  footerContactLabel: string;
   footerCopyright: string;
   footerNote: string;
+  directorySearchEyebrow?: string;
+  directorySearchTitle?: string;
+  directorySearchDescription?: string;
+  directorySearchPlaceholder?: string;
+  directorySearchEmpty?: string;
+  directorySearchAriaLabel?: string;
+  directorySearchActionLabel?: string;
+  directorySearchMetaFallback?: string;
 }
 
 export interface SiteConceptConfig {
@@ -36,7 +48,7 @@ export interface SiteConceptConfig {
   basePath: string;
   siteUrl: string;
   siteName: string;
-  description: string;
+  shellKey?: string;
   routes: {
     articlePrefix: string;
     categoryPrefix: string;
@@ -46,12 +58,6 @@ export interface SiteConceptConfig {
     sitemapUrls: string[];
     extraUrls: string[];
   };
-  nav: Array<{ path: string; label: string }>;
-  callsToAction: {
-    primary: { href: string; label: string };
-    secondary: { href: string; label: string };
-  };
-  shell: ConceptShellConfig;
 }
 
 export interface SiteProfileConfig {
@@ -70,7 +76,7 @@ export interface SiteProfileConfig {
     pagesPreviewAlias: string;
     routeWorkerName: string;
   };
-  courseLinks: CourseLinkConfig[];
+  courseLinkSetKey?: string;
   concepts: Record<string, SiteConceptConfig>;
 }
 

@@ -24,23 +24,7 @@ const siteProfiles = {
       forbiddenMarkers: ['Kurs.ing Kommune', 'Kommuneguide', 'Kommunespesifikke sider'],
       exactBypassPaths: ['/robots.txt', '/sitemap.xml', '/sitemap-index.xml'],
     },
-    courseLinks: [
-      {
-        path: '/etablererproven',
-        label: 'Kurs for etablererprøven',
-        description: 'Pensum, oppgaver og råd før prøven i kommunen.',
-      },
-      {
-        path: '/skjenkebevilling',
-        label: 'Kurs for skjenkebevilling',
-        description: 'For styrer og stedfortreder som må dokumentere kunnskap om alkoholloven.',
-      },
-      {
-        path: '/salgsbevilling',
-        label: 'Kurs for salgsbevilling',
-        description: 'For butikker og utsalgssteder som skal søke eller drifte salgsbevilling.',
-      },
-    ],
+    courseLinkSetKey: 'kurs-ing',
     concepts: {
       guide: {
         key: 'guide',
@@ -49,8 +33,7 @@ const siteProfiles = {
         basePath: '/guide',
         siteUrl: 'https://www.kurs.ing/guide',
         siteName: 'Kurs.ing Blogg',
-        description:
-          'Norske guider om etablererprøven, skjenkebevilling og salgsbevilling, skrevet for folk som vil bestå kommunens prøve og komme raskt i gang.',
+        shellKey: 'kurs-ing/guide',
         routes: {
           articlePrefix: '/blog',
           categoryPrefix: '/category',
@@ -70,63 +53,6 @@ const siteProfiles = {
             warmupRuns: 0,
           },
         },
-        nav: [
-          { path: '/', label: 'Artikler' },
-          { path: '/category/etablererproven', label: 'Etablererprøven' },
-          { path: '/category/skjenkebevilling', label: 'Skjenkebevilling' },
-          { path: '/category/salgsbevilling', label: 'Salgsbevilling' },
-        ],
-        callsToAction: {
-          primary: {
-            href: 'https://www.kurs.ing/kasse.html',
-            label: 'Kjøp kurset',
-          },
-          secondary: {
-            href: 'https://www.kurs.ing',
-            label: 'Hovedside',
-          },
-        },
-        shell: {
-          subLabel: 'Blogg',
-          homeEyebrow: 'Forklart enkelt',
-          homeTitle: 'Det du må vite om etablererprøven, skjenkebevilling og salgsbevilling.',
-          homeDescription:
-            'Her finner du enkle forklaringer på vanlige spørsmål om krav, pensum og ansvar. Målet er å gjøre det lettere å forstå hva du må kunne før du kjøper kurs eller går opp til prøve.',
-          homeStats: [
-            {
-              value: '3',
-              label: 'kurs i én pakke på hovedsiden',
-            },
-            {
-              value: '8 uker',
-              label: 'tilgang etter kjøp',
-            },
-            {
-              value: 'Norsk',
-              label: 'innhold skrevet for norske krav og kommunale prøver',
-            },
-          ],
-          homeAsideEyebrow: 'Velg riktig kurs',
-          homeAsideReasonTitle: 'Derfor finnes disse artiklene',
-          homeAsideReasonText:
-            'Her får du raske og tydelige svar på det folk ofte lurer på før de velger kurs eller går opp til kommunens prøve.',
-          listingEyebrow: 'Artikler',
-          listingTitle: 'Dette lurer mange på før de går opp til prøve',
-          listingDescription: 'Forklaringer av pensum, krav, ansvar og hvordan du forbereder deg best mulig.',
-          articleContextLabel: 'Guide',
-          articleLanguageBadge: 'På norsk',
-          articlePrimaryActionText: 'Les artikkel',
-          articleNextStepEyebrow: 'Neste steg',
-          articleNextStepText:
-            'Når du er klar for pensum, oppgaver og eksamentrening, går du videre til kurspakken på hovedsiden.',
-          articleAboutPurpose: 'Forklare krav tydelig og lede videre til riktig kurs.',
-          footerEyebrow: 'Kurs.ing blogg',
-          footerTitle: 'Artikler som hjelper deg å forstå kravene før du kjøper eller går opp til prøve.',
-          footerDescription:
-            'Her finner du forklaringer og råd som gjør det lettere å forstå kravene rundt etablererprøven, skjenkebevilling og salgsbevilling.',
-          footerCopyright: 'Innhold for Norge, skrevet på norsk.',
-          footerNote: 'Beståttgaranti og produktinformasjon finner du på hovedsiden.',
-        },
       },
       kommune: {
         key: 'kommune',
@@ -135,8 +61,7 @@ const siteProfiles = {
         basePath: '/kommune',
         siteUrl: 'https://www.kurs.ing/kommune',
         siteName: 'Kurs.ing Kommune',
-        description:
-          'Kommuneguider for deg som skal søke, drive eller overta serveringssted, butikk eller arrangement med alkohol i Norge.',
+        shellKey: 'kurs-ing/kommune',
         routes: {
           articlePrefix: '/',
           categoryPrefix: '/tema',
@@ -159,55 +84,6 @@ const siteProfiles = {
             runs: 3,
             warmupRuns: 1,
           },
-        },
-        nav: [
-          { path: '/', label: 'Kommuner' },
-          { path: '/arendal', label: 'Arendal' },
-          { path: '/bergen', label: 'Bergen' },
-          { path: '/lillehammer', label: 'Lillehammer' },
-          { path: '/trysil', label: 'Trysil' },
-        ],
-        callsToAction: {
-          primary: {
-            href: 'https://www.kurs.ing/kasse.html',
-            label: 'Se kurspakken',
-          },
-          secondary: {
-            href: 'https://www.kurs.ing',
-            label: 'Til kurs.ing',
-          },
-        },
-        shell: {
-          subLabel: 'Kommune',
-          homeEyebrow: 'For salg og servering i Norge',
-          homeTitle: 'Finn kommunen din og se hva som gjelder for skjenking, salg, søknad og innsyn.',
-          homeDescription:
-            'Her finner du kommuner der vi faktisk har kvalitetssikret lokale tider, søknadsspor, innsyn og relevante kommunale kilder for deg som skal jobbe med mat, drikke, servering eller alkoholsalg.',
-          directorySearchEyebrow: 'Søk kommune',
-          directorySearchTitle: 'Skriv kommunen du jobber mot',
-          directorySearchDescription:
-            'Søket foreslår bare kommuner som faktisk har en publisert side akkurat nå.',
-          directorySearchPlaceholder: 'Begynn å skrive, for eksempel Arendal eller Bjerkreim',
-          directorySearchEmpty: 'Ingen publisert kommune matcher søket ennå.',
-          homeStats: [],
-          homeAsideEyebrow: 'Utvalgte kommuner',
-          homeAsideReasonTitle: 'Hva du får her',
-          homeAsideReasonText:
-            'Hver kommuneside viser lokale tider, nyttige kilder fra kommunen og hva som er viktig å kontrollere før du søker, åpner eller endrer driften.',
-          listingEyebrow: 'Kommuner',
-          listingTitle: 'Kommuner som er klare til bruk',
-          listingDescription: 'Velg kommunen du jobber mot. Hver side er laget for å gi praktisk støtte før søknad, oppstart eller endring i drift.',
-          articleContextLabel: 'Kommune',
-          articleLanguageBadge: 'På norsk',
-          articlePrimaryActionText: 'Les kommunesiden',
-          articleNextStepEyebrow: 'Neste steg',
-          articleNextStepText: 'Bruk kommunesiden for lokal oversikt, og gå deretter videre til riktig guide eller kurs når du trenger forklaring og trening.',
-          articleAboutPurpose: 'Gi deg raskere tilgang til riktige lokale kilder før du søker eller endrer drift.',
-          footerEyebrow: 'Kurs.ing kommune',
-          footerTitle: 'Finn riktige kommunesider før du søker, åpner eller endrer drift.',
-          footerDescription: 'Målet er å gjøre det lettere å finne fram til riktige kommunale kilder før du bruker tid på søknad, opplæring eller planlegging av drift.',
-          footerCopyright: 'Kommunespesifikt innhold for Norge.',
-          footerNote: 'Bruk hovedsiden og guideseksjonen når du trenger mer forklaring, eksamentrening eller kurs.',
         },
       },
     },
@@ -237,7 +113,7 @@ const siteProfiles = {
       forbiddenMarkers: [],
       exactBypassPaths: ['/robots.txt', '/sitemap.xml', '/sitemap-index.xml'],
     },
-    courseLinks: [],
+    courseLinkSetKey: 'gatareba-ge',
     concepts: {
       guide: {
         key: 'guide',
@@ -246,7 +122,7 @@ const siteProfiles = {
         basePath: '/guide',
         siteUrl: 'https://www.gatareba.ge/guide',
         siteName: 'Gatareba.ge Guide',
-        description: 'Example profile for a completely unrelated domain. Replace with real brand copy before deployment.',
+        shellKey: 'gatareba-ge/guide',
         routes: {
           articlePrefix: '/blog',
           categoryPrefix: '/category',
@@ -265,44 +141,6 @@ const siteProfiles = {
             runs: 1,
             warmupRuns: 0,
           },
-        },
-        nav: [
-          { path: '/', label: 'Articles' },
-        ],
-        callsToAction: {
-          primary: {
-            href: 'https://www.gatareba.ge',
-            label: 'Go to site',
-          },
-          secondary: {
-            href: 'mailto:hello@gatareba.ge',
-            label: 'Contact',
-          },
-        },
-        shell: {
-          subLabel: 'Guide',
-          homeEyebrow: 'Replace this profile',
-          homeTitle: 'This unrelated-domain example is here to prove the repo can separate sites cleanly.',
-          homeDescription:
-            'Before using this profile, replace all copy, CTA links, taxonomy, audit targets, and concept routing with real site data.',
-          homeStats: [],
-          homeAsideEyebrow: 'Important',
-          homeAsideReasonTitle: 'Example only',
-          homeAsideReasonText: 'Do not ship this profile as-is. It is only a scaffold for a completely different domain.',
-          listingEyebrow: 'Articles',
-          listingTitle: 'Guide content',
-          listingDescription: 'Replace with real content for the new site.',
-          articleContextLabel: 'Guide',
-          articleLanguageBadge: 'Localized',
-          articlePrimaryActionText: 'Read article',
-          articleNextStepEyebrow: 'Next step',
-          articleNextStepText: 'Replace all content and actions before publishing.',
-          articleAboutPurpose: 'Demonstrate site separation.',
-          footerEyebrow: 'Guide',
-          footerTitle: 'Replace this scaffold with real brand copy.',
-          footerDescription: 'This profile exists to show how unrelated sites can live in the same repo without sharing config.',
-          footerCopyright: 'Example profile only.',
-          footerNote: 'Replace before launch.',
         },
       },
     },

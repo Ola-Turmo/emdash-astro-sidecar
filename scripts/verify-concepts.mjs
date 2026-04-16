@@ -3,6 +3,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { getResolvedSiteCopy } from '../apps/blog/site-copy.mjs';
 import { getConceptOutputDir } from '../apps/blog/site-profiles.mjs';
 
 const repoRoot = process.cwd();
@@ -19,12 +20,6 @@ const concepts = [
       'index.html',
       path.join('blog', 'hvordan-besta-etablererproven', 'index.html'),
     ],
-    textChecks: [
-      {
-        file: 'index.html',
-        snippets: ['Forklart enkelt', 'Det du må vite om etablererprøven'],
-      },
-    ],
   },
   {
     siteKey: 'kurs-ing',
@@ -32,37 +27,15 @@ const concepts = [
     expectedFiles: [
       'index.html',
       path.join('arendal', 'index.html'),
-      path.join('bergen', 'index.html'),
       path.join('bjerkreim', 'index.html'),
-      path.join('lillehammer', 'index.html'),
-      path.join('narvik', 'index.html'),
-      path.join('trysil', 'index.html'),
-    ],
-    textChecks: [
-      {
-        file: 'index.html',
-        snippets: ['Kommuneguide', 'Velg kommunen du vil se nærmere på'],
-      },
-      {
-        file: path.join('arendal', 'index.html'),
-        snippets: ['Tidslinje for lokale alkoholregler', 'Kilder og kontrollpunkter', 'Se kurspakken'],
-      },
-      {
-        file: path.join('bergen', 'index.html'),
-        snippets: ['Dette skiller Bergen fra andre kommuner', 'Kommunale sider du bør åpne først'],
-      },
+      path.join('bremanger', 'index.html'),
+      path.join('nord-aurdal', 'index.html'),
     ],
   },
   {
     siteKey: 'gatareba-ge',
     conceptKey: 'guide',
     expectedFiles: ['index.html'],
-    textChecks: [
-      {
-        file: 'index.html',
-        snippets: ['Replace this profile', 'Example only'],
-      },
-    ],
   },
 ];
 
@@ -80,7 +53,11 @@ for (const target of concepts) {
 }
 
 function verifyBuildOutputs(target) {
-  const distRoot = path.join(blogAppRoot, getConceptOutputDir(target.siteKey, target.conceptKey).replace(/^\.\//, ''));
+  const distRoot = path.join(
+    blogAppRoot,
+    getConceptOutputDir(target.siteKey, target.conceptKey).replace(/^\.\//u, ''),
+  );
+  const resolvedCopy = getResolvedSiteCopy(target.siteKey, target.conceptKey);
 
   for (const relativePath of target.expectedFiles) {
     const absolutePath = path.join(distRoot, relativePath);
@@ -89,15 +66,19 @@ function verifyBuildOutputs(target) {
     }
   }
 
-  for (const check of target.textChecks) {
-    const absolutePath = path.join(distRoot, check.file);
-    const html = readFileSync(absolutePath, 'utf8');
-    for (const snippet of check.snippets) {
-      if (!html.includes(snippet)) {
-        throw new Error(
-          `Missing expected concept text for ${target.siteKey}/${target.conceptKey} in ${check.file}: ${snippet}`,
-        );
-      }
+  const landingHtml = readFileSync(path.join(distRoot, 'index.html'), 'utf8');
+  const expectedSnippets = [
+    resolvedCopy.shell.homeTitle,
+    resolvedCopy.shell.homeDescription,
+    resolvedCopy.shell.listingTitle,
+    resolvedCopy.shell.footerTitle,
+  ].filter(Boolean);
+
+  for (const snippet of expectedSnippets) {
+    if (!landingHtml.includes(snippet)) {
+      throw new Error(
+        `Missing expected concept shell copy for ${target.siteKey}/${target.conceptKey} in index.html: ${snippet}`,
+      );
     }
   }
 }
