@@ -93,6 +93,23 @@ Weak blocks:
 - generic municipal home-page summaries
 - filler explanation paragraphs that do not change from municipality to municipality
 
+## Landing Page Rules
+
+The `/kommune` landing page must also be written for the end user, not for the system.
+
+It should:
+
+- explain what the reader can do there in plain Norwegian
+- make it obvious that the page is for people working with servering or alkoholsalg
+- only surface municipalities that are actually published right now
+- offer a simple municipality search that only suggests live pages
+
+It should not:
+
+- talk about "same design", "content model", or similar internal architecture terms
+- describe the guide/blog split as if the user cares about repository structure
+- promise breadth the current publish set does not actually support
+
 ## Timeline Rules
 
 Use the local timeline only for facts supported by the municipality source set.

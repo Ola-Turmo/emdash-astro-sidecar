@@ -67,6 +67,11 @@ type RuntimeShape = {
       homeEyebrow: string;
       homeTitle: string;
       homeDescription: string;
+      directorySearchEyebrow?: string;
+      directorySearchTitle?: string;
+      directorySearchDescription?: string;
+      directorySearchPlaceholder?: string;
+      directorySearchEmpty?: string;
       homeStats: Array<{ value: string; label: string }>;
       homeAsideEyebrow: string;
       homeAsideReasonTitle: string;

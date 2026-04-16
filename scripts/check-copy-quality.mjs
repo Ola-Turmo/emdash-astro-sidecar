@@ -9,7 +9,10 @@ const findings = [];
 const uiFiles = await walkFiles(path.join(repoRoot, 'apps/blog/src'), (filePath) =>
   /\.(astro|md|mdx|json|ts)$/.test(filePath),
 );
-const filesToCheck = [...uiFiles];
+const filesToCheck = [
+  ...uiFiles,
+  path.join(repoRoot, 'apps', 'blog', 'site-profiles.mjs'),
+];
 
 const bannedUiPhrases = [
   'SEO / GEO sidecar',
@@ -26,6 +29,10 @@ const bannedUiPhrases = [
   'det strukturerte datagrunnlaget',
   'praktiske innganger',
   'Kommunale sider som faktisk er relevante her',
+  'egen lokal innholdsmodell',
+  'samme design',
+  'guidebloggen',
+  'Kommunespesifikk informasjon',
 ];
 
 const bannedPlaceholderPhrases = [

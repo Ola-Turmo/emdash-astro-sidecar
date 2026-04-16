@@ -1,0 +1,137 @@
+---
+interface SearchOption {
+  label: string;
+  href: string;
+  county?: string;
+}
+
+interface Props {
+  options: SearchOption[];
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  placeholder?: string;
+  emptyText?: string;
+}
+
+const {
+  options,
+  eyebrow = 'Søk kommune',
+  title = 'Skriv kommunen du jobber mot',
+  description = '',
+  placeholder = 'Søk etter publisert kommune',
+  emptyText = 'Ingen publisert kommune matcher søket ennå.',
+} = Astro.props as Props;
+
+const serializedOptions = JSON.stringify(options);
+---
+
+<section
+  class="shell-card mt-8 p-5 sm:p-6"
+  data-municipality-search
+  data-options={serializedOptions}
+  data-empty={emptyText}
+>
+  <p class="eyebrow">{eyebrow}</p>
+  <h2 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">{title}</h2>
+  {description && <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{description}</p>}
+
+  <div class="mt-5">
+    <label class="sr-only" for="municipality-search-input">Søk kommune</label>
+    <div class="relative">
+      <input
+        id="municipality-search-input"
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder={placeholder}
+        class="w-full rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 shadow-sm outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15"
+      />
+      <div
+        class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 hidden overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white shadow-xl"
+        data-search-results
+      >
+        <div data-search-empty class="hidden px-4 py-3 text-sm text-slate-500"></div>
+        <div data-search-list class="max-h-80 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (() => {
+    const root = document.querySelector('[data-municipality-search]');
+    if (!root) return;
+
+    const input = root.querySelector('#municipality-search-input');
+    const results = root.querySelector('[data-search-results]');
+    const list = root.querySelector('[data-search-list]');
+    const empty = root.querySelector('[data-search-empty]');
+    if (!(input instanceof HTMLInputElement) || !(results instanceof HTMLDivElement) || !(list instanceof HTMLDivElement) || !(empty instanceof HTMLDivElement)) {
+      return;
+    }
+
+    const options = JSON.parse(root.getAttribute('data-options') || '[]');
+    const emptyText = root.getAttribute('data-empty') || 'Ingen publisert kommune matcher søket ennå.';
+
+    const render = (query) => {
+      const normalized = String(query || '').trim().toLocaleLowerCase('nb');
+      const matches = normalized
+        ? options.filter((option) => `${option.label} ${option.county || ''}`.toLocaleLowerCase('nb').includes(normalized))
+        : options.slice(0, 6);
+
+      list.innerHTML = '';
+      empty.textContent = emptyText;
+      empty.classList.toggle('hidden', matches.length !== 0);
+
+      for (const option of matches.slice(0, 8)) {
+        const link = document.createElement('a');
+        link.href = option.href;
+        link.className = 'flex items-center justify-between gap-4 border-t border-slate-100 px-4 py-3 text-sm transition hover:bg-slate-50 first:border-t-0';
+
+        const textWrap = document.createElement('span');
+        textWrap.className = 'min-w-0';
+
+        const title = document.createElement('span');
+        title.className = 'block font-bold text-slate-900';
+        title.textContent = option.label;
+
+        const meta = document.createElement('span');
+        meta.className = 'block text-slate-500';
+        meta.textContent = option.county || 'Kommune';
+
+        const action = document.createElement('span');
+        action.className = 'shrink-0 font-semibold text-teal-700';
+        action.textContent = 'Åpne';
+
+        textWrap.append(title, meta);
+        link.append(textWrap, action);
+        list.append(link);
+      }
+
+      results.classList.toggle('hidden', matches.length === 0 && !normalized);
+      if (matches.length > 0 || normalized) {
+        results.classList.remove('hidden');
+      }
+    };
+
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('focus', () => render(input.value));
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      const normalized = input.value.trim().toLocaleLowerCase('nb');
+      const firstMatch = options.find((option) =>
+        `${option.label} ${option.county || ''}`.toLocaleLowerCase('nb').includes(normalized),
+      );
+      if (firstMatch) {
+        window.location.href = firstMatch.href;
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!root.contains(event.target)) {
+        results.classList.add('hidden');
+      }
+    });
+  })();
+</script>

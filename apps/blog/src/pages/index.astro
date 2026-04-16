@@ -4,6 +4,7 @@ import ArticleCard from '../components/ArticleCard.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import MunicipalityCard from '../components/MunicipalityCard.astro';
+import MunicipalitySearch from '../components/MunicipalitySearch.astro';
 import { deriveMunicipalityView } from '../lib/municipality-view';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import {
@@ -27,12 +28,19 @@ const sortedPosts = allPosts.sort(
 );
 const featuredPosts = sortedPosts.slice(0, 6);
 const municipalityPages = isMunicipalityConcept ? await getPublishedMunicipalPages() : [];
-const featuredMunicipalities = municipalityPages
+const sortedMunicipalities = municipalityPages
   .sort((a, b) => a.data.municipality.localeCompare(b.data.municipality, 'nb'))
+const featuredMunicipalities = sortedMunicipalities
   .slice(0, 12);
+const municipalitySearchOptions = sortedMunicipalities.map((page) => ({
+  label: page.data.municipality,
+  href: articlePath(page.slug),
+  county: page.data.county,
+}));
+const landingTitle = isMunicipalityConcept ? SHELL_COPY.homeTitle : SITE_NAME;
 ---
 
-<BaseLayout title={SITE_NAME} description={SITE_DESCRIPTION}>
+<BaseLayout title={landingTitle} description={SITE_DESCRIPTION}>
   <Header />
 
   <main>
@@ -102,6 +110,17 @@ const featuredMunicipalities = municipalityPages
 
     <section class="px-3 pb-14 sm:px-4 md:pb-20">
       <div class="mx-auto max-w-6xl">
+        {isMunicipalityConcept && municipalitySearchOptions.length > 0 && (
+          <MunicipalitySearch
+            options={municipalitySearchOptions}
+            eyebrow={SHELL_COPY.directorySearchEyebrow}
+            title={SHELL_COPY.directorySearchTitle}
+            description={SHELL_COPY.directorySearchDescription}
+            placeholder={SHELL_COPY.directorySearchPlaceholder}
+            emptyText={SHELL_COPY.directorySearchEmpty}
+          />
+        )}
+
         <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p class="eyebrow">{SHELL_COPY.listingEyebrow}</p>
