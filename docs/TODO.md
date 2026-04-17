@@ -1,6 +1,6 @@
 # Active TODO
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 
 This is the maintained backlog for `emdash-astro-sidecar`.
 
@@ -71,18 +71,15 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P0: Telemetry And Feedback Loop
 
-- [ ] Finish live Google Search Console activation and ingestion.
 - [x] Added a GSC-free Google public-signals fallback (`pnpm report:google-public`, `pnpm qa:google-public`) so search-readiness work does not block on OAuth setup.
 - [x] Added a reusable CrUX ingestion path for the active site/concept (`pnpm telemetry:crux`) plus persistent D1 history in `metrics_crux_samples`.
 - [x] Resolved the metrics-worker secret visibility issue by adding a Cloudflare-side D1 fallback for runtime secrets when worker secret bindings drift.
 - [x] CrUX no longer acts like a blocker when Google has no data for the queried origin/URLs; it now resolves as a clean `crux_no_data` state.
-- [ ] Finish Bing Webmaster ingestion.
 - [x] Bing no longer acts like a blocker when the current key/site pairing is unauthorized; it now resolves as a clean `bing_not_authorized` state after trying realistic site variants.
 - [x] Added a Cloudflare-native request/referrer telemetry report so organic landings and crawler behavior can be measured without GSC or Bing auth.
 - [x] Added crawler-detection reporting from first-party edge request signals.
 - [x] Added a public PageSpeed report path that works without Search Console credentials.
 - [x] Codified a credentialless autopilot telemetry strategy in `docs/credentialless-telemetry-strategy.md`.
-- [ ] Finish IndexNow submission plus outcome tracking.
 - [ ] Tie telemetry to automatic refresh candidates:
   - falling CTR
   - rising impressions with weak clicks
@@ -257,7 +254,6 @@ These are not blockers for generic platform work, but they are needed for specif
 - [ ] Locale, language, geography, and support email
 - [ ] Allowed topic clusters and categories
 - [ ] Cloudflare zone / Pages / route-worker decisions
-- [ ] Search Console / Bing / IndexNow access if telemetry should go live
 
 ### For a new concept on an existing site
 
