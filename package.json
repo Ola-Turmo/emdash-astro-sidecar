@@ -22,7 +22,7 @@
     "sync:concept-seo": "node ./scripts/sync-concept-seo-artifacts.mjs",
     "audit:deployed": "node ./scripts/audit-deployed-urls.mjs",
     "audit:deployed:lighthouse": "node ./scripts/audit-deployed-urls.mjs --lighthouse",
-    "audit:deployed:psi": "node ./scripts/audit-deployed-urls.mjs --lighthouse",
+    "audit:deployed:psi": "node ./scripts/audit-deployed-urls.mjs --psi",
     "autonomous:check-env": "node ./scripts/check-autonomous-env.mjs",
     "autonomous:deploy-workers": "node ./scripts/deploy-autonomous-workers.mjs",
     "cloudflare:check-auth": "node ./scripts/check-cloudflare-auth.mjs --require-pages",

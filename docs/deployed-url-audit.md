@@ -24,6 +24,13 @@ Compatibility alias:
 pnpm audit:deployed:psi
 ```
 
+That alias still runs the same local Lighthouse audit as `pnpm audit:deployed:lighthouse`.
+If you want real public PageSpeed API data instead, use:
+
+```bash
+pnpm report:pagespeed-public
+```
+
 ## URL Discovery
 
 The audit reads:
@@ -86,6 +93,7 @@ That gate audits the built local site at multiple narrow viewports and fails on 
 ## Lighthouse Runtime
 
 The Lighthouse pass runs locally against the live URLs. It does not call Google PageSpeed Insights.
+The `audit:deployed:psi` alias is only a backwards-compatible command name for that same local run.
 
 On first use, the script bootstraps a cached Lighthouse CLI into a local tool directory under the current user profile and reuses that on later runs.
 

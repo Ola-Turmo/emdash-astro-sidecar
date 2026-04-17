@@ -40,7 +40,8 @@ function slugifyUrl(url) {
 function parseArgs(argv) {
   const urls = [];
   const sitemaps = [];
-  const includeLighthouse = argv.includes('--lighthouse') || argv.includes('--psi');
+  const usesPsiAlias = argv.includes('--psi');
+  const includeLighthouse = argv.includes('--lighthouse') || usesPsiAlias;
   const includeConfigured = argv.includes('--include-configured');
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -55,7 +56,7 @@ function parseArgs(argv) {
     }
   }
 
-  return { urls, sitemaps, includeLighthouse, includeConfigured };
+  return { urls, sitemaps, includeLighthouse, includeConfigured, usesPsiAlias };
 }
 
 function ensureTrailingSlash(url) {
@@ -588,7 +589,13 @@ async function main() {
     sitemaps: cliSitemaps,
     includeLighthouse,
     includeConfigured,
+    usesPsiAlias,
   } = parseArgs(process.argv.slice(2));
+  if (usesPsiAlias) {
+    console.warn(
+      'The --psi mode is a compatibility alias for the local Lighthouse audit. Use `pnpm report:pagespeed-public` for the real public PageSpeed API report.',
+    );
+  }
   const configured = await loadSiteAuditTargets();
   const useConfiguredTargets = includeConfigured || (cliUrls.length === 0 && cliSitemaps.length === 0);
   const distUrls = useConfiguredTargets && configured.siteUrl ? await discoverDistUrls(configured.siteUrl) : [];
