@@ -3,18 +3,15 @@
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
+import { loadPreviousSummary, summarizeTrend, writeReportArtifacts } from './lib/report-artifacts.mjs';
+import { loadRuntimeQualityConfig } from './lib/runtime-quality.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 
-async function loadUrls() {
-  const siteConfigModule = await import(pathToFileURL(path.join(repoRoot, 'apps/blog/src/site-config.ts')).href);
-  return [...new Set([siteConfigModule.SITE_URL, ...(siteConfigModule.DEPLOY_AUDIT_EXTRA_URLS || [])].filter(Boolean))];
-}
-
 function parseArgs(argv) {
-  const options = { urls: [] };
+  const options = { urls: [], strict: argv.includes('--strict') };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--url' && argv[index + 1]) {
@@ -26,8 +23,10 @@ function parseArgs(argv) {
 }
 
 async function main() {
+  const config = loadRuntimeQualityConfig(process.env);
+  const previous = loadPreviousSummary(repoRoot, 'accessibility', config.outputScope);
   const options = parseArgs(process.argv.slice(2));
-  const urls = options.urls.length ? options.urls : await loadUrls();
+  const urls = options.urls.length ? options.urls : config.auditUrls;
   if (!urls.length) {
     throw new Error('No URLs configured for accessibility checks.');
   }
@@ -212,6 +211,7 @@ async function main() {
       findings.push('Keyboard tab reachability looks broken or too shallow');
     }
 
+    const previousResult = previous?.results?.find((entry) => entry.url === url);
     results.push({
       url,
       lang: analysis.htmlLang || null,
@@ -222,6 +222,10 @@ async function main() {
       unlabeledControls: analysis.unlabeledControls,
       contrastIssues: analysis.contrastIssues,
       findings,
+      trends: {
+        focusableCount: summarizeTrend(analysis.focusableCount, previousResult?.focusableCount, false),
+        contrastIssues: summarizeTrend(analysis.contrastIssues.length, previousResult?.contrastIssues?.length, true),
+      },
     });
   }
 
@@ -229,14 +233,34 @@ async function main() {
 
   const summary = {
     generatedAt: new Date().toISOString(),
+    siteKey: config.runtime.siteKey,
+    conceptKey: config.runtime.conceptKey,
+    dashboardLabel: config.dashboardLabel,
+    strict: options.strict,
     results,
+    findings: results.flatMap((result) => result.findings.map((finding) => `${result.url}: ${finding}`)),
   };
 
-  console.log(JSON.stringify(summary, null, 2));
+  const markdown = [
+    '# Accessibility Report',
+    '',
+    `Generated: ${summary.generatedAt}`,
+    `Scope: ${summary.siteKey}/${summary.conceptKey}`,
+    '',
+    '| URL | h1 | Focusable | Missing alt | Unlabeled controls | Contrast issues | Status |',
+    '| --- | ---: | ---: | ---: | ---: | ---: | --- |',
+    ...results.map((result) => `| ${result.url} | ${result.h1Count} | ${result.focusableCount} | ${result.missingAlt.length} | ${result.unlabeledControls.length} | ${result.contrastIssues.length} | ${result.findings.length ? 'alert' : 'ok'} |`),
+    '',
+    '## Findings',
+    '',
+    ...(summary.findings.length ? summary.findings.map((finding) => `- ${finding}`) : ['- No accessibility regressions found.']),
+  ].join('\n');
 
-  const failures = results.flatMap((result) => result.findings.map((finding) => `${result.url}: ${finding}`));
-  if (failures.length) {
-    throw new Error(`Accessibility regression gate failed:\n- ${failures.join('\n- ')}`);
+  const paths = writeReportArtifacts(repoRoot, 'accessibility', summary, markdown, config.outputScope);
+  console.log(`Accessibility report written to ${paths.latestMarkdownPath}`);
+
+  if (options.strict && summary.findings.length) {
+    throw new Error(`Accessibility regression gate failed. See ${paths.latestMarkdownPath}`);
   }
 }
 

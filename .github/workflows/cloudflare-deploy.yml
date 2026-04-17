@@ -186,6 +186,29 @@ jobs:
           path: output/playwright/deployed-audit
           if-no-files-found: error
 
+      - name: Generate release health dashboard
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
+          CONTENT_API_TOKEN: ${{ secrets.CONTENT_API_TOKEN }}
+        run: pnpm report:release -- --refresh
+
+      - name: Append release dashboard summary
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          SUMMARY_PATH="output/release-health/kurs-ing/guide/latest/SUMMARY.md"
+          if [ -f "$SUMMARY_PATH" ]; then
+            cat "$SUMMARY_PATH" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload release dashboard artifacts
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-health
+          path: output/release-health
+          if-no-files-found: error
+
   # Optional: Run tests after deployment
   test-deployment:
     name: Test Deployment

@@ -1,0 +1,71 @@
+name: Quality Reporting
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * *'
+
+jobs:
+  dashboard:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - site_key: kurs-ing
+            concept_key: guide
+          - site_key: kurs-ing
+            concept_key: kommune
+          - site_key: gatareba-ge
+            concept_key: guide
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build active concept
+        env:
+          EMDASH_SITE_KEY: ${{ matrix.site_key }}
+          EMDASH_CONCEPT_KEY: ${{ matrix.concept_key }}
+        run: pnpm --filter @emdash/blog build
+
+      - name: Proof live browser RUM
+        env:
+          EMDASH_SITE_KEY: ${{ matrix.site_key }}
+          EMDASH_CONCEPT_KEY: ${{ matrix.concept_key }}
+        run: pnpm proof:rum
+
+      - name: Generate quality dashboards
+        env:
+          EMDASH_SITE_KEY: ${{ matrix.site_key }}
+          EMDASH_CONCEPT_KEY: ${{ matrix.concept_key }}
+          CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
+          CONTENT_API_TOKEN: ${{ secrets.CONTENT_API_TOKEN }}
+        run: pnpm report:release -- --refresh
+
+      - name: Append dashboard summary
+        env:
+          EMDASH_SITE_KEY: ${{ matrix.site_key }}
+          EMDASH_CONCEPT_KEY: ${{ matrix.concept_key }}
+        run: |
+          SUMMARY_PATH="output/release-health/${EMDASH_SITE_KEY}/${EMDASH_CONCEPT_KEY}/latest/SUMMARY.md"
+          if [ -f "$SUMMARY_PATH" ]; then
+            cat "$SUMMARY_PATH" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload quality artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-${{ matrix.site_key }}-${{ matrix.concept_key }}
+          path: output/
+          if-no-files-found: error

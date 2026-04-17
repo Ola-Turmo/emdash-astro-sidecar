@@ -16,6 +16,8 @@ Use these docs as the operational runbook for the sidecar.
   Known failure modes, especially subpath asset failures and Cloudflare routing mistakes.
 - [quality-gates.md](./quality-gates.md)
   Release gates, what they check, and how to use them before every deploy.
+- [operator-dashboards.md](./operator-dashboards.md)
+  Release-health dashboards, scheduled reporting, and deploy-summary artifacts.
 - [deployed-url-audit.md](./deployed-url-audit.md)
   Screenshot and analytics workflow for every live deployed URL.
 - [editorial-workflow.md](./editorial-workflow.md)
@@ -30,8 +32,14 @@ Use these docs as the operational runbook for the sidecar.
   Manual review checklist for flagship pages on top of the automated accessibility gate.
 - [security-checklist.md](./security-checklist.md)
   Reusable security and ASVS-oriented checklist for the public app and worker surfaces.
+- [csp-baseline.md](./csp-baseline.md)
+  Required CSP baseline directives plus the remaining exceptions that still need review.
 - [credentialless-telemetry-strategy.md](./credentialless-telemetry-strategy.md)
   Default telemetry strategy for autopilot operation without GSC OAuth or Bing site authorization.
+- [site-onboarding.md](./site-onboarding.md)
+  Scaffold workflow for adding a new site profile with less manual setup.
+- [control-plane-backups.md](./control-plane-backups.md)
+  Export workflow for runtime state, generated reports, and optional remote D1 snapshots.
 - [TODO.md](./TODO.md)
   Maintained backlog including the latest learning, review, taxonomy, and observability work.
 - [world-class-quality-targets.md](./world-class-quality-targets.md)

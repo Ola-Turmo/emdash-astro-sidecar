@@ -4,11 +4,14 @@ import type { CollectionEntry } from 'astro:content';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import BaseLayout from './BaseLayout.astro';
+import { generateArticleJsonLd, generateBreadcrumbJsonLd } from '../lib/seo';
 import {
   MAIN_SITE_NAME,
   PRIMARY_CTA,
   SECONDARY_CTA,
   SHELL_COPY,
+  SITE_NAME,
+  SITE_URL,
   categoryPath,
 } from '../consts';
 
@@ -26,15 +29,37 @@ const categoryEntry = categoryId ? await getEntry('categories', categoryId) : un
 const authorName = authorEntry?.data.name ?? authorId ?? MAIN_SITE_NAME;
 const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
 const categorySlug = categoryEntry?.slug ?? categoryId ?? '';
+const canonicalUrl = new URL(Astro.url.pathname, SITE_URL).href;
+const categoryUrl = new URL(categoryPath(categorySlug).replace(/^\//u, ''), `${SITE_URL}/`).toString();
+const jsonLdScripts = [
+  generateBreadcrumbJsonLd([
+    { name: SITE_NAME, url: SITE_URL },
+    { name: categoryName, url: categoryUrl },
+    { name: title, url: canonicalUrl },
+  ]),
+  generateArticleJsonLd({
+    title,
+    description: excerpt || description,
+    url: canonicalUrl,
+    ogImage: featuredImage?.src,
+    pubDate,
+    updatedDate,
+    author: authorName,
+    schemaType,
+  }),
+];
 ---
 
 <BaseLayout
   title={title}
   description={excerpt || description}
   ogImage={featuredImage?.src}
+  canonicalUrl={canonicalUrl}
   pubDate={pubDate}
+  updatedDate={updatedDate}
   author={authorName}
   schemaType={schemaType}
+  jsonLdScripts={jsonLdScripts}
 >
   <Header />
 

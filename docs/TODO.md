@@ -32,27 +32,27 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P0: Release Quality And Operator Visibility
 
-- [ ] Turn the current RUM summary foundation into production release gating and dashboarding:
+- [x] Turn the current RUM summary foundation into production release gating and dashboarding:
   - alerting on regressions
   - flagship-page tracking
   - persistent trend views
   - deploy summaries tied to field targets
-- [ ] Add a release gate for field-performance targets on flagship surfaces:
+- [x] Add a release gate for field-performance targets on flagship surfaces:
   - `LCP p75 <= 2.5s`
   - `INP p75 <= 200ms`
   - `CLS p75 <= 0.1`
   - `TTFB p75 <= 0.8s`
   - `FCP p75 <= 1.8s`
-- [ ] Add stronger Lighthouse CI budgets for flagship pages:
+- [x] Add stronger Lighthouse CI budgets for flagship pages:
   - `Performance >= 90`
   - `Accessibility >= 90`
   - `SEO >= 90`
   - `Best Practices >= 90`
   - `TBT < 200ms`
-- [ ] Add a world-class `flagship` target tier for key landing pages and highest-value articles:
+- [x] Add a world-class `flagship` target tier for key landing pages and highest-value articles:
   - `Performance >= 95`
   - tighter LCP target toward `~1.2-1.5s` on hero pages
-- [ ] Make performance and release targets visible in operator dashboards and deployment summaries, not just in CLI output.
+- [x] Make performance and release targets visible in operator dashboards and deployment summaries, not just in CLI output.
 
 ## P0: Telemetry And Feedback Loop
 
@@ -67,7 +67,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - crawl/index state
   - publish quality state
   - conversion/funnel signals
-- [ ] Add recurring scheduled/browser-proof reporting outside deploys so fresh browser samples stay continuously verified between releases.
+- [x] Add recurring scheduled/browser-proof reporting outside deploys so fresh browser samples stay continuously verified between releases.
 
 ## P0: Kommune Concept Quality
 
@@ -76,16 +76,16 @@ Everything else in the current municipality rollout should stay drafted until it
   - renewal and controls
   - local exceptions or seasonal distinctions
   - consumption-stop rules and enforcement nuances
-- [ ] Execute real Cloudflare kommune cache purges after deploys when `CLOUDFLARE_API_TOKEN` is available locally or in CI.
+- [x] Execute real Cloudflare kommune cache purges after deploys when `CLOUDFLARE_API_TOKEN` is available locally or in CI.
 
 ## P0: Accessibility
 
-- [ ] Surface accessibility trend reporting in dashboards instead of only per-run CLI output.
+- [x] Surface accessibility trend reporting in dashboards instead of only per-run CLI output.
 
 ## P0: Security And Transport
 
-- [ ] Tighten CSP toward a reusable strict baseline and document allowed exceptions.
-- [ ] Add passive vulnerability scanning into normal verification or scheduled audits.
+- [x] Tighten CSP toward a reusable strict baseline and document allowed exceptions.
+- [x] Add passive vulnerability scanning into normal verification or scheduled audits.
 
 ## P0: Reliability And Operations
 
@@ -95,13 +95,13 @@ Everything else in the current municipality rollout should stay drafted until it
   - error rate
   - queue/workflow health
 - [ ] Add error-budget style reporting and alerting for the Cloudflare control plane.
-- [ ] Add better host-state visibility:
+- [x] Add better host-state visibility:
   - locked host runs
   - cooldown state
   - worker failure rate
   - retry churn
   - publish event timelines
-- [ ] Add backup/export workflows for:
+- [x] Add backup/export workflows for:
   - D1 runtime state
   - review state
   - publish history
@@ -110,27 +110,27 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P1: SEO / Discoverability / Search Readiness
 
-- [ ] Add structured-data validity checks to recurring verification.
-- [ ] Track sitemap freshness and error rate as a first-class quality signal.
-- [ ] Add a guard against intrusive overlays/interstitial patterns on production pages.
-- [ ] Add explicit crawlability and renderability checks for key templates.
+- [x] Add structured-data validity checks to recurring verification.
+- [x] Track sitemap freshness and error rate as a first-class quality signal.
+- [x] Add a guard against intrusive overlays/interstitial patterns on production pages.
+- [x] Add explicit crawlability and renderability checks for key templates.
 
 ## P1: Astro / Edge Parity
 
-- [ ] Reach closer parity between Astro-served articles and edge-served articles for:
+- [x] Reach closer parity between Astro-served articles and edge-served articles for:
   - metadata
   - shell
   - navigation
   - structured data
   - image handling
-- [ ] Add parity regression tests so edge-only pages cannot quietly diverge from the Astro standard.
+- [x] Add parity regression tests so edge-only pages cannot quietly diverge from the Astro standard.
 
 ## P1: Multisite / Multi-Concept Maturity
 
-- [ ] Add site-onboarding tooling so a new domain can be added with less manual configuration.
+- [x] Add site-onboarding tooling so a new domain can be added with less manual configuration.
 - [ ] Add concept-specific template families beyond `guide` and `kommune`.
 - [ ] Add per-site and per-concept budgets, model routing defaults, and publish policies.
-- [ ] Add concept-specific dashboards so unrelated sites do not blend into one operator view.
+- [x] Add concept-specific dashboards so unrelated sites do not blend into one operator view.
 
 ## P1: Content Growth
 
@@ -182,6 +182,10 @@ These are not blockers for generic platform work, but they are needed for specif
 
 ## Recently Completed
 
+- [x] Added scoped release-health dashboards, scheduled quality reporting, and production deploy summaries.
+- [x] Added structured-data, crawlability/renderability, and Astro-vs-edge parity verification entrypoints.
+- [x] Added CSP baseline enforcement, dependency-audit reporting, and control-plane backup/export tooling.
+- [x] Added site-onboarding scaffolds plus flagship-aware field/Lighthouse budgets and reports.
 - [x] Added a first-class indexability audit and wired it into `pnpm qa:seo`.
 - [x] Added an explicit kommune cache-purge path and rollout documentation for post-deploy invalidation.
 - [x] Improved `Kort oppsummert` so published kommune pages prioritize local differences instead of generic summary rows.

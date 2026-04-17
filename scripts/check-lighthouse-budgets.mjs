@@ -2,12 +2,14 @@
 
 import { exec, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { getApplicableLighthouseTargets, isFlagshipUrl, loadRuntimeQualityConfig } from './lib/runtime-quality.mjs';
+import { loadPreviousSummary, summarizeTrend, writeReportArtifacts } from './lib/report-artifacts.mjs';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -20,7 +22,6 @@ const LIGHTHOUSE_VERSION = '13.1.0';
 const LIGHTHOUSE_TOOL_DIR = path.join(localToolRoot, `lighthouse-${LIGHTHOUSE_VERSION}`);
 const LIGHTHOUSE_CLI_PATH = path.join(LIGHTHOUSE_TOOL_DIR, 'node_modules', 'lighthouse', 'cli', 'index.js');
 const LIGHTHOUSE_TMP_DIR = path.join(LIGHTHOUSE_TOOL_DIR, 'tmp');
-const outputDir = path.join(repoRoot, 'output', 'lighthouse-budgets');
 
 const DEFAULT_THRESHOLDS = {
   performance: 90,
@@ -36,7 +37,7 @@ function parseArgs(argv) {
     strategy: 'mobile',
     runs: 1,
     warmupRuns: 0,
-    thresholds: { ...DEFAULT_THRESHOLDS },
+    strict: argv.includes('--strict'),
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -88,11 +89,12 @@ async function ensureLocalLighthouseCli() {
 
   const packageJsonPath = path.join(LIGHTHOUSE_TOOL_DIR, 'package.json');
   if (!existsSync(packageJsonPath)) {
-    await writeFile(
-      packageJsonPath,
-      JSON.stringify({ name: 'emdash-lighthouse-runtime', private: true, type: 'module' }, null, 2),
-      'utf8',
-    );
+    await mkdir(path.dirname(packageJsonPath), { recursive: true });
+    await execAsync(`${npmCommand()} init -y`, {
+      cwd: LIGHTHOUSE_TOOL_DIR,
+      windowsHide: true,
+      maxBuffer: 20 * 1024 * 1024,
+    });
   }
 
   await execAsync(`${npmCommand()} install --no-save --no-fund --no-audit lighthouse@${LIGHTHOUSE_VERSION}`, {
@@ -104,20 +106,11 @@ async function ensureLocalLighthouseCli() {
   return LIGHTHOUSE_CLI_PATH;
 }
 
-async function loadDefaultUrls() {
-  const siteConfigModule = await import(pathToFileURL(path.join(repoRoot, 'apps/blog/src/site-config.ts')).href);
-  const urls = [siteConfigModule.SITE_URL, ...(siteConfigModule.DEPLOY_AUDIT_EXTRA_URLS || [])].filter(Boolean);
-  return {
-    urls: [...new Set(urls)],
-    runs: Number(siteConfigModule.LIGHTHOUSE_AUDIT_RUNS || 1),
-    warmupRuns: Number(siteConfigModule.LIGHTHOUSE_AUDIT_WARMUP_RUNS || 0),
-  };
-}
-
 async function runLighthouse(url, strategy) {
   const cliPath = await ensureLocalLighthouseCli();
-  await mkdir(outputDir, { recursive: true });
-  const reportPath = path.join(outputDir, `${slugifyUrl(url)}-${strategy}.json`);
+  const reportDir = path.join(repoRoot, 'output', 'lighthouse-runtime');
+  await mkdir(reportDir, { recursive: true });
+  const reportPath = path.join(reportDir, `${slugifyUrl(url)}-${strategy}.json`);
   const args = [
     cliPath,
     url,
@@ -162,7 +155,7 @@ async function runLighthouse(url, strategy) {
 function summarizeLighthouseWarning(error) {
   const message = error instanceof Error ? error.message : String(error);
   if (/EPERM/i.test(message) && /lighthouse\./i.test(message)) {
-    return 'Lighthouse produced a valid report, but Windows blocked temp-folder cleanup after the run.';
+    return 'Lighthouse produced a valid report, but temp-folder cleanup failed after the run.';
   }
   const firstLine = message.split(/\r?\n/).find((line) => line.trim());
   return firstLine || 'Lighthouse returned a valid report with a non-zero exit code.';
@@ -188,6 +181,7 @@ function evaluateBudgets(url, strategy, lighthouseResult, thresholds) {
   const result = {
     url,
     strategy,
+    thresholds,
     performance: toScore(categories.performance?.score),
     accessibility: toScore(categories.accessibility?.score),
     seo: toScore(categories.seo?.score),
@@ -209,32 +203,48 @@ function evaluateBudgets(url, strategy, lighthouseResult, thresholds) {
   if ((result.bestPractices ?? 0) < thresholds.bestPractices) {
     result.findings.push(`Best Practices ${result.bestPractices} < ${thresholds.bestPractices}`);
   }
-  if (result.tbt > thresholds.tbt) {
+  if ((result.tbt ?? 0) > thresholds.tbt) {
     result.findings.push(`TBT ${result.tbt}ms > ${thresholds.tbt}ms`);
   }
 
   return result;
 }
 
+function withTrends(result, previous) {
+  return {
+    ...result,
+    trends: {
+      performance: summarizeTrend(result.performance, previous?.performance, false),
+      accessibility: summarizeTrend(result.accessibility, previous?.accessibility, false),
+      seo: summarizeTrend(result.seo, previous?.seo, false),
+      bestPractices: summarizeTrend(result.bestPractices, previous?.bestPractices, false),
+      tbt: summarizeTrend(result.tbt, previous?.tbt, true),
+    },
+  };
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  const config = loadRuntimeQualityConfig(process.env);
+  const previous = loadPreviousSummary(repoRoot, 'lighthouse-budgets', config.outputScope);
+
   if (!options.urls.length) {
-    const defaults = await loadDefaultUrls();
-    options.urls = defaults.urls;
+    options.urls = config.auditUrls;
     if (!process.argv.slice(2).includes('--runs')) {
-      options.runs = Math.max(1, defaults.runs);
+      options.runs = Math.max(1, Number(config.runtime.concept.audit?.lighthouse?.runs || 1));
     }
     if (!process.argv.slice(2).includes('--warmup-runs')) {
-      options.warmupRuns = Math.max(0, defaults.warmupRuns);
+      options.warmupRuns = Math.max(0, Number(config.runtime.concept.audit?.lighthouse?.warmupRuns || 0));
     }
   }
-  const urls = options.urls;
-  if (!urls.length) {
+
+  if (!options.urls.length) {
     throw new Error('No URLs to audit. Provide --url or configure concept audit URLs.');
   }
 
   const results = [];
-  for (const url of urls) {
+  for (const url of options.urls) {
+    const thresholds = { ...DEFAULT_THRESHOLDS, ...getApplicableLighthouseTargets(url, config) };
     for (let warmupIndex = 0; warmupIndex < options.warmupRuns; warmupIndex += 1) {
       await runLighthouse(url, options.strategy);
     }
@@ -242,64 +252,92 @@ async function main() {
     const measuredRuns = [];
     for (let runIndex = 0; runIndex < options.runs; runIndex += 1) {
       const result = await runLighthouse(url, options.strategy);
-      measuredRuns.push(evaluateBudgets(url, options.strategy, result, options.thresholds));
+      measuredRuns.push(evaluateBudgets(url, options.strategy, result, thresholds));
     }
 
+    let aggregated;
     if (measuredRuns.length === 1) {
-      results.push(measuredRuns[0]);
-      continue;
+      aggregated = measuredRuns[0];
+    } else {
+      aggregated = {
+        url,
+        strategy: options.strategy,
+        thresholds,
+        performance: median(measuredRuns.map((run) => run.performance).filter((value) => value !== null)),
+        accessibility: median(measuredRuns.map((run) => run.accessibility).filter((value) => value !== null)),
+        seo: median(measuredRuns.map((run) => run.seo).filter((value) => value !== null)),
+        bestPractices: median(measuredRuns.map((run) => run.bestPractices).filter((value) => value !== null)),
+        tbt: median(measuredRuns.map((run) => run.tbt)),
+        warning: measuredRuns.map((run) => run.warning).filter(Boolean).join(' | ') || null,
+        findings: [],
+        runs: measuredRuns,
+      };
+
+      if ((aggregated.performance ?? 0) < thresholds.performance) {
+        aggregated.findings.push(`Performance ${aggregated.performance} < ${thresholds.performance}`);
+      }
+      if ((aggregated.accessibility ?? 0) < thresholds.accessibility) {
+        aggregated.findings.push(`Accessibility ${aggregated.accessibility} < ${thresholds.accessibility}`);
+      }
+      if ((aggregated.seo ?? 0) < thresholds.seo) {
+        aggregated.findings.push(`SEO ${aggregated.seo} < ${thresholds.seo}`);
+      }
+      if ((aggregated.bestPractices ?? 0) < thresholds.bestPractices) {
+        aggregated.findings.push(`Best Practices ${aggregated.bestPractices} < ${thresholds.bestPractices}`);
+      }
+      if ((aggregated.tbt ?? 0) > thresholds.tbt) {
+        aggregated.findings.push(`TBT ${aggregated.tbt}ms > ${thresholds.tbt}ms`);
+      }
     }
 
-    const aggregated = {
-      url,
-      strategy: options.strategy,
-      performance: median(measuredRuns.map((run) => run.performance).filter((value) => value !== null)),
-      accessibility: median(measuredRuns.map((run) => run.accessibility).filter((value) => value !== null)),
-      seo: median(measuredRuns.map((run) => run.seo).filter((value) => value !== null)),
-      bestPractices: median(measuredRuns.map((run) => run.bestPractices).filter((value) => value !== null)),
-      tbt: median(measuredRuns.map((run) => run.tbt)),
-      warning: measuredRuns.map((run) => run.warning).filter(Boolean).join(' | ') || null,
-      findings: [],
-      runs: measuredRuns,
-    };
-
-    if ((aggregated.performance ?? 0) < options.thresholds.performance) {
-      aggregated.findings.push(`Performance ${aggregated.performance} < ${options.thresholds.performance}`);
-    }
-    if ((aggregated.accessibility ?? 0) < options.thresholds.accessibility) {
-      aggregated.findings.push(`Accessibility ${aggregated.accessibility} < ${options.thresholds.accessibility}`);
-    }
-    if ((aggregated.seo ?? 0) < options.thresholds.seo) {
-      aggregated.findings.push(`SEO ${aggregated.seo} < ${options.thresholds.seo}`);
-    }
-    if ((aggregated.bestPractices ?? 0) < options.thresholds.bestPractices) {
-      aggregated.findings.push(`Best Practices ${aggregated.bestPractices} < ${options.thresholds.bestPractices}`);
-    }
-    if ((aggregated.tbt ?? 0) > options.thresholds.tbt) {
-      aggregated.findings.push(`TBT ${aggregated.tbt}ms > ${options.thresholds.tbt}ms`);
-    }
-
-    results.push(aggregated);
+    const previousEntry = previous?.results?.find((entry) => entry.url === url && entry.strategy === options.strategy);
+    results.push(withTrends({
+      ...aggregated,
+      tier: isFlagshipUrl(url, config) ? 'flagship' : 'release',
+    }, previousEntry));
   }
 
+  const alerts = results.flatMap((result) => result.findings.map((finding) => `${result.url}: ${finding}`));
   const summary = {
     generatedAt: new Date().toISOString(),
+    siteKey: config.runtime.siteKey,
+    conceptKey: config.runtime.conceptKey,
+    dashboardLabel: config.dashboardLabel,
     strategy: options.strategy,
     runs: options.runs,
     warmupRuns: options.warmupRuns,
-    thresholds: options.thresholds,
+    strict: options.strict,
     results,
+    alerts,
   };
 
-  await mkdir(outputDir, { recursive: true });
-  await writeFile(path.join(outputDir, 'latest.json'), JSON.stringify(summary, null, 2), 'utf8');
+  const markdown = [
+    '# Lighthouse Budget Report',
+    '',
+    `Generated: ${summary.generatedAt}`,
+    `Scope: ${summary.siteKey}/${summary.conceptKey}`,
+    `Strategy: ${summary.strategy}`,
+    `Measured runs: ${summary.runs}`,
+    '',
+    '| URL | Tier | Performance | Accessibility | SEO | Best Practices | TBT | Status |',
+    '| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |',
+    ...results.map((result) => `| ${result.url} | ${result.tier} | ${format(result.performance)} | ${format(result.accessibility)} | ${format(result.seo)} | ${format(result.bestPractices)} | ${format(result.tbt)} | ${result.findings.length ? 'alert' : 'ok'} |`),
+    '',
+    '## Alerts',
+    '',
+    ...(alerts.length ? alerts.map((alert) => `- ${alert}`) : ['- No Lighthouse alerts.']),
+  ].join('\n');
 
-  console.log(JSON.stringify(summary, null, 2));
+  const paths = writeReportArtifacts(repoRoot, 'lighthouse-budgets', summary, markdown, config.outputScope);
+  console.log(`Lighthouse report written to ${paths.latestMarkdownPath}`);
 
-  const failures = results.flatMap((result) => result.findings.map((finding) => `${result.url}: ${finding}`));
-  if (failures.length) {
-    throw new Error(`Lighthouse budget gate failed:\n- ${failures.join('\n- ')}`);
+  if (options.strict && alerts.length) {
+    throw new Error(`Lighthouse budget gate failed. See ${paths.latestMarkdownPath}`);
   }
+}
+
+function format(value) {
+  return value === null || value === undefined ? '-' : String(value);
 }
 
 main().catch((error) => {

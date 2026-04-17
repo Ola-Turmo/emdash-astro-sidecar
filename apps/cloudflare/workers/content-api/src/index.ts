@@ -40,6 +40,11 @@ interface SummaryHostRow {
   site_url: string;
   base_path: string;
   host_mode: string | null;
+  runtime_status: string | null;
+  cooldown_until: string | null;
+  consecutive_failures: number;
+  run_blocked_24h: number;
+  run_failed_24h: number;
   ready_for_review_count: number;
   ready_for_publish_count: number;
   published_count: number;
@@ -365,13 +370,28 @@ async function buildObservabilitySummary(env: Env): Promise<Record<string, unkno
           h.site_url,
           h.base_path,
           hm.mode AS host_mode,
+          hrs.status AS runtime_status,
+          hrs.cooldown_until,
+          COALESCE(hrs.consecutive_failures, 0) AS consecutive_failures,
+          COALESCE(SUM(CASE WHEN hre.event_type = 'run_blocked' THEN 1 ELSE 0 END), 0) AS run_blocked_24h,
+          COALESCE(SUM(CASE WHEN hre.event_type = 'run_failed' THEN 1 ELSE 0 END), 0) AS run_failed_24h,
           SUM(CASE WHEN d.status = 'ready_for_review' THEN 1 ELSE 0 END) AS ready_for_review_count,
           SUM(CASE WHEN d.status IN ('ready_for_publish', 'approved_for_publish') THEN 1 ELSE 0 END) AS ready_for_publish_count,
           SUM(CASE WHEN d.status = 'published' THEN 1 ELSE 0 END) AS published_count
         FROM hosts h
         LEFT JOIN host_modes hm ON hm.host_id = h.id
+        LEFT JOIN host_runtime_state hrs ON hrs.host_id = h.id
         LEFT JOIN drafts d ON d.host_id = h.id
-        GROUP BY h.id, h.host_name, h.site_url, h.base_path, hm.mode
+        LEFT JOIN host_run_events hre ON hre.host_id = h.id AND hre.created_at >= datetime('now', '-1 day')
+        GROUP BY
+          h.id,
+          h.host_name,
+          h.site_url,
+          h.base_path,
+          hm.mode,
+          hrs.status,
+          hrs.cooldown_until,
+          hrs.consecutive_failures
         ORDER BY h.host_name ASC
       `,
     )
@@ -904,9 +924,9 @@ function buildRejectForm(token: string, draftId: string): string {
 
 function renderHostTable(hosts: SummaryHostRow[]): string {
   if (!hosts.length) return '<p>Ingen vertsdata enda.</p>';
-  return `<table><thead><tr><th>Vert</th><th>Modus</th><th>Review</th><th>Klar</th><th>Publisert</th></tr></thead><tbody>${hosts
+  return `<table><thead><tr><th>Vert</th><th>Modus</th><th>Runtime</th><th>Fail</th><th>Blokkert 24t</th><th>Review</th><th>Klar</th><th>Publisert</th></tr></thead><tbody>${hosts
     .map(
-      (host) => `<tr><td>${escapeHtml(host.host_name)}</td><td>${escapeHtml(host.host_mode ?? '-')}</td><td>${host.ready_for_review_count}</td><td>${host.ready_for_publish_count}</td><td>${host.published_count}</td></tr>`,
+      (host) => `<tr><td>${escapeHtml(host.host_name)}</td><td>${escapeHtml(host.host_mode ?? '-')}</td><td>${escapeHtml(host.runtime_status ?? 'idle')}</td><td>${host.run_failed_24h}/${host.consecutive_failures}</td><td>${host.run_blocked_24h}</td><td>${host.ready_for_review_count}</td><td>${host.ready_for_publish_count}</td><td>${host.published_count}</td></tr>`,
     )
     .join('')}</tbody></table>`;
 }
