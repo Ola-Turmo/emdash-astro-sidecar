@@ -48,60 +48,68 @@ export async function inspectMunicipalityUrl(url, expectedKind = 'general') {
 }
 
 async function inspectMunicipalityUrlInner(url, expectedKind) {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
-    const response = await fetch(url, {
-      redirect: 'follow',
-      headers: {
-        'user-agent': 'Mozilla/5.0 (compatible; emdash-sidecar/1.0)',
-        accept: 'text/html,application/xhtml+xml',
-      },
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
+  let lastError = null;
 
-    if (!response.ok) {
-      return { ok: false, reason: `http_${response.status}`, finalUrl: response.url };
-    }
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      const response = await fetch(url, {
+        redirect: 'follow',
+        headers: {
+          'user-agent': 'Mozilla/5.0 (compatible; emdash-sidecar/1.0)',
+          accept: 'text/html,application/xhtml+xml',
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
 
-    const text = await response.text();
-    const normalizedBody = normalizeText(stripHtml(text));
-    const normalizedTitle = normalizeText(
-      decodeHtmlEntities(text.match(/<title[^>]*>(.*?)<\/title>/is)?.[1] || ''),
-    );
-    const haystack = `${normalizedTitle} ${normalizedBody}`.toLowerCase();
+      if (!response.ok) {
+        return { ok: false, reason: `http_${response.status}`, finalUrl: response.url };
+      }
 
-    if (missingPagePatterns.some((pattern) => pattern.test(haystack))) {
+      const text = await response.text();
+      const normalizedBody = normalizeText(stripHtml(text));
+      const normalizedTitle = normalizeText(
+        decodeHtmlEntities(text.match(/<title[^>]*>(.*?)<\/title>/is)?.[1] || ''),
+      );
+      const haystack = `${normalizedTitle} ${normalizedBody}`.toLowerCase();
+
+      if (missingPagePatterns.some((pattern) => pattern.test(haystack))) {
+        return {
+          ok: false,
+          reason: 'missing_page_content',
+          finalUrl: response.url,
+          title: normalizedTitle,
+        };
+      }
+
+      if (!matchesExpectedSemantics(url, expectedKind, haystack)) {
+        return {
+          ok: false,
+          reason: `semantic_mismatch:${expectedKind}`,
+          finalUrl: response.url,
+          title: normalizedTitle,
+        };
+      }
+
       return {
-        ok: false,
-        reason: 'missing_page_content',
+        ok: true,
         finalUrl: response.url,
         title: normalizedTitle,
+        summary: normalizedBody.slice(0, 320),
       };
+    } catch (error) {
+      lastError = error;
+      if (attempt === 1) break;
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
     }
-
-    if (!matchesExpectedSemantics(url, expectedKind, haystack)) {
-      return {
-        ok: false,
-        reason: `semantic_mismatch:${expectedKind}`,
-        finalUrl: response.url,
-        title: normalizedTitle,
-      };
-    }
-
-    return {
-      ok: true,
-      finalUrl: response.url,
-      title: normalizedTitle,
-      summary: normalizedBody.slice(0, 320),
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      reason: error instanceof Error ? error.name : 'fetch_error',
-    };
   }
+
+  return {
+    ok: false,
+    reason: lastError instanceof Error ? lastError.name : 'fetch_error',
+  };
 }
 
 function matchesExpectedSemantics(url, expectedKind, haystack) {

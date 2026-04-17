@@ -196,6 +196,7 @@ Read:
 - [`docs/credentialless-telemetry-strategy.md`](docs/credentialless-telemetry-strategy.md)
 - [`docs/multisite-and-multi-concept.md`](docs/multisite-and-multi-concept.md)
 - [`docs/municipality-content-quality.md`](docs/municipality-content-quality.md)
+- [`docs/municipality-rollout-workflow.md`](docs/municipality-rollout-workflow.md)
 - [`docs/TODO.md`](docs/TODO.md)
 - [`docs/world-class-quality-targets.md`](docs/world-class-quality-targets.md)
 - [`docs/prd-autonomous-content-control-plane.md`](docs/prd-autonomous-content-control-plane.md)

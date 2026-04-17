@@ -32,7 +32,11 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 - [x] `Arendal`
 - [x] `Bjerkreim`
 - [x] `Bremanger`
+- [x] `Halden`
+- [x] `Lillehammer`
 - [x] `Nord-Aurdal`
+- [x] `Oslo`
+- [x] `Trysil`
 
 Everything else in the current municipality rollout should stay drafted until it clears the evidence gate and quality threshold.
 
@@ -125,6 +129,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - local differences are too weak
   - hero image is missing for flagship municipality pages
   - page remains too similar to another published municipality page
+- [x] Added reusable municipality batch promotion and screenshot-audit commands so rollout can happen in quality-gated tranches instead of one-off draft flips.
 
 ## P0: Shell And Landing-Page Quality
 

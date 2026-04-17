@@ -77,7 +77,7 @@ function extractBlock(frontmatter, fieldName) {
 
 function inferKind(label) {
   const source = label.toLowerCase();
-  if (/alkoholpolitisk|skjenketider|plan/.test(source)) return 'plan';
+  if (/alkoholpolitisk|skjenketider|plan|lokale regler og tider/.test(source)) return 'plan';
   if (/skjema|selvbetjening/.test(source)) return 'forms';
   if (/innsyn|journal/.test(source)) return 'publicRecords';
   if (/kontroll|tilsyn/.test(source)) return 'controls';

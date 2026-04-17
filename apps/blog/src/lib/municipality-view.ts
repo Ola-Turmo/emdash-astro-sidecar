@@ -334,7 +334,7 @@ function buildHighlights(
 
   const lateServingEntry = timeline
     .filter((item) => item.kind === 'serving' || item.kind === 'opening')
-    .find((item) => toTimeMinutes(item.endTime) >= toTimeMinutes('03:00'));
+    .find((item) => isLateNightCutoff(item.endTime));
   if (lateServingEntry) {
     highlights.push(`${data.municipality} åpner for sen drift sammenlignet med mange andre kommuner. Det bør du kontrollere opp mot konsept, naboer og intern drift før søknad.`);
   }
@@ -536,7 +536,7 @@ function deriveOperatingProfile(
     || timeline.find((entry) => entry.kind === 'opening');
   const outdoor = timeline.find((entry) => /ute/i.test(entry.label) || /ute/i.test(entry.note));
 
-  if (opening && toTimeMinutes(opening.endTime) >= toTimeMinutes('03:00')) {
+  if (opening && isLateNightCutoff(opening.endTime)) {
     descriptors.push('Sen nattdrift');
   } else if (opening && toTimeMinutes(opening.endTime) > -1 && toTimeMinutes(opening.endTime) <= toTimeMinutes('02:00')) {
     descriptors.push('Tidligere stenging');
@@ -624,6 +624,14 @@ function toTimeMinutes(value: string) {
   const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
   if (!match) return -1;
   return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function isLateNightCutoff(value: string) {
+  const normalized = normalizeTime(value);
+  const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return false;
+  const hour = Number(match[1]);
+  return hour >= 0 && hour <= 6;
 }
 
 function capitalize(value: string) {
