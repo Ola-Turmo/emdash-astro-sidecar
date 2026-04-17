@@ -71,7 +71,7 @@
     "verify:blog": "pnpm --filter @emdash/blog check && pnpm --filter @emdash/blog build && pnpm sync:guide-seo",
     "verify:skills": "pnpm --filter @emdash-astro-sidecar/skills typecheck",
     "verify:concepts": "node ./scripts/verify-concepts.mjs",
-    "verify": "pnpm verify:skills && pnpm verify:autonomous && pnpm verify:workers && pnpm verify:blog && pnpm qa && pnpm verify:concepts",
+    "verify": "pnpm verify:skills && pnpm verify:autonomous && pnpm verify:workers && pnpm verify:blog && pnpm verify:concepts && pnpm qa",
     "clean": "pnpm -r run clean && rm -rf node_modules .astro dist",
     "test": "pnpm --filter @emdash/blog test"
   },

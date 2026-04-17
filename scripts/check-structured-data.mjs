@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getConceptOutputDir, resolveActiveSiteRuntime } from '../apps/blog/site-profiles.mjs';
 import { writeReportArtifacts } from './lib/report-artifacts.mjs';
 import { loadRuntimeQualityConfig } from './lib/runtime-quality.mjs';
 
@@ -43,9 +45,23 @@ function normalizeTypes(value) {
   return types.filter((entry) => typeof entry === 'string');
 }
 
-async function inspectUrl(url) {
-  const response = await fetch(url, { redirect: 'follow' });
-  const html = await response.text();
+function urlToDistPath(url, runtime) {
+  const distRoot = path.join(
+    repoRoot,
+    'apps/blog',
+    getConceptOutputDir(runtime.siteKey, runtime.conceptKey).replace(/^\.\//u, ''),
+  );
+  const parsed = new URL(url);
+  let pathname = parsed.pathname;
+  if (!pathname.startsWith(runtime.concept.basePath)) {
+    throw new Error(`URL ${url} does not live under concept base path ${runtime.concept.basePath}`);
+  }
+  pathname = pathname.slice(runtime.concept.basePath.length) || '/';
+  const normalized = pathname === '/' ? '' : pathname.replace(/^\//u, '').replace(/\/$/u, '');
+  return normalized ? path.join(distRoot, normalized, 'index.html') : path.join(distRoot, 'index.html');
+}
+
+function inspectHtml(url, html, status, source) {
   const findings = [];
   const scripts = extractJsonLd(html);
   const parsedBlocks = [];
@@ -87,16 +103,41 @@ async function inspectUrl(url) {
 
   return {
     url,
-    status: response.status,
+    status,
+    source,
     blockCount: scripts.length,
     types: [...new Set(allTypes)],
     findings,
   };
 }
 
+async function inspectUrl(url) {
+  const response = await fetch(url, { redirect: 'follow' });
+  const html = await response.text();
+  return inspectHtml(url, html, response.status, 'live');
+}
+
+function inspectLocalUrl(url, runtime) {
+  const localPath = urlToDistPath(url, runtime);
+  if (!existsSync(localPath)) {
+    return {
+      url,
+      status: 0,
+      source: 'local',
+      blockCount: 0,
+      types: [],
+      findings: [`Missing local build artifact: ${path.relative(repoRoot, localPath)}`],
+    };
+  }
+
+  const html = readFileSync(localPath, 'utf8');
+  return inspectHtml(url, html, 200, 'local');
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const config = loadRuntimeQualityConfig(process.env);
+  const runtime = resolveActiveSiteRuntime(process.env);
   const urls = options.urls.length ? options.urls : config.auditUrls;
   if (!urls.length) {
     throw new Error('No URLs configured for structured-data checks.');
@@ -104,7 +145,7 @@ async function main() {
 
   const results = [];
   for (const url of urls) {
-    results.push(await inspectUrl(url));
+    results.push(options.strict ? inspectLocalUrl(url, runtime) : await inspectUrl(url));
   }
 
   const summary = {
@@ -123,9 +164,9 @@ async function main() {
     `Generated: ${summary.generatedAt}`,
     `Scope: ${summary.siteKey}/${summary.conceptKey}`,
     '',
-    '| URL | Status | Blocks | Types | Status |',
-    '| --- | ---: | ---: | --- | --- |',
-    ...results.map((result) => `| ${result.url} | ${result.status} | ${result.blockCount} | ${result.types.join(', ') || '-'} | ${result.findings.length ? 'alert' : 'ok'} |`),
+    '| URL | Source | Status | Blocks | Types | Result |',
+    '| --- | --- | ---: | ---: | --- | --- |',
+    ...results.map((result) => `| ${result.url} | ${result.source} | ${result.status || '-'} | ${result.blockCount} | ${result.types.join(', ') || '-'} | ${result.findings.length ? 'alert' : 'ok'} |`),
     '',
     '## Findings',
     '',
