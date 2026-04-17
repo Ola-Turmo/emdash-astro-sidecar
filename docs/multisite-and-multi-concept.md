@@ -18,7 +18,7 @@ Runtime selection:
 - `EMDASH_SITE_KEY`
 - `EMDASH_CONCEPT_KEY`
 
-Current scaffolded examples:
+Current configured examples:
 
 - `kurs-ing / guide`
 - `kurs-ing / kommune`
@@ -54,7 +54,7 @@ The app is fully wired for one active site/concept build at a time.
 That means:
 
 - `kurs-ing / guide` works today
-- `kurs-ing / kommune` now has its own collection, route scaffold, and draft example content, but still needs real kommune content and a richer municipality-specific layout
+- `kurs-ing / kommune` now has its own collection, generator, quality gates, and curated published municipality set
 - unrelated sites can now be represented cleanly in config, but still need their own content, copy, and deployment settings
 
 ## Content Separation
@@ -75,11 +75,11 @@ Relevant files:
 
 ## What Still Needs To Be Added
 
-To support concepts like `kurs.ing/kommune/oslo` cleanly, the next implementation step is:
+The architecture is in place, but the backlog is now mostly about quality depth rather than basic concept plumbing:
 
-1. continue enriching the municipality template with stronger source-backed local curation
-2. add concept-specific audit handling once kommune pages are live
-3. add concept-specific worker routing where needed
+1. continue enriching municipality pages with stronger local signals and operator summaries
+2. keep tightening concept-specific release gates and telemetry
+3. reduce remaining demo/scaffold surfaces for non-production site profiles
 
 ## Local-Content Rule
 
@@ -99,7 +99,7 @@ The important pattern to reuse on future projects is:
 
 ## Current Kommune Content Source
 
-The first kommune pages are now generated from the structured catalog in:
+The kommune concept is generated from the structured catalog in:
 
 - `Ola-Turmo/kommune.no.apimcp.site`
 
@@ -117,49 +117,31 @@ Command:
 pnpm generate:municipal-pages
 ```
 
-Current generated municipality pages:
-
-- Oslo
-- Bergen
-- Trondheim
-- Stavanger
-- Kristiansand
-- Tromsø
-- Bærum
-- Sandnes
-- Drammen
-- Fredrikstad
-- Asker
-- Lillestrøm
-- Sandefjord
-- Alta
-- Bodø
-- Ålesund
-- Tønsberg
-- Porsgrunn
-- Skien
-- Arendal
-- Haugesund
-- Moss
-- Sarpsborg
-- Hamar
-- Lillehammer
-- Harstad
-- Narvik
-- Gjøvik
-- Larvik
-- Kongsberg
-
-The generated pages are now richer than the raw municipality dataset. The generator also tries to pull:
+The generated pages are richer than the raw municipality dataset. The generator also tries to pull:
 
 - official page titles
 - official meta descriptions or first-paragraph summaries
 - municipality-specific checklists
 - direct handoffs into the existing Kurs.ing guide cluster
 
-The repo now blocks weak kommune pages with a dedicated gate:
+The repo blocks weak kommune pages with dedicated gates:
 
 - `pnpm qa:municipality`
+- `pnpm report:municipality`
+- `pnpm audit:municipality-batch`
+
+The kommune release model is curated rather than all-or-nothing. The currently published municipality set is:
+
+- Arendal
+- Bjerkreim
+- Bremanger
+- Halden
+- Lillehammer
+- Nord-Aurdal
+- Oslo
+- Trysil
+
+Everything else stays drafted until it clears the evidence and release gates.
 
 ## Concept Verification
 
@@ -178,6 +160,11 @@ This script does three things:
 - runs `astro check` for each concept target
 - runs a real build for each concept target
 - asserts concept-specific output files and expected HTML snippets so kommune pages do not silently regress
+
+For kommune-specific rollout and quality rules, also use:
+
+- [docs/municipality-content-quality.md](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\docs\municipality-content-quality.md)
+- [README.md](G:\My Drive\_local\_myrepos\emdash-astro-sidecar\README.md)
 
 ## Recommended Usage
 
