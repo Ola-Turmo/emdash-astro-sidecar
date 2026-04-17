@@ -187,7 +187,7 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P1: SEO / Discoverability / Search Readiness
 
-- [ ] Add a first-class indexability audit:
+- [x] Added a first-class indexability audit covering:
   - should-index URLs
   - should-not-index URLs
   - canonical correctness
