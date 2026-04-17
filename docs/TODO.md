@@ -7,25 +7,15 @@ This is the maintained backlog for `emdash-astro-sidecar`.
 Use it as the execution list.
 Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the measurable target pack behind the list.
 
-## Current State
+## Current Status
 
 - [x] Root `kurs.ing` landing page is separated from `/guide` and `/kommune` and protected by live route guards.
 - [x] Cloudflare-native screenshot auditing exists.
-- [x] Autonomous draft / eval / publish control-plane foundation exists.
 - [x] Multisite and multi-concept separation exists.
-- [x] Weak kommune pages now fail closed instead of staying published.
-- [x] Kommune quality reporting exists.
-- [x] Kommune hero-image workflow exists for the currently published municipality set.
-- [x] The current evidence-backed published municipality set has text-free municipality-specific hero images plus derivative assets.
-- [x] Kommune landing cards now use dedicated thumbnail derivatives instead of loading full hero assets in the listing grid.
-- [x] Kommune publishing is now driven by a curated municipality set with structured editorial takeaways and practical steps instead of the old generic 30-page generator.
-- [x] First-party RUM exists for field CWV ingestion, `p50/p75/p95/p99` summaries, device splits, page-type splits, and top-page rollups.
-- [x] The browser RUM client is now embedded directly in generated HTML, removing the fragile external `rum-client.js` delivery path from `guide` and `kommune`.
-- [x] The current mobile Lighthouse budget gate passes for the active `guide` and `kommune` flagship URLs.
-- [x] Lighthouse audit policy is now concept-specific, so volatile concepts like `kommune` can use warmups plus median-of-runs without slowing all other deployments.
-- [x] User-facing concept shell copy is now centralized in a validated copy registry instead of being scattered through site config and components.
-- [x] Landing-page shell copy now has a rendered shell gate that checks visible copy, internal links, and external link intent instead of trusting raw `200 OK`.
-- [x] Municipality-only search was replaced with a reusable directory-search component wired through localized shell copy.
+- [x] Autonomous draft / eval / publish control-plane foundation exists.
+- [x] Full `pnpm qa` currently passes.
+- [x] `guide` has registry-driven shell copy, generalized smoke tests, synced SEO artifacts, green security/root-routing checks, and a first-class built-route indexability audit.
+- [x] `kommune` is fail-closed, quality-gated, batch-audited, and deployable through a curated publish workflow instead of a bulk generator.
 
 ## Current Published Kommune Set
 
@@ -40,16 +30,13 @@ Use [world-class-quality-targets.md](./world-class-quality-targets.md) as the me
 
 Everything else in the current municipality rollout should stay drafted until it clears the evidence gate and quality threshold.
 
-## P0: Measurable World-Class Baseline
+## P0: Release Quality And Operator Visibility
 
 - [ ] Turn the current RUM summary foundation into production release gating and dashboarding:
   - alerting on regressions
   - flagship-page tracking
   - persistent trend views
   - deploy summaries tied to field targets
-- [x] Added reusable field-performance reporting and a strict gate entrypoint (`pnpm report:field`, `pnpm qa:field`).
-- [x] Added field-performance summaries to the Cloudflare observability surface.
-- [x] Split field summaries by explicit sample source so `browser_rum` can be gated separately from synthetic/manual tests.
 - [ ] Add a release gate for field-performance targets on flagship surfaces:
   - `LCP p75 <= 2.5s`
   - `INP p75 <= 200ms`
@@ -62,24 +49,13 @@ Everything else in the current municipality rollout should stay drafted until it
   - `SEO >= 90`
   - `Best Practices >= 90`
   - `TBT < 200ms`
-- [x] Added a reusable Lighthouse budget gate entrypoint (`pnpm qa:lighthouse`) for the active concept's flagship URLs.
-- [x] Wired the Lighthouse budget gate into the production deploy path for the active concept.
 - [ ] Add a world-class `flagship` target tier for key landing pages and highest-value articles:
   - `Performance >= 95`
   - tighter LCP target toward `~1.2-1.5s` on hero pages
-- [ ] Make these targets visible in operator dashboards and deployment summaries, not just in local CLI output.
+- [ ] Make performance and release targets visible in operator dashboards and deployment summaries, not just in CLI output.
 
 ## P0: Telemetry And Feedback Loop
 
-- [x] Added a GSC-free Google public-signals fallback (`pnpm report:google-public`, `pnpm qa:google-public`) so search-readiness work does not block on OAuth setup.
-- [x] Added a reusable CrUX ingestion path for the active site/concept (`pnpm telemetry:crux`) plus persistent D1 history in `metrics_crux_samples`.
-- [x] Resolved the metrics-worker secret visibility issue by adding a Cloudflare-side D1 fallback for runtime secrets when worker secret bindings drift.
-- [x] CrUX no longer acts like a blocker when Google has no data for the queried origin/URLs; it now resolves as a clean `crux_no_data` state.
-- [x] Bing no longer acts like a blocker when the current key/site pairing is unauthorized; it now resolves as a clean `bing_not_authorized` state after trying realistic site variants.
-- [x] Added a Cloudflare-native request/referrer telemetry report so organic landings and crawler behavior can be measured without GSC or Bing auth.
-- [x] Added crawler-detection reporting from first-party edge request signals.
-- [x] Added a public PageSpeed report path that works without Search Console credentials.
-- [x] Codified a credentialless autopilot telemetry strategy in `docs/credentialless-telemetry-strategy.md`.
 - [ ] Tie telemetry to automatic refresh candidates:
   - falling CTR
   - rising impressions with weak clicks
@@ -91,78 +67,25 @@ Everything else in the current municipality rollout should stay drafted until it
   - crawl/index state
   - publish quality state
   - conversion/funnel signals
-- [x] Added trustworthy live verification for real browser RUM samples on both `guide` and `kommune`, not just synthetic or manual validation paths.
-- [x] Proved automatic browser-to-`/__rum` collection on live `guide` and `kommune` pages after the inline-client fix.
-- [x] Turned `pnpm proof:rum` into a stricter operator gate that can fail when fresh browser samples do not appear.
-- [x] Wired browser RUM freshness proof into the production deploy path for the active concept.
 - [ ] Add recurring scheduled/browser-proof reporting outside deploys so fresh browser samples stay continuously verified between releases.
 
 ## P0: Kommune Concept Quality
 
-- [x] `/kommune` now fails closed on an evidence basis and only keeps municipalities that still have verified source coverage.
-- [x] Legacy or previously published municipalities outside the current evidence-backed set are drafted out automatically by the municipality generator.
-- [x] The `/kommune` worker now derives sitemap and allowlist from the active Pages origin, so live route exposure follows the actual evidence-backed deploy instead of stale worker artifacts.
-- [x] Added a Bergen-specific hero image to stabilize the last major Lighthouse outlier in the current `/kommune` audit set.
 - [ ] Extract more concrete local signals from municipality sources:
   - application flow differences
   - renewal and controls
   - local exceptions or seasonal distinctions
   - consumption-stop rules and enforcement nuances
-- [x] Made `Kort oppsummert` more decision-useful and less repetitive across the current published municipality set.
-- [x] Replaced the old generic municipality title/description/lead pattern with a stricter end-user-focused generator and gate.
-- [x] `Kort oppsummert` now prioritizes operator decisions like øl og vin, brennevin, åpningstid, søknad, kontroll and innsyn instead of echoing raw timeline rows.
-- [x] Added a derived `Driftsprofil` summary signal so the sidebar surfaces whether the municipality is oriented around sen nattdrift, strammere spritgrense, arrangementsløp, ute/inne split, or explicit kontrollspor.
-- [x] Kommune link classification now prioritizes arrangement, kontroll, prøver and other specific local paths before generic skjenking/service-hub buckets.
-- [x] Added hero images for the full current curated municipality set without regressing the kommune gate.
-- [x] Kommune HTML responses now force upstream revalidation plus `no-store` on the proxy layer to reduce stale page deploys.
-- [x] Added a separate municipality evidence gate that validates published links against real page content and blocks inferred rules from being published as confirmed facts.
-- [x] Added a rendered municipality truth gate so the built HTML is also checked for unsupported facts and stale municipality links.
-- [x] Reclassified ambiguous `skjenketider` links as local rules pages instead of automatically treating them as alcohol-policy plans.
-- [x] Rewrote the `/kommune` landing shell copy around the end user instead of internal system language.
-- [x] Added municipality landing-page search that only suggests currently published municipalities.
-- [x] Added an explicit kommune cache-purge path so drafted slugs and refreshed live pages can be invalidated intentionally after deploy.
-- [x] Add a municipality-specific release gate that blocks publishing if:
-  - source cards are too generic
-  - local differences are too weak
-  - hero image is missing for flagship municipality pages
-  - page remains too similar to another published municipality page
-- [x] Added reusable municipality batch promotion and screenshot-audit commands so rollout can happen in quality-gated tranches instead of one-off draft flips.
-
-## P0: Shell And Landing-Page Quality
-
-- [x] Moved user-facing concept shell copy into a reusable registry with validation.
-- [x] Removed hardcoded landing/footer shell strings from the runtime path for `guide` and `kommune`.
-- [x] Added a reusable rendered shell gate that fails on:
-  - mojibake
-  - internal/system language
-  - missing expected shell copy
-  - concept links that do not point to real built outputs
-  - external shell links that resolve to the wrong host/path or soft-404 content
-- [x] Added intent-based external link quality checks for high-value shell links like course pages and primary CTAs.
-- [x] Extended the shell registry pattern to author/category/article and municipality detail empty/content states so runtime UI copy no longer depends on scattered literals.
+- [ ] Execute real Cloudflare kommune cache purges after deploys when `CLOUDFLARE_API_TOKEN` is available locally or in CI.
 
 ## P0: Accessibility
 
-- [x] Treat `WCAG 2.2 AA` as the standard target for key templates and flows.
-- [x] Added automated accessibility regression checks for:
-  - contrast
-  - alt text
-  - form labels
-  - keyboard reachability on core surfaces
-- [x] Added a manual accessibility review checklist for flagship pages and landing pages.
 - [ ] Surface accessibility trend reporting in dashboards instead of only per-run CLI output.
 
 ## P0: Security And Transport
 
-- [x] Added an explicit header-quality gate for:
-  - `HSTS`
-  - `CSP`
-  - `Referrer-Policy`
-  - `Permissions-Policy`
-  - `X-Content-Type-Options`
 - [ ] Tighten CSP toward a reusable strict baseline and document allowed exceptions.
 - [ ] Add passive vulnerability scanning into normal verification or scheduled audits.
-- [x] Added an `OWASP ASVS`-aligned checklist for the app + worker surfaces that are exposed publicly.
 
 ## P0: Reliability And Operations
 
@@ -187,11 +110,6 @@ Everything else in the current municipality rollout should stay drafted until it
 
 ## P1: SEO / Discoverability / Search Readiness
 
-- [x] Added a first-class indexability audit covering:
-  - should-index URLs
-  - should-not-index URLs
-  - canonical correctness
-  - noindex correctness
 - [ ] Add structured-data validity checks to recurring verification.
 - [ ] Track sitemap freshness and error rate as a first-class quality signal.
 - [ ] Add a guard against intrusive overlays/interstitial patterns on production pages.
@@ -236,10 +154,8 @@ Everything else in the current municipality rollout should stay drafted until it
 ## P2: Repo Cleanup
 
 - [ ] Remove or archive remaining legacy demo content that should not survive active rollouts.
-- [x] Replace or remove the placeholder newsletter UI.
 - [ ] Finish repo-wide copy cleanup for older internal/demo language.
 - [ ] Improve Windows audit ergonomics further so normal success cases stay quiet.
-- [x] Isolated Astro build output per `site/concept` to avoid shared `dist` collisions across guide/kommune deploys.
 - [ ] Keep generated artifacts organized so quality reports do not become clutter.
 
 ## Inputs Still Needed From User
@@ -266,20 +182,13 @@ These are not blockers for generic platform work, but they are needed for specif
 
 ## Recently Completed
 
-- [x] Added a reusable municipality quality report with publish/draft reasons.
-- [x] Centralized shell copy in `apps/blog/site-copy.mjs` and added `pnpm qa:shell` as a rendered shell-quality gate.
-- [x] Extended registry-driven shell copy to author/category/article and municipality detail chrome, and made `pnpm qa:shell` verify a representative built content page in addition to the landing page.
-- [x] Added fail-closed kommune publishing so weak municipality pages are drafted out.
-- [x] Rebuilt `/kommune` around a curated 10-page publish set with municipality-specific editorial takeaways and practical steps.
-- [x] Redeployed `/kommune` so the live route worker returns `404` for drafted-out municipalities like `Kristiansand`.
-- [x] Added text-free municipality hero-image support with reusable prompt files.
-- [x] Added a Bergen-specific hero image and derivative assets to stabilize live kommune Lighthouse performance.
-- [x] Tightened Norwegian kommune writing and codified banned synthetic phrases.
-- [x] Added Cloudflare-native screenshot auditing.
-- [x] Re-established and protected the real `kurs.ing` landing page.
-- [x] Added multisite and multi-concept separation.
-- [x] Added live first-party RUM ingestion with percentile summaries, device splits, page-type splits, and top-page rollups.
-- [x] Removed the separate `rum-client.js` dependency by embedding the browser collector directly in generated HTML.
-- [x] Added a reusable Playwright-based browser proof for first-party RUM on both `guide` and `kommune`.
-- [x] Added `pnpm qa:rum` plus `/rum/recent` support so browser proof can verify fresh rows, not only cumulative summaries.
-
+- [x] Added a first-class indexability audit and wired it into `pnpm qa:seo`.
+- [x] Added an explicit kommune cache-purge path and rollout documentation for post-deploy invalidation.
+- [x] Improved `Kort oppsummert` so published kommune pages prioritize local differences instead of generic summary rows.
+- [x] Fixed the Windows concept-command wrapper so `pnpm build:kommune` works reliably.
+- [x] Restored `www.kurs.ing` root worker coverage and the missing security-header layer on the `www` host.
+- [x] Synced guide SEO artifacts and clarified the `audit:deployed:psi` compatibility alias.
+- [x] Generalized blog smoke tests to the active site/concept runtime instead of hard-coded `Kurs.ing` assumptions.
+- [x] Removed the placeholder newsletter UI and added a guard against fake interactive placeholder components.
+- [x] Refreshed multisite / concept documentation to match the current curated kommune rollout.
+- [x] Trimmed the maintained backlog to remove Search Console, Bing Webmaster, and IndexNow completion work.

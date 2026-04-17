@@ -15,6 +15,11 @@ This is the correct shape when the blog lives under a host path such as:
 
 ## Pages Deployment
 
+Operator preference for this repo:
+
+- use the Wrangler CLI directly for Cloudflare deploy, worker, and secret operations
+- do not stop to ask whether Wrangler should be used for normal Cloudflare work here
+
 Before any Cloudflare deploy or secret sync, verify the local Wrangler auth path:
 
 ```bash
