@@ -239,7 +239,7 @@ Everything else in the current municipality rollout should stay drafted until it
 ## P2: Repo Cleanup
 
 - [ ] Remove or archive remaining legacy demo content that should not survive active rollouts.
-- [ ] Replace or remove the placeholder newsletter UI.
+- [x] Replace or remove the placeholder newsletter UI.
 - [ ] Finish repo-wide copy cleanup for older internal/demo language.
 - [ ] Improve Windows audit ergonomics further so normal success cases stay quiet.
 - [x] Isolated Astro build output per `site/concept` to avoid shared `dist` collisions across guide/kommune deploys.

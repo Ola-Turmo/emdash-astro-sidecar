@@ -58,6 +58,12 @@ const bannedPlaceholderPhrases = [
   'TBD',
 ];
 
+const bannedPlaceholderUiPatterns = [
+  /onsubmit\s*=\s*["']window\.alert\(/i,
+  /placeholder for MVP/i,
+  /would submit to your email service provider/i,
+];
+
 const { mojibakePatterns } = getShellQualityFixtures();
 
 for (const [siteKey, site] of Object.entries(siteProfiles)) {
@@ -94,6 +100,13 @@ for (const filePath of filesToCheck) {
   for (const phrase of bannedPlaceholderPhrases) {
     if (content.includes(phrase)) {
       findings.push(`${relative} contains placeholder phrase "${phrase}"`);
+    }
+  }
+
+  for (const pattern of bannedPlaceholderUiPatterns) {
+    if (pattern.test(content)) {
+      findings.push(`${relative} contains fake or placeholder interactive UI`);
+      break;
     }
   }
 
