@@ -180,7 +180,7 @@ jobs:
 
       - name: Upload deployed audit artifacts
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deployed-url-audit
           path: output/playwright/deployed-audit
@@ -203,7 +203,7 @@ jobs:
 
       - name: Upload release dashboard artifacts
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-health
           path: output/release-health
