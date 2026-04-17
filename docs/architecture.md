@@ -92,6 +92,8 @@ Example:
 - host path: `https://www.kurs.ing/guide/`
 - worker route: `www.kurs.ing/guide*`
 
+That Pages alias is an origin hostname, not a Git branch rule. The repo default branch can still be `main`.
+
 ## Configuration Surfaces
 
 ### Host-specific

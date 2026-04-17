@@ -286,6 +286,22 @@ After deployment, verify all of these:
 
 Cloudflare Pages aliases matter.
 
+Git branch names and Pages alias hostnames are separate things.
+
+Operational rule:
+
+- GitHub default branch for this repo is `main`
+- local release work should be merged and pushed to `main`
+- a Pages alias may still be named `master.<project>.pages.dev` for historical or operational reasons
+- do not treat a Pages alias containing `master` as evidence that the repo should ship from the `master` branch
+
+Before production pushes, confirm the branch explicitly:
+
+```bash
+git remote show origin
+git branch --show-current
+```
+
 If the production branch on the Pages project is not the one you are actively deploying, you may need the route worker to point at a stable preview alias such as:
 
 - `master.<project>.pages.dev`

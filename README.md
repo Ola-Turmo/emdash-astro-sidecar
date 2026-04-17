@@ -121,6 +121,19 @@ Then configure:
 - [`apps/blog/astro.config.mjs`](apps/blog/astro.config.mjs)
 - [`apps/cloudflare/workers/guide-proxy/wrangler.toml`](apps/cloudflare/workers/guide-proxy/wrangler.toml)
 
+## Branch Rule
+
+Treat `main` as the Git default branch for this repo.
+
+Do not infer the Git branch from a Cloudflare Pages alias. A Pages alias like `master.emdash-astro-sidecar.pages.dev` is an infrastructure hostname, not proof that `master` is the Git production branch.
+
+Before pushing release work, verify both:
+
+```bash
+git remote show origin
+git branch --show-current
+```
+
 ## Release Standard
 
 Do not ship because the app “builds.”
