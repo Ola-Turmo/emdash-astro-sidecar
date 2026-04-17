@@ -2,7 +2,7 @@
 import type { CollectionEntry } from 'astro:content';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { articlePath } from '../consts';
+import { SHELL_COPY, articlePath } from '../consts';
 import BaseLayout from './BaseLayout.astro';
 
 interface Props {
@@ -20,7 +20,7 @@ const { name, description } = category.data;
   <main>
     <section class="px-4 py-16">
       <div class="mx-auto max-w-6xl">
-        <span class="eyebrow">Kategori</span>
+        <span class="eyebrow">{SHELL_COPY.contentMeta.categoryEyebrow}</span>
         <h1 class="display-title mt-3 text-4xl font-bold text-slate-950 md:text-5xl">{name}</h1>
         {description && <p class="mt-4 max-w-2xl text-lg leading-8 text-slate-600">{description}</p>}
       </div>
@@ -46,7 +46,7 @@ const { name, description } = category.data;
       </div>
 
       {posts.length === 0 && (
-        <p class="py-12 text-center text-slate-500">Ingen artikler i denne kategorien ennå.</p>
+        <p class="py-12 text-center text-slate-500">{SHELL_COPY.contentMeta.categoryEmptyText}</p>
       )}
     </section>
   </main>

@@ -14,14 +14,20 @@ const uiFiles = await walkFiles(path.join(repoRoot, 'apps/blog/src'), (filePath)
 
 const filesToCheck = [
   ...uiFiles,
+  path.join(repoRoot, 'apps', 'blog', 'site-copy.mjs'),
   path.join(repoRoot, 'apps', 'blog', 'site-profiles.mjs'),
 ];
 
 const skipMojibakeScanFiles = new Set([
+  path.join(repoRoot, 'apps', 'blog', 'site-copy.mjs'),
   path.join(repoRoot, 'apps', 'blog', 'src', 'lib', 'municipality-view.ts'),
   path.join(repoRoot, 'scripts', 'lib', 'municipality-evidence.mjs'),
   path.join(repoRoot, 'scripts', 'report-municipality-quality.mjs'),
   path.join(repoRoot, 'scripts', 'check-text-encoding.mjs'),
+]);
+
+const skipBannedPhraseScanFiles = new Set([
+  path.join(repoRoot, 'apps', 'blog', 'site-copy.mjs'),
 ]);
 
 const bannedUiPhrases = [
@@ -77,9 +83,11 @@ for (const filePath of filesToCheck) {
     continue;
   }
 
-  for (const phrase of bannedUiPhrases) {
-    if (content.includes(phrase)) {
-      findings.push(`${relative} contains banned user-facing phrase "${phrase}"`);
+  if (!skipBannedPhraseScanFiles.has(filePath)) {
+    for (const phrase of bannedUiPhrases) {
+      if (content.includes(phrase)) {
+        findings.push(`${relative} contains banned user-facing phrase "${phrase}"`);
+      }
     }
   }
 

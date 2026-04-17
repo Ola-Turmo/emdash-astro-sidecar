@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { PRIMARY_CTA, articlePath, blogPath } from '../consts';
+import { PRIMARY_CTA, SHELL_COPY, articlePath, blogPath } from '../consts';
 import { deriveMunicipalityView } from '../lib/municipality-view';
 
 interface Props {
@@ -36,7 +36,7 @@ const heroImageSrc = heroImage?.src
       </div>
     )}
 
-    <span class="eyebrow">{county || 'Kommune'}</span>
+    <span class="eyebrow">{county || SHELL_COPY.directoryCard?.metaFallback || SHELL_COPY.directorySearchMetaFallback}</span>
     <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 transition-colors group-hover:text-teal-800">
       {municipality}
     </h3>
@@ -47,19 +47,19 @@ const heroImageSrc = heroImage?.src
     <dl class="mt-5 grid gap-3 text-sm text-slate-600">
       {municipalityNumber && (
         <div>
-          <dt class="font-bold text-slate-900">Kommunenummer</dt>
+          <dt class="font-bold text-slate-900">{SHELL_COPY.directoryCard?.municipalityNumberLabel}</dt>
           <dd>{municipalityNumber}</dd>
         </div>
       )}
       {publicRecordsPlatform && (
         <div>
-          <dt class="font-bold text-slate-900">Innsyn</dt>
+          <dt class="font-bold text-slate-900">{SHELL_COPY.directoryCard?.publicRecordsLabel}</dt>
           <dd>{publicRecordsPlatform}</dd>
         </div>
       )}
       {municipalitySitePlatform && (
         <div>
-          <dt class="font-bold text-slate-900">Nettside</dt>
+          <dt class="font-bold text-slate-900">{SHELL_COPY.directoryCard?.websiteLabel}</dt>
           <dd>{municipalitySitePlatform}</dd>
         </div>
       )}
@@ -73,7 +73,7 @@ const heroImageSrc = heroImage?.src
 
     <div class="mt-5 flex items-center justify-between gap-4 text-sm">
       <span class="font-semibold text-slate-500">{county || 'Norge'}</span>
-      <span class="font-bold text-teal-700">Les kommunesiden</span>
+      <span class="font-bold text-teal-700">{SHELL_COPY.articlePrimaryActionText}</span>
     </div>
   </a>
 

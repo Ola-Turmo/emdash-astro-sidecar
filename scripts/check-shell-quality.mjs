@@ -4,7 +4,7 @@ import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { getResolvedSiteCopy, getShellQualityFixtures } from '../apps/blog/site-copy.mjs';
 import { getConceptOutputDir, siteProfiles } from '../apps/blog/site-profiles.mjs';
-import { failIfFindings, readUtf8 } from './lib/repo-utils.mjs';
+import { failIfFindings, readUtf8, walkFiles } from './lib/repo-utils.mjs';
 
 const repoRoot = process.cwd();
 const blogRoot = path.join(repoRoot, 'apps', 'blog');
@@ -77,6 +77,14 @@ for (const [siteKey, site] of Object.entries(siteProfiles)) {
       resolvedCopy,
       findings,
       shellStopwords,
+    });
+
+    await validateRepresentativeContentPage({
+      siteKey,
+      concept,
+      distRoot,
+      resolvedCopy,
+      findings,
     });
   }
 }
@@ -196,6 +204,36 @@ async function validateExternalLinks({
   }
 }
 
+async function validateRepresentativeContentPage({
+  siteKey,
+  concept,
+  distRoot,
+  resolvedCopy,
+  findings,
+}) {
+  const contentPagePath = await findRepresentativeContentPage(distRoot, concept);
+  if (!contentPagePath) {
+    return;
+  }
+
+  const contentHtml = await readUtf8(contentPagePath);
+  const contentText = normalizeText(stripHtml(contentHtml));
+  const relativePath = path.relative(repoRoot, contentPagePath);
+
+  for (const pattern of mojibakePatterns) {
+    if (pattern.test(contentHtml)) {
+      findings.push(`${siteKey}/${concept.key} content page contains mojibake or broken encoding: ${relativePath}`);
+      break;
+    }
+  }
+
+  for (const snippet of getExpectedContentSnippets(concept, resolvedCopy).filter(Boolean)) {
+    if (!contentText.includes(normalizeText(snippet))) {
+      findings.push(`${siteKey}/${concept.key} content page is missing expected shell copy in ${relativePath}: "${snippet}"`);
+    }
+  }
+}
+
 function buildQualityMap(site, resolvedCopy) {
   const map = new Map();
 
@@ -228,6 +266,33 @@ function dedupeAnchors(anchors) {
   }
 
   return results;
+}
+
+async function findRepresentativeContentPage(distRoot, concept) {
+  const htmlFiles = await walkFiles(distRoot, (filePath) => path.basename(filePath) === 'index.html');
+
+  if (concept.pageStructure === 'blog') {
+    const articlePrefix = String(concept.routes?.articlePrefix ?? '/')
+      .replace(/^\/+|\/+$/gu, '');
+
+    return htmlFiles.find((filePath) => {
+      const relativePath = path.relative(distRoot, filePath);
+      const segments = relativePath.split(path.sep);
+      return articlePrefix
+        ? segments[0] === articlePrefix && segments.length >= 3
+        : relativePath !== 'index.html';
+    }) ?? null;
+  }
+
+  if (concept.pageStructure === 'directory') {
+    return htmlFiles.find((filePath) => {
+      const relativePath = path.relative(distRoot, filePath);
+      const segments = relativePath.split(path.sep);
+      return relativePath !== 'index.html' && segments.length === 2;
+    }) ?? null;
+  }
+
+  return htmlFiles.find((filePath) => path.relative(distRoot, filePath) !== 'index.html') ?? null;
 }
 
 function extractAnchors(html) {
@@ -308,6 +373,22 @@ function deriveKeywords(text, shellStopwords) {
 
 function normalizeHref(value) {
   return stripTrailingSlash(String(value ?? '').trim());
+}
+
+function getExpectedContentSnippets(concept, resolvedCopy) {
+  if (concept.pageStructure === 'directory' && resolvedCopy.shell.municipalityPage) {
+    return [
+      resolvedCopy.shell.articleNextStepEyebrow,
+      resolvedCopy.shell.municipalityPage.summaryEyebrow,
+      resolvedCopy.shell.municipalityPage.sourcesEyebrow,
+    ];
+  }
+
+  return [
+    resolvedCopy.shell.articleNextStepEyebrow,
+    resolvedCopy.shell.contentMeta?.articleMetaEyebrow,
+    resolvedCopy.shell.contentMeta?.articleMetaPurposeLabel,
+  ];
 }
 
 function stripTrailingSlash(value) {

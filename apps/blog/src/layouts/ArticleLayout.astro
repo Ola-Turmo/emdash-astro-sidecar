@@ -100,18 +100,18 @@ const categorySlug = categoryEntry?.slug ?? categoryId ?? '';
           </div>
 
           <div class="shell-card p-4 sm:p-5">
-            <p class="eyebrow">Om artikkelen</p>
+            <p class="eyebrow">{SHELL_COPY.contentMeta.articleMetaEyebrow}</p>
             <dl class="mt-4 space-y-3 text-sm">
               <div>
-                <dt class="font-bold text-slate-900">Kategori</dt>
+                <dt class="font-bold text-slate-900">{SHELL_COPY.contentMeta.articleMetaCategoryLabel}</dt>
                 <dd class="text-slate-600">{categoryName}</dd>
               </div>
               <div>
-                <dt class="font-bold text-slate-900">Forfatter</dt>
+                <dt class="font-bold text-slate-900">{SHELL_COPY.contentMeta.articleMetaAuthorLabel}</dt>
                 <dd class="text-slate-600">{authorName}</dd>
               </div>
               <div>
-                <dt class="font-bold text-slate-900">Formål</dt>
+                <dt class="font-bold text-slate-900">{SHELL_COPY.contentMeta.articleMetaPurposeLabel}</dt>
                 <dd class="text-slate-600">{SHELL_COPY.articleAboutPurpose}</dd>
               </div>
             </dl>

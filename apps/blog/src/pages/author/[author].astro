@@ -4,6 +4,7 @@ import type { GetStaticPaths } from 'astro';
 import ArticleCard from '../../components/ArticleCard.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
+import { SHELL_COPY } from '../../consts';
 import { getActiveAuthors, getPostAuthorSlug, getPublishedPosts } from '../../lib/published-content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
@@ -42,7 +43,7 @@ const { name, bio, avatar, social } = author.data;
         />
       )}
       <div>
-        <p class="eyebrow">Forfatter</p>
+        <p class="eyebrow">{SHELL_COPY.contentMeta.authorEyebrow}</p>
         <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">{name}</h1>
         <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{bio}</p>
         {social && (
@@ -59,14 +60,14 @@ const { name, bio, avatar, social } = author.data;
     </header>
 
     <section>
-      <h2 class="display-title text-3xl font-bold text-slate-950">Artikler</h2>
+      <h2 class="display-title text-3xl font-bold text-slate-950">{SHELL_COPY.contentMeta.articleListingTitle}</h2>
       <div class="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {posts.map((post) => (
           <ArticleCard post={post} />
         ))}
       </div>
       {posts.length === 0 && (
-        <p class="text-slate-500">Ingen artikler fra denne forfatteren ennå.</p>
+        <p class="text-slate-500">{SHELL_COPY.contentMeta.authorEmptyText}</p>
       )}
     </section>
   </main>

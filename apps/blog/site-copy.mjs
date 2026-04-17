@@ -170,6 +170,17 @@ const siteCopyRegistry = {
           footerContactLabel: 'Kontakt',
           footerCopyright: 'Innhold skrevet for bruk i Norge.',
           footerNote: 'Gå til hovedsiden når du vil kjøpe kurs eller se hele tilbudet.',
+          contentMeta: {
+            authorEyebrow: 'Forfatter',
+            articleListingTitle: 'Artikler',
+            authorEmptyText: 'Ingen artikler fra denne forfatteren ennå.',
+            categoryEyebrow: 'Kategori',
+            categoryEmptyText: 'Ingen artikler i denne kategorien ennå.',
+            articleMetaEyebrow: 'Om artikkelen',
+            articleMetaCategoryLabel: 'Kategori',
+            articleMetaAuthorLabel: 'Forfatter',
+            articleMetaPurposeLabel: 'Formål',
+          },
         },
       },
       kommune: {
@@ -237,6 +248,48 @@ const siteCopyRegistry = {
           footerContactLabel: 'Kontakt',
           footerCopyright: 'Kommunespesifikt innhold for Norge.',
           footerNote: 'Bruk hovedsiden og guidene når du trenger mer forklaring, trening eller kurs.',
+          contentMeta: {
+            authorEyebrow: 'Forfatter',
+            articleListingTitle: 'Artikler',
+            authorEmptyText: 'Ingen artikler fra denne forfatteren ennå.',
+            categoryEyebrow: 'Kategori',
+            categoryEmptyText: 'Ingen artikler i denne kategorien ennå.',
+            articleMetaEyebrow: 'Om artikkelen',
+            articleMetaCategoryLabel: 'Kategori',
+            articleMetaAuthorLabel: 'Forfatter',
+            articleMetaPurposeLabel: 'Formål',
+          },
+          directoryCard: {
+            metaFallback: 'Kommune',
+            municipalityNumberLabel: 'Kommunenummer',
+            publicRecordsLabel: 'Innsyn',
+            websiteLabel: 'Nettside',
+          },
+          municipalityPage: {
+            timelineEyebrow: 'Tidslinje for lokale alkoholregler',
+            salesEyebrow: 'Salg av alkohol',
+            highlightsEyebrowTemplate: 'Dette skiller {municipality} fra andre kommuner',
+            curatedLinksEyebrow: 'Kommunale sider du bør åpne først',
+            curatedLinksActionLabel: 'Åpne kommunesiden',
+            checklistEyebrow: 'Dette bør du gjøre før du søker eller åpner',
+            usefulSourcesEyebrow: 'Offisielle kilder med nyttig lokal forklaring',
+            usefulSourcesActionLabel: 'Åpne kilden',
+            summaryEyebrow: 'Kort oppsummert',
+            summaryMunicipalityLabel: 'Kommune',
+            summaryCountyLabel: 'Fylke',
+            summarySiteUpdatedLabel: 'Sist oppdatert nettsted',
+            relatedGuidesEyebrow: 'Les mer på kurs.ing',
+            sourcesEyebrow: 'Kilder og kontrollpunkter',
+            sourceRepoLabel: 'Kilde',
+            sourceLastCheckedLabel: 'Sist kontrollert',
+            sourceSiteLabel: 'Kommunenettsted',
+            sourceFormsLabel: 'Skjema',
+            sourcePublicRecordsLabel: 'Innsyn',
+            sourcePolicyLabel: 'Plan eller tider',
+            sourcePlatformLabel: 'Nettstedsplattform',
+            sourceDomainLabel: 'Domene',
+            sourceLanguageLabel: 'Målform',
+          },
         },
       },
     },
@@ -288,6 +341,17 @@ const siteCopyRegistry = {
           footerContactLabel: 'Contact',
           footerCopyright: 'Example profile only.',
           footerNote: 'Replace before launch.',
+          contentMeta: {
+            authorEyebrow: 'Author',
+            articleListingTitle: 'Articles',
+            authorEmptyText: 'No articles from this author yet.',
+            categoryEyebrow: 'Category',
+            categoryEmptyText: 'No articles in this category yet.',
+            articleMetaEyebrow: 'About this article',
+            articleMetaCategoryLabel: 'Category',
+            articleMetaAuthorLabel: 'Author',
+            articleMetaPurposeLabel: 'Purpose',
+          },
         },
       },
     },
@@ -426,6 +490,66 @@ function validateShell(siteKey, conceptKey, shell) {
     requireString(stat.value, `${siteKey}/${conceptKey}.shell.homeStats[].value`);
     requireString(stat.label, `${siteKey}/${conceptKey}.shell.homeStats[].label`);
     assertCopySafe(stat.label, `${siteKey}/${conceptKey}.shell.homeStats[].label`, { allowFacts: true });
+  }
+
+  validateNestedShellSection(shell.contentMeta, [
+    'authorEyebrow',
+    'articleListingTitle',
+    'authorEmptyText',
+    'categoryEyebrow',
+    'categoryEmptyText',
+    'articleMetaEyebrow',
+    'articleMetaCategoryLabel',
+    'articleMetaAuthorLabel',
+    'articleMetaPurposeLabel',
+  ], `${siteKey}/${conceptKey}.shell.contentMeta`);
+
+  if (shell.directoryCard != null) {
+    validateNestedShellSection(shell.directoryCard, [
+      'metaFallback',
+      'municipalityNumberLabel',
+      'publicRecordsLabel',
+      'websiteLabel',
+    ], `${siteKey}/${conceptKey}.shell.directoryCard`);
+  }
+
+  if (shell.municipalityPage != null) {
+    validateNestedShellSection(shell.municipalityPage, [
+      'timelineEyebrow',
+      'salesEyebrow',
+      'highlightsEyebrowTemplate',
+      'curatedLinksEyebrow',
+      'curatedLinksActionLabel',
+      'checklistEyebrow',
+      'usefulSourcesEyebrow',
+      'usefulSourcesActionLabel',
+      'summaryEyebrow',
+      'summaryMunicipalityLabel',
+      'summaryCountyLabel',
+      'summarySiteUpdatedLabel',
+      'relatedGuidesEyebrow',
+      'sourcesEyebrow',
+      'sourceRepoLabel',
+      'sourceLastCheckedLabel',
+      'sourceSiteLabel',
+      'sourceFormsLabel',
+      'sourcePublicRecordsLabel',
+      'sourcePolicyLabel',
+      'sourcePlatformLabel',
+      'sourceDomainLabel',
+      'sourceLanguageLabel',
+    ], `${siteKey}/${conceptKey}.shell.municipalityPage`);
+  }
+}
+
+function validateNestedShellSection(section, fields, labelPrefix) {
+  if (!section || typeof section !== 'object') {
+    throw new Error(`${labelPrefix} must be an object`);
+  }
+
+  for (const field of fields) {
+    requireString(section[field], `${labelPrefix}.${field}`);
+    assertCopySafe(section[field], `${labelPrefix}.${field}`, { allowFacts: false });
   }
 }
 

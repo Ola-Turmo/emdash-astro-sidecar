@@ -137,7 +137,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - concept links that do not point to real built outputs
   - external shell links that resolve to the wrong host/path or soft-404 content
 - [x] Added intent-based external link quality checks for high-value shell links like course pages and primary CTAs.
-- [ ] Extend the shell registry pattern to other user-facing empty/error states outside the landing shell when they become concept-specific.
+- [x] Extended the shell registry pattern to author/category/article and municipality detail empty/content states so runtime UI copy no longer depends on scattered literals.
 
 ## P0: Accessibility
 
@@ -267,6 +267,7 @@ These are not blockers for generic platform work, but they are needed for specif
 
 - [x] Added a reusable municipality quality report with publish/draft reasons.
 - [x] Centralized shell copy in `apps/blog/site-copy.mjs` and added `pnpm qa:shell` as a rendered shell-quality gate.
+- [x] Extended registry-driven shell copy to author/category/article and municipality detail chrome, and made `pnpm qa:shell` verify a representative built content page in addition to the landing page.
 - [x] Added fail-closed kommune publishing so weak municipality pages are drafted out.
 - [x] Rebuilt `/kommune` around a curated 10-page publish set with municipality-specific editorial takeaways and practical steps.
 - [x] Redeployed `/kommune` so the live route worker returns `404` for drafted-out municipalities like `Kristiansand`.
