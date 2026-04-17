@@ -22,16 +22,12 @@ if (!options.site || !options.concept) {
 }
 
 const [command, ...commandRest] = commandArgs;
-const child = spawn(resolveCommand(command), commandRest, {
-  cwd: process.cwd(),
-  stdio: 'inherit',
-  shell: false,
-  env: {
-    ...process.env,
-    EMDASH_SITE_KEY: options.site,
-    EMDASH_CONCEPT_KEY: options.concept,
-  },
-});
+const env = {
+  ...process.env,
+  EMDASH_SITE_KEY: options.site,
+  EMDASH_CONCEPT_KEY: options.concept,
+};
+const child = spawnCommand(command, commandRest, env);
 
 child.on('exit', (code, signal) => {
   if (signal) {
@@ -41,16 +37,31 @@ child.on('exit', (code, signal) => {
   process.exit(code ?? 1);
 });
 
-function resolveCommand(command) {
+function spawnCommand(command, args, env) {
   if (process.platform !== 'win32') {
-    return command;
+    return spawn(command, args, {
+      cwd: process.cwd(),
+      stdio: 'inherit',
+      shell: false,
+      env,
+    });
   }
 
-  if (['pnpm', 'npm', 'npx'].includes(command)) {
-    return `${command}.cmd`;
+  const commandLine = [command, ...args].map(quoteForCmd).join(' ');
+  return spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', commandLine], {
+    cwd: process.cwd(),
+    stdio: 'inherit',
+    shell: false,
+    env,
+  });
+}
+
+function quoteForCmd(value) {
+  if (!/[\s"]/u.test(value)) {
+    return value;
   }
 
-  return command;
+  return `"${value.replace(/"/g, '""')}"`;
 }
 
 function parseOptions(optionArgs) {

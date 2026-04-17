@@ -108,7 +108,7 @@ Everything else in the current municipality rollout should stay drafted until it
   - renewal and controls
   - local exceptions or seasonal distinctions
   - consumption-stop rules and enforcement nuances
-- [ ] Make `Kort oppsummert` more decision-useful and less repetitive across all 10 published pages.
+- [x] Made `Kort oppsummert` more decision-useful and less repetitive across the current published municipality set.
 - [x] Replaced the old generic municipality title/description/lead pattern with a stricter end-user-focused generator and gate.
 - [x] `Kort oppsummert` now prioritizes operator decisions like øl og vin, brennevin, åpningstid, søknad, kontroll and innsyn instead of echoing raw timeline rows.
 - [x] Added a derived `Driftsprofil` summary signal so the sidebar surfaces whether the municipality is oriented around sen nattdrift, strammere spritgrense, arrangementsløp, ute/inne split, or explicit kontrollspor.
@@ -120,7 +120,7 @@ Everything else in the current municipality rollout should stay drafted until it
 - [x] Reclassified ambiguous `skjenketider` links as local rules pages instead of automatically treating them as alcohol-policy plans.
 - [x] Rewrote the `/kommune` landing shell copy around the end user instead of internal system language.
 - [x] Added municipality landing-page search that only suggests currently published municipalities.
-- [ ] Add a cache-purge or explicit invalidation path for kommune slugs that are drafted out, so stale live 200s disappear without relying on query-string cache busting.
+- [x] Added an explicit kommune cache-purge path so drafted slugs and refreshed live pages can be invalidated intentionally after deploy.
 - [x] Add a municipality-specific release gate that blocks publishing if:
   - source cards are too generic
   - local differences are too weak
@@ -282,3 +282,4 @@ These are not blockers for generic platform work, but they are needed for specif
 - [x] Removed the separate `rum-client.js` dependency by embedding the browser collector directly in generated HTML.
 - [x] Added a reusable Playwright-based browser proof for first-party RUM on both `guide` and `kommune`.
 - [x] Added `pnpm qa:rum` plus `/rum/recent` support so browser proof can verify fresh rows, not only cumulative summaries.
+

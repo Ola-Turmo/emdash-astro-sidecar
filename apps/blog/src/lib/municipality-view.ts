@@ -71,6 +71,12 @@ export type MunicipalityViewModel = {
   summaryRows: Array<{ label: string; value: string }>;
 };
 
+type SummaryRow = {
+  label: string;
+  value: string;
+  priority: number;
+};
+
 const linkKinds: Record<string, { label: string; note: string }> = {
   plan: {
     label: 'Lokale regler og tider',
@@ -479,50 +485,75 @@ function buildSummaryRows(
   curatedLinks: Array<LinkEntry & { kind: string; displayLabel: string; displayNote: string }>,
   salesNote: string,
 ) {
-  const rows: Array<{ label: string; value: string }> = [];
+  const rows: SummaryRow[] = [];
   const operatingProfile = deriveOperatingProfile(timeline, curatedLinks);
   if (operatingProfile) {
-    rows.push({ label: 'Driftsprofil', value: operatingProfile });
+    rows.push({ label: 'Driftsprofil', value: operatingProfile, priority: 0 });
   }
+  const seasonalOpening = timeline.find((entry) =>
+    entry.kind === 'opening' && /utvidet/i.test(entry.label) && (entry.days || entry.endTime || entry.note),
+  );
   const primaryServing = timeline.find((entry) => entry.kind === 'serving' && /gruppe 1, 2/i.test(entry.label))
     || timeline.find((entry) => entry.kind === 'serving' && entry.startTime && entry.endTime);
   const spiritServing = timeline.find((entry) => entry.kind === 'serving' && /gruppe 3/i.test(entry.label));
   const openingEntry = timeline.find((entry) => entry.kind === 'opening' && /serveringssted/i.test(entry.label))
     || timeline.find((entry) => entry.kind === 'opening');
   const outdoorEntry = timeline.find((entry) => entry.kind === 'opening' && /ute/i.test(entry.label));
+  if (seasonalOpening) {
+    rows.push({ label: 'Sesong', value: formatWindow(seasonalOpening, ' · ') || normalizeText(seasonalOpening.note), priority: 1 });
+  }
   if (primaryServing) {
-    rows.push({ label: mapSummaryLabel(primaryServing.label), value: formatWindow(primaryServing, ' · ') || normalizeText(primaryServing.note) });
+    rows.push({ label: mapSummaryLabel(primaryServing.label), value: formatWindow(primaryServing, ' · ') || normalizeText(primaryServing.note), priority: 2 });
   }
   if (spiritServing) {
-    rows.push({ label: mapSummaryLabel(spiritServing.label), value: formatWindow(spiritServing, ' · ') || normalizeText(spiritServing.note) });
+    rows.push({ label: mapSummaryLabel(spiritServing.label), value: formatWindow(spiritServing, ' · ') || normalizeText(spiritServing.note), priority: 3 });
   }
   if (openingEntry) {
-    rows.push({ label: /ute/i.test(openingEntry.label) ? 'Uteservering' : 'Åpningstid', value: formatWindow(openingEntry, ' · ') || normalizeText(openingEntry.note) });
+    rows.push({ label: /ute/i.test(openingEntry.label) ? 'Uteservering' : 'Åpningstid', value: formatWindow(openingEntry, ' · ') || normalizeText(openingEntry.note), priority: 4 });
   }
-  if (outdoorEntry && outdoorEntry !== openingEntry) {
-    rows.push({ label: 'Uteservering', value: formatWindow(outdoorEntry, ' · ') || normalizeText(outdoorEntry.note) });
+  if (outdoorEntry && outdoorEntry !== openingEntry && isDistinctOutdoorWindow(outdoorEntry, openingEntry)) {
+    rows.push({ label: 'Uteservering', value: formatWindow(outdoorEntry, ' · ') || normalizeText(outdoorEntry.note), priority: 5 });
   }
   const applicationLink = curatedLinks.find((entry) => entry.kind === 'application') || curatedLinks.find((entry) => entry.kind === 'forms');
   if (applicationLink) {
-    rows.push({ label: 'Søknad', value: applicationLink.kind === 'application' ? 'Egen side for søknad og endringer' : applicationLink.displayLabel });
+    rows.push({ label: 'Søknad', value: applicationLink.kind === 'application' ? 'Egen side for søknad og endringer' : applicationLink.displayLabel, priority: 8 });
   }
   const controlsLink = curatedLinks.find((entry) => entry.kind === 'controls' || entry.kind === 'rules');
   if (controlsLink) {
-    rows.push({ label: controlsLink.kind === 'controls' ? 'Kontroll' : 'Regelverk', value: controlsLink.displayLabel });
+    rows.push({ label: controlsLink.kind === 'controls' ? 'Kontroll' : 'Regelverk', value: controlsLink.displayLabel, priority: 9 });
   }
-  if (data.publicRecordsPlatform) {
-    rows.push({ label: 'Innsyn', value: normalizeText(data.publicRecordsPlatform) });
+  if (data.publicRecordsPlatform && (rows.length < 3 || !isGenericPublicRecordsPlatform(data.publicRecordsPlatform))) {
+    rows.push({ label: 'Innsyn', value: normalizeText(data.publicRecordsPlatform), priority: 10 });
   }
   if (salesNote) {
-    rows.push({ label: 'Salgstid', value: 'Ikke tydelig oppgitt' });
+    rows.push({ label: 'Salgstid', value: 'Ikke tydelig oppgitt', priority: 11 });
   }
-  return uniqueByKey(rows, (entry) => `${entry.label}|${entry.value}`).slice(0, 6);
+  return uniqueByKey(
+    rows
+      .sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label, 'nb'))
+      .map(({ priority: _priority, ...entry }) => entry),
+    (entry) => `${entry.label}|${entry.value}`,
+  ).slice(0, 6);
 }
 
 function mapSummaryLabel(label: string) {
+  if (/gruppe 1, 2, 3/i.test(label)) return 'Skjenking';
   if (/gruppe 1, 2/i.test(label)) return 'Øl og vin';
   if (/gruppe 3/i.test(label)) return 'Brennevin';
   return capitalize(label);
+}
+
+function isDistinctOutdoorWindow(outdoorEntry: MunicipalityTimelineEntry, openingEntry?: MunicipalityTimelineEntry) {
+  if (!openingEntry) return true;
+  return (
+    formatWindow(outdoorEntry, ' · ') !== formatWindow(openingEntry, ' · ') ||
+    normalizeText(outdoorEntry.note) !== normalizeText(openingEntry.note)
+  );
+}
+
+function isGenericPublicRecordsPlatform(value?: string) {
+  const text = normalizeText(value || '');
+  return ['eInnsyn', 'ACOS Innsyn', 'Offentlig Innsyn', 'Bergen Offentlig Innsyn'].includes(text);
 }
 
 function deriveOperatingProfile(

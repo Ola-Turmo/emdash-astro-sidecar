@@ -90,7 +90,22 @@ pnpm sync:kommune-seo
 pnpm deploy:kommune:pages
 ```
 
-### 7. Audit the live publish set with screenshots
+### 7. Purge kommune cache for current slugs
+
+Use this after deploy when you need drafted-out slugs and refreshed live pages to stop relying on cache expiry:
+
+```bash
+pnpm purge:kommune-cache
+```
+
+Optional:
+
+- `--published-only` if you only want the current live set plus core kommune routes
+- `--dry-run` to print the purge list without calling Cloudflare
+
+This script currently requires `CLOUDFLARE_API_TOKEN` because it uses the Cloudflare purge API directly.
+
+### 8. Audit the live publish set with screenshots
 
 ```bash
 pnpm audit:municipality-batch -- --mode published --limit 20 --live-base-url https://www.kurs.ing/kommune

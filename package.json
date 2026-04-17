@@ -15,6 +15,7 @@
     "build:municipality-images": "python ./scripts/build-municipality-image-derivatives.py",
     "report:municipality": "node ./scripts/report-municipality-quality.mjs",
     "audit:municipality-batch": "node ./scripts/audit-municipality-batch.mjs",
+    "purge:kommune-cache": "node ./scripts/purge-kommune-cache.mjs",
     "build:kommune": "node ./scripts/run-concept-command.mjs --site kurs-ing --concept kommune -- pnpm --filter @emdash/blog build",
     "sync:kommune-seo": "node ./scripts/run-concept-command.mjs --site kurs-ing --concept kommune -- pnpm sync:concept-seo",
     "deploy:kommune:pages": "node ./scripts/run-concept-command.mjs --site kurs-ing --concept kommune -- pnpm exec wrangler pages deploy apps/blog/dist/kurs-ing/kommune --project-name=kurs-ing-static --branch=main --commit-dirty=true",
