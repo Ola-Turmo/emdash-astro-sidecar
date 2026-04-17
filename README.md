@@ -55,7 +55,7 @@ Use it when you need to:
 - grow non-brand traffic without touching checkout or onboarding
 - publish educational content that answers pre-sale questions
 - add local or regulated-information sections like `/kommune`
-- keep search content operationally measurable instead of “blog-shaped and unverified”
+- keep search content operationally measurable instead of "blog-shaped and unverified"
 
 ## How It Works
 
@@ -136,7 +136,7 @@ git branch --show-current
 
 ## Release Standard
 
-Do not ship because the app “builds.”
+Do not ship because the app "builds."
 
 Ship because the live system clears the full quality bar:
 
@@ -218,11 +218,24 @@ That matters when you need local or regulated information architecture that shou
 
 The current `kurs.ing/kommune` concept is driven from the structured municipality dataset in `Ola-Turmo/kommune.no.apimcp.site`, then filtered through stricter quality gates so weak municipality pages fail closed instead of shipping.
 
-Run:
+Core loop:
 
 ```bash
 pnpm generate:municipal-pages
+pnpm report:municipality
+pnpm audit:municipality-batch -- --mode published
+pnpm qa:municipality
 ```
+
+Promotion loop for drafted-but-publishable pages:
+
+```bash
+pnpm audit:municipality-batch -- --mode publishable-drafted --limit 10
+pnpm promote:municipality-batch -- --require-hero --limit 5
+pnpm qa:municipality
+```
+
+The municipality release set is intentionally curated. The generator can draft weak or stale pages back out, the batch audit gives you a screenshot pass over the current slice, and the release gate keeps the prompt-backed flagship hero set and local-difference standard from regressing.
 
 Concept separation is also enforced in normal verification:
 

@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 import path from 'node:path';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { loadMunicipalityPages } from './lib/municipality-pages.mjs';
 
 const repoRoot = process.cwd();
-const municipalityRoot = path.join(repoRoot, 'apps', 'blog', 'src', 'content', 'municipalPages');
 const outputRoot = path.join(repoRoot, 'output', 'municipality-batches');
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const entries = await loadEntries();
+  const entries = await loadMunicipalityPages(repoRoot);
   const targets = selectTargets(entries, args);
 
   if (!targets.length) {
@@ -28,10 +28,10 @@ async function main() {
     generatedAt: new Date().toISOString(),
     requireHero: args.requireHero,
     limit: args.limit,
-    promoted: targets.map(({ municipality, slug, score, hasHero }) => ({
+    promoted: targets.map(({ municipality, slug, qualityScore, hasHero }) => ({
       municipality,
       slug,
-      score,
+      score: qualityScore,
       hasHero,
     })),
   };
@@ -74,28 +74,6 @@ function parseArgs(argv) {
   }
 
   return args;
-}
-
-async function loadEntries() {
-  const files = (await readdir(municipalityRoot)).filter((fileName) => fileName.endsWith('.mdx'));
-  const results = [];
-
-  for (const fileName of files) {
-    const filePath = path.join(municipalityRoot, fileName);
-    const source = await readFile(filePath, 'utf8');
-    results.push({
-      filePath,
-      source,
-      slug: fileName.replace(/\.mdx$/i, ''),
-      municipality: source.match(/^municipality:\s*"(.+)"$/m)?.[1] || fileName.replace(/\.mdx$/i, ''),
-      score: Number(source.match(/^  score:\s*([0-9]+)$/m)?.[1] || '-1'),
-      publishable: /^  publishable:\s*true$/m.test(source),
-      draft: /^draft:\s*true$/m.test(source),
-      hasHero: /^heroImage:/m.test(source),
-    });
-  }
-
-  return results.sort((a, b) => b.score - a.score || a.municipality.localeCompare(b.municipality, 'nb'));
 }
 
 function selectTargets(entries, args) {

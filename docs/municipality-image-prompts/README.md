@@ -10,12 +10,18 @@ Rules:
 - editorial, trustworthy, municipality-specific atmosphere
 - enough visual quiet space for the page headline
 
-Current published heroes:
+Current prompt-backed flagship heroes:
 
 - `arendal`
-- `kristiansand`
+- `bergen`
+- `bjerkreim`
+- `bremanger`
+- `farsund`
+- `halden`
 - `lillehammer`
 - `narvik`
+- `nord-aurdal`
+- `trysil`
 
 Render command pattern:
 

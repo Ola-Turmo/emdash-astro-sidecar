@@ -12,11 +12,11 @@ const missingPagePatterns = [
 
 const semanticSignals = {
   plan: ['alkohol', 'skjenk', 'skjenketid', 'alkoholpolitisk', 'retningslinje', 'bevilling'],
-  forms: ['skjema', 'send inn', 'søknad', 'bevilling', 'selvbetjening'],
+  forms: ['skjema', 'send inn', 'soknad', 'bevilling', 'selvbetjening'],
   publicRecords: ['innsyn', 'postliste', 'journal', 'offentlig', 'saksinnsyn', 'einnsyn'],
   serviceHub: ['salg', 'servering', 'skjenking', 'alkohol', 'bevilling'],
-  application: ['søk', 'søknad', 'endre', 'bevilling', 'melding'],
-  rules: ['regel', 'vilkår', 'skjenking', 'salg', 'bevilling', 'prikktildeling'],
+  application: ['sok', 'soknad', 'endre', 'bevilling', 'melding'],
+  rules: ['regel', 'vilkar', 'skjenking', 'salg', 'bevilling', 'prikktildeling'],
   sales: ['salgsbevilling', 'salg', 'alkohol', 'bevilling'],
   serving: ['skjenkebevilling', 'skjenking', 'alkohol', 'bevilling'],
   servering: ['serveringsbevilling', 'servering', 'bevilling'],
@@ -25,7 +25,7 @@ const semanticSignals = {
   controls: ['kontroll', 'regelbrudd', 'prikktildeling', 'omsetningsoppgave', 'tilsyn'],
   outdoor: ['uteserver', 'uteareal', 'offentlig areal'],
   singleEvent: ['arrangement', 'enkeltanledning', 'midlertidig', 'enkelt arrangement'],
-  exam: ['kunnskapsprøve', 'kunnskapsprove', 'etablerer', 'prøve', 'prove'],
+  exam: ['kunnskapsprove', 'etablerer', 'prove'],
 };
 
 export function isDerivedRuleNote(value = '') {
@@ -118,15 +118,19 @@ function matchesExpectedSemantics(url, expectedKind, haystack) {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
     if (expectedKind === 'forms' && hostname.includes('skjema.no')) return true;
-    if (expectedKind === 'publicRecords' && (hostname.includes('einnsyn.no') || haystack.includes('postliste') || haystack.includes('innsyn'))) {
+    if (
+      expectedKind === 'publicRecords' &&
+      (hostname.includes('einnsyn.no') || haystack.includes('postliste') || haystack.includes('innsyn'))
+    ) {
       return true;
     }
   } catch {
     // ignore
   }
 
+  const semanticHaystack = asciiFold(haystack);
   const signals = semanticSignals[expectedKind] || [];
-  return signals.some((signal) => haystack.includes(signal));
+  return signals.some((signal) => semanticHaystack.includes(signal));
 }
 
 function stripHtml(value) {
@@ -151,7 +155,7 @@ function decodeHtmlEntities(value) {
 export function normalizeText(value) {
   let normalized = String(value ?? '');
   for (let index = 0; index < 2; index += 1) {
-    if (!/[ÃƒÃ‚]/.test(normalized)) break;
+    if (!/[ÂÃ]/.test(normalized)) break;
     const repaired = Buffer.from(normalized, 'latin1').toString('utf8');
     if (countMarkers(repaired) > countMarkers(normalized)) break;
     normalized = repaired;
@@ -163,6 +167,14 @@ export function normalizeText(value) {
     .trim();
 }
 
+function asciiFold(value) {
+  return normalizeText(value)
+    .toLowerCase()
+    .replace(/æ/g, 'ae')
+    .replace(/ø/g, 'o')
+    .replace(/å/g, 'a');
+}
+
 function countMarkers(value) {
-  return [...String(value || '')].filter((character) => character === 'Ãƒ' || character === 'Ã‚').length;
+  return [...String(value || '')].filter((character) => character === 'Â' || character === 'Ã').length;
 }

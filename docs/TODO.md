@@ -124,7 +124,7 @@ Everything else in the current municipality rollout should stay drafted until it
 - [x] Rewrote the `/kommune` landing shell copy around the end user instead of internal system language.
 - [x] Added municipality landing-page search that only suggests currently published municipalities.
 - [ ] Add a cache-purge or explicit invalidation path for kommune slugs that are drafted out, so stale live 200s disappear without relying on query-string cache busting.
-- [ ] Add a municipality-specific release gate that blocks publishing if:
+- [x] Add a municipality-specific release gate that blocks publishing if:
   - source cards are too generic
   - local differences are too weak
   - hero image is missing for flagship municipality pages

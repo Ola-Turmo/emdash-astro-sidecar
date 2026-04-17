@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 import { createServer } from 'node:http';
-import { readdir, readFile, stat, mkdir, writeFile } from 'node:fs/promises';
+import { stat, mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium, devices } from 'playwright';
+import { loadMunicipalityPages } from './lib/municipality-pages.mjs';
 
 const repoRoot = process.cwd();
 const distRoot = path.join(repoRoot, 'apps', 'blog', 'dist', 'kurs-ing');
-const municipalityRoot = path.join(repoRoot, 'apps', 'blog', 'src', 'content', 'municipalPages');
 const outputRoot = path.join(repoRoot, 'output', 'playwright', 'municipality-batch');
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 const runDir = path.join(outputRoot, timestamp);
@@ -15,7 +15,7 @@ const screenshotsDir = path.join(runDir, 'screenshots');
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const entries = await loadMunicipalityEntries();
+  const entries = await loadMunicipalityPages(repoRoot);
   const targets = selectTargets(entries, args);
 
   if (!targets.length) {
@@ -57,7 +57,7 @@ async function main() {
           title,
           description,
           linkCount: document.querySelectorAll('a[href]').length,
-          hasCourseRootMarker: bodyText.includes('Kurs for Etablererprøven'),
+          hasCourseRootMarker: bodyText.includes('Kurs for Etablererproven'),
           hasKommuneMarker: bodyText.includes('Kurs.ing Kommune') || title.includes('Kurs.ing Kommune'),
         };
       });
@@ -121,7 +121,7 @@ async function main() {
       `### ${result.municipality}`,
       '',
       `- URL: ${result.url}`,
-      `- Score: ${result.score}`,
+      `- Score: ${result.qualityScore}`,
       `- Draft: ${result.draft}`,
       `- Publishable: ${result.publishable}`,
       `- H1: ${result.audit.h1}`,
@@ -199,28 +199,6 @@ function parseArgs(argv) {
   }
 
   return args;
-}
-
-async function loadMunicipalityEntries() {
-  const files = (await readdir(municipalityRoot)).filter((fileName) => fileName.endsWith('.mdx'));
-  const results = [];
-
-  for (const fileName of files) {
-    const source = await readFile(path.join(municipalityRoot, fileName), 'utf8');
-    const municipality = source.match(/^municipality:\s*"(.+)"$/m)?.[1] || fileName.replace(/\.mdx$/i, '');
-    const score = Number(source.match(/^  score:\s*([0-9]+)$/m)?.[1] || '-1');
-    const publishable = /^  publishable:\s*true$/m.test(source);
-    const draft = /^draft:\s*true$/m.test(source);
-    results.push({
-      slug: fileName.replace(/\.mdx$/i, ''),
-      municipality,
-      score,
-      publishable,
-      draft,
-    });
-  }
-
-  return results.sort((a, b) => b.score - a.score || a.municipality.localeCompare(b.municipality, 'nb'));
 }
 
 function selectTargets(entries, args) {

@@ -273,9 +273,26 @@ Before publishing municipality content, the repo should at minimum pass:
 
 - `pnpm qa:municipality`
 - `pnpm report:municipality`
+- `pnpm audit:municipality-batch -- --mode published`
+- `pnpm promote:municipality-batch -- --require-hero --limit <n>` when moving drafted candidates into the public set
 - `pnpm qa:shell`
 - concept build for `kurs-ing/kommune`
 - live smoke checks on representative municipality URLs
+
+The operator loop should be:
+
+1. regenerate pages from the current source catalog
+2. inspect the quality report to see which pages are publishable, drafted, or drafted outside the curated live set
+3. run the batch audit on the published or promotion candidate set
+4. promote only the prompt-backed hero set you are ready to stand behind
+5. rerun `pnpm qa:municipality` before deploy
+
+The release gate should explicitly block the curated public set when:
+
+- official source cards are too generic to be useful
+- local differences are too weak or too repetitive
+- two published municipality pages drift too close to the same copy pattern
+- a municipality in the prompt-backed flagship hero set loses its hero image wiring
 
 The report should be treated as the operator summary for the current municipality set:
 
