@@ -63,6 +63,11 @@ if (!routerWranglerSource.includes('name = "router-worker"')) {
 }
 
 const hostname = new URL(site.brand.mainSiteUrl).hostname.replace(/^www\./, '');
+const wwwHostname = new URL(site.brand.mainSiteUrl).hostname;
+if (!routerWranglerSource.includes(`pattern = "${wwwHostname}/*"`)) {
+  findings.push(`router-worker route must include ${wwwHostname}/*`);
+}
+
 if (!apexWranglerSource.includes(`pattern = "${hostname}/*"`)) {
   findings.push(`apex-site-proxy route must include ${hostname}/*`);
 }

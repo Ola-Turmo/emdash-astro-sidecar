@@ -79,7 +79,7 @@ const workerExpectations = [
   },
   {
     path: 'apps/cloudflare/workers/router-worker/wrangler.toml',
-    checks: ['ROOT_SITE_ORIGIN', 'https://new.kurs.ing'],
+    checks: ['ROOT_SITE_ORIGIN', 'https://new.kurs.ing', 'www.kurs.ing/*'],
   },
   {
     path: 'apps/cloudflare/workers/apex-site-proxy/wrangler.toml',
