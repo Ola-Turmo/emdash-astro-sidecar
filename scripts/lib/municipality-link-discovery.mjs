@@ -160,7 +160,10 @@ export function classifyMunicipalLinkKind(value, fallbackKind = 'general') {
       return 'rules';
     }
 
-    if (/\/(skjema|selvbetjening)\/?$/.test(pathname)) return 'forms';
+    if (/\/(skjema|skjemaer|skjemaoversikt|selvbetjening)\/?$/.test(pathname)) return 'forms';
+    if (/https?:\/\/([a-z0-9-]+\.)?skjema\.no\//.test(rawUrl) || /https?:\/\/skjema\.[^/]+\/skjema\//.test(rawUrl)) {
+      return 'forms';
+    }
     if (/\/(innsyn|postliste|offentlig-journal)\/?$/.test(pathname)) return 'publicRecords';
     if (/\/(bevillingsgebyr|gebyr|satser)\/?$/.test(pathname)) return 'fees';
     if (/\/(fornyelse|fornye)\/?$/.test(pathname)) return 'renewal';
