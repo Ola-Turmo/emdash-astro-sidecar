@@ -15,6 +15,7 @@ const { site } = runtime;
 const mainSiteUrl = new URL(site.brand.mainSiteUrl);
 const wwwHost = mainSiteUrl.hostname.startsWith('www.') ? mainSiteUrl.hostname : `www.${mainSiteUrl.hostname}`;
 const apexHost = mainSiteUrl.hostname.replace(/^www\./u, '');
+const protectedPagesProjects = new Set(['kurs-ing-static']);
 const expectedDeployDirectories = new Set(
   Object.values(site.concepts).map((concept) =>
     normalizeRepoPath(path.join('apps', 'blog', getConceptOutputDir(site.key, concept.key).replace(/^\.\//u, ''))),
@@ -29,6 +30,12 @@ const expectedRouteWorkerConfigs = new Set(
 );
 
 for (const concept of Object.values(site.concepts)) {
+  if (protectedPagesProjects.has(concept.cloudflare.pagesProject)) {
+    findings.push(
+      `${concept.key} must not target protected Pages project ${concept.cloudflare.pagesProject}; use a dedicated sidecar Pages project instead`,
+    );
+  }
+
   const workerConfigPath = path.join(
     repoRoot,
     'apps',

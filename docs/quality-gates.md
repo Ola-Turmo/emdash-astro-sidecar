@@ -32,7 +32,7 @@ This repo now has reusable gates for the highest-value public quality risks.
 - `pnpm qa:parity`
   Compares built Astro output against live edge-served pages for key parity signals.
 - `pnpm qa:ownership`
-  Enforces public route ownership boundaries so this sidecar only claims and deploys `kurs.ing/guide` and `kurs.ing/kommune`, while the main `kurs.ing` root stays on its separate origin.
+  Enforces public route ownership boundaries so this sidecar only claims and deploys `kurs.ing/guide` and `kurs.ing/kommune`, while the main `kurs.ing` root stays on its separate origin and protected main-app Pages projects such as `kurs-ing-static` are rejected for sidecar concepts.
 
 ## Current Limits
 

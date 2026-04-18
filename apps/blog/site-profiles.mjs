@@ -115,8 +115,8 @@ const siteProfiles = {
           authorPrefix: '/redaksjon',
         },
         cloudflare: {
-          pagesProject: 'kurs-ing-static',
-          pagesPreviewAlias: 'kurs-ing-static.pages.dev',
+          pagesProject: 'kurs-ing-kommune-sidecar',
+          pagesPreviewAlias: 'kurs-ing-kommune-sidecar.pages.dev',
           routeWorkerName: 'kurs-ing-kommune-proxy',
           routeWorkerDirectory: 'kommune-proxy',
         },

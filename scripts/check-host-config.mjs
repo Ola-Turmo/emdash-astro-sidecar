@@ -29,10 +29,14 @@ const runtime = resolveActiveSiteRuntime(process.env);
 const siteUrl = runtime.concept.siteUrl;
 const basePath = runtime.concept.basePath;
 const pagesProject = runtime.concept.cloudflare.pagesProject;
+const primaryConcept = runtime.site.concepts.guide ?? runtime.concept;
+const defaultPagesProject = primaryConcept.cloudflare.pagesProject;
+const defaultSiteUrl = primaryConcept.siteUrl;
 const routeWorkerName = runtime.concept.cloudflare.routeWorkerName;
 const hostname = new URL(runtime.site.brand.mainSiteUrl).hostname;
 const wwwPatternHost = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
 const routeWorkerDirectory = runtime.concept.cloudflare.routeWorkerDirectory;
+const protectedPagesProjects = new Set(['kurs-ing-static']);
 
 if (!astroConfigSource.includes('resolveActiveSiteRuntime')) {
   findings.push('apps/blog/astro.config.mjs must resolve the active site/concept profile');
@@ -50,12 +54,16 @@ if (!siteConfigSource.includes('resolveActiveSiteRuntime')) {
   findings.push('apps/blog/src/site-config.ts must use the shared site registry');
 }
 
-if (!wranglerSource.includes(`"name": "${pagesProject}"`)) {
-  findings.push(`apps/blog/wrangler.jsonc name must match ${pagesProject}`);
+if (!wranglerSource.includes(`"name": "${defaultPagesProject}"`)) {
+  findings.push(`apps/blog/wrangler.jsonc name must match the default concept Pages project ${defaultPagesProject}`);
 }
 
-if (!wranglerSource.includes(`"PUBLIC_SITE_URL": "${siteUrl}"`)) {
-  findings.push(`apps/blog/wrangler.jsonc PUBLIC_SITE_URL must match ${siteUrl}`);
+if (protectedPagesProjects.has(pagesProject)) {
+  findings.push(`active concept Pages project must not use protected main-app project ${pagesProject}`);
+}
+
+if (!wranglerSource.includes(`"PUBLIC_SITE_URL": "${defaultSiteUrl}"`)) {
+  findings.push(`apps/blog/wrangler.jsonc PUBLIC_SITE_URL must match the default concept site URL ${defaultSiteUrl}`);
 }
 
 const productionVarsMatch = wranglerSource.match(

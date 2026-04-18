@@ -20,6 +20,7 @@ const BLOG_DIR = join(process.cwd(), 'apps/blog');
 const { siteKey, conceptKey, site, concept } = resolveActiveSiteRuntime(process.env);
 const OUTPUT_DIR = join(BLOG_DIR, getConceptOutputDir(siteKey, conceptKey).replace(/^\.\//, ''));
 const DEFAULT_PROJECT_NAME = process.env.PAGES_PROJECT_NAME || concept.cloudflare.pagesProject;
+const PROTECTED_PAGES_PROJECTS = new Set(['kurs-ing-static']);
 
 const green = (msg) => `\x1b[32m${msg}\x1b[0m`;
 const blue = (msg) => `\x1b[34m${msg}\x1b[0m`;
@@ -102,6 +103,12 @@ async function main() {
   logStep(3, 'Deploying to Cloudflare Pages');
 
   const projectName = DEFAULT_PROJECT_NAME;
+
+  if (PROTECTED_PAGES_PROJECTS.has(projectName)) {
+    throw new Error(
+      `Refusing to deploy ${siteKey}/${conceptKey} to protected Pages project ${projectName}. Configure a dedicated sidecar Pages project instead.`,
+    );
+  }
 
   if (isProduction) {
     const productionBranch = explicitBranch || 'main';
