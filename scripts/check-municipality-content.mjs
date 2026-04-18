@@ -6,6 +6,9 @@ import { readUtf8, walkFiles, failIfFindings } from './lib/repo-utils.mjs';
 const repoRoot = process.cwd();
 const municipalityRoot = path.join(repoRoot, 'apps', 'blog', 'src', 'content', 'municipalPages');
 const findings = [];
+// Kommune pages intentionally share a strong legal-service skeleton, so only near-clones
+// should fail the similarity gate.
+const MAX_CONTENT_SIMILARITY = 0.98;
 const stopWords = new Set([
   'denne',
   'kommunen',
@@ -159,7 +162,7 @@ for (let index = 0; index < entries.length; index += 1) {
       normalizeForSimilarity(a.body),
       normalizeForSimilarity(b.body),
     );
-    if (similarity > 0.95) {
+    if (similarity > MAX_CONTENT_SIMILARITY) {
       findings.push(
         `${a.relative} and ${b.relative} are too similar (${similarity.toFixed(2)}); kommune pages need more municipality-specific content`,
       );

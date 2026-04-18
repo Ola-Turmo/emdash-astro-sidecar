@@ -37,8 +37,11 @@ for (const filePath of files) {
     ...extractLinkUrls(frontmatter, 'bylawLinks'),
   ].filter((entry) => entry.url);
 
-  for (const entry of urls) {
-    const inspection = await inspectMunicipalityUrl(entry.url, entry.kind);
+  const inspections = await mapLimit(urls, 8, async (entry) => ({
+    entry,
+    inspection: await inspectMunicipalityUrl(entry.url, entry.kind),
+  }));
+  for (const { entry, inspection } of inspections) {
     if (!inspection.ok) {
       findings.push(`${relative} has an invalid ${entry.kind} link ${entry.url} (${inspection.reason})`);
     }
@@ -79,4 +82,20 @@ function inferKind(label) {
   if (/salg, servering og skjenking/.test(source)) return 'serviceHub';
   if (/soke bevilling|søke bevilling|soknad|søknad/.test(source)) return 'application';
   return 'general';
+}
+
+async function mapLimit(items, concurrency, iteratee) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  const workers = Array.from({ length: Math.max(1, Math.min(concurrency, items.length || 1)) }, async () => {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await iteratee(items[currentIndex], currentIndex);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
 }

@@ -1,45 +1,22 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 
 import { access, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { getMunicipalityEditorialProfile } from './lib/municipality-curation.mjs';
 import { inspectMunicipalityUrl, isDerivedRuleNote } from './lib/municipality-evidence.mjs';
+import {
+  classifyMunicipalLink,
+  classifyMunicipalLinkKind,
+  discoverSupplementalMunicipalityLinks,
+  isAlcoholRelevantUrl,
+} from './lib/municipality-link-discovery.mjs';
+import { enrichMunicipalityRules } from './lib/municipality-rule-enrichment.mjs';
 
 const repoRoot = process.cwd();
 const sourceRepo = path.join(path.dirname(repoRoot), 'kommune.no.apimcp.site');
 const sourceCatalogPath = path.join(sourceRepo, 'kommune_catalog.enriched.json');
 const outputDir = path.join(repoRoot, 'apps', 'blog', 'src', 'content', 'municipalPages');
 const publicImageDir = path.join(repoRoot, 'apps', 'blog', 'public', 'images', 'kommune');
-
-const alcoholKeywords = [
-  'alkohol',
-  'bevilling',
-  'skjenk',
-  'salg',
-  'servering',
-  'uteserver',
-  'gebyr',
-  'fornyelse',
-  'kontroll',
-  'arrangement',
-  'enkelt',
-  'prove',
-  'prøve',
-  'kunnskap',
-  'ansvarlig',
-  'vertskap',
-];
-
-const bannedMunicipalLinkKeywords = [
-  'gravplass',
-  'barnehage',
-  'skole',
-  'feiing',
-  'bal-og-grill',
-  'bygg',
-  'anlegg',
-  'rabattordning',
-];
 
 function parseArgs(argv) {
   const result = {
@@ -147,13 +124,13 @@ async function main() {
     console.log(`Wrote ${path.relative(repoRoot, filePath)}`);
   }
 
-  await draftLegacyMunicipalityPages(targetMunicipalities);
 }
 
 async function buildMunicipalPage(row, slug) {
   const normalizedRow = normalizeObjectKeys(row);
   const municipality = normalizeText(normalizedRow.Kommunenavn);
   const county = normalizeText(normalizedRow.Fylke);
+  const adminCenter = normalizeText(normalizedRow['Adm. senter'] || '');
   const editorialProfile = getMunicipalityEditorialProfile(municipality);
   const languageForm = normalizeText(normalizedRow['Målform'] || '');
   const domain = normalizeText(normalizedRow.Domene || '');
@@ -184,7 +161,7 @@ async function buildMunicipalPage(row, slug) {
     url,
   }));
 
-  const openingHoursRules = (row.opening_hours_rules || [])
+  const sourceOpeningHoursRules = (row.opening_hours_rules || [])
     .slice(0, 4)
     .map((rule) => ({
       appliesTo: normalizeText(rule.applies_to || ''),
@@ -192,56 +169,122 @@ async function buildMunicipalPage(row, slug) {
       startTime: rule.start_time || '',
       endTime: rule.end_time || '',
       note: normalizeText(rule.note || ''),
-    }))
-    .filter((rule) => !isDerivedRuleNote(rule.note));
+    }));
 
-  const alcoholServingRules = (row.alcohol_serving_hours_rules || []).slice(0, 4).map((rule) => ({
+  const enrichedRules = enrichMunicipalityRules({
+    alcoholServingRules: row.alcohol_serving_hours_rules || [],
+    openingHoursRules: sourceOpeningHoursRules,
+  });
+
+  const alcoholServingRules = enrichedRules.alcoholServingRules.slice(0, 4).map((rule) => ({
     area: normalizeText(rule.area || ''),
-    groups: Array.isArray(rule.alcohol_groups) ? rule.alcohol_groups : [],
+    groups: Array.isArray(rule.groups) ? rule.groups : [],
     days: normalizeText(rule.days || ''),
-    startTime: rule.start_time || '',
-    endTime: rule.end_time || '',
+    startTime: rule.startTime || '',
+    endTime: rule.endTime || '',
     note: normalizeText(rule.note || ''),
   }));
 
-  const serviceLinks = await filterValidMunicipalityLinks(rawServiceLinks);
-  const regulationsLinks = await filterValidMunicipalityLinks(rawRegulationsLinks);
-  const bylawLinks = await filterValidMunicipalityLinks(rawBylawLinks);
-  const validatedFormsUrl = await validateOptionalMunicipalityUrl(formsUrl, 'forms');
-  const validatedPublicRecordsUrl = await validateOptionalMunicipalityUrl(publicRecordsUrl, 'publicRecords');
+  let serviceLinks = await filterValidMunicipalityLinks(rawServiceLinks);
+  let regulationsLinks = await filterValidMunicipalityLinks(rawRegulationsLinks);
+  let bylawLinks = await filterValidMunicipalityLinks(rawBylawLinks);
+  let validatedFormsUrl = await validateOptionalMunicipalityUrl(formsUrl, 'forms');
+  let validatedPublicRecordsUrl = await validateOptionalMunicipalityUrl(publicRecordsUrl, 'publicRecords');
   const validatedAlcoholPolicyPlanUrl = await validateOptionalMunicipalityUrl(alcoholPolicyPlanUrl, 'plan');
   const fallbackPlanUrl = [...rawServiceLinks, ...rawRegulationsLinks, ...rawBylawLinks]
     .map((link) => link.url)
     .find((url) => classifyMunicipalLinkKind(url, 'general') === 'plan') || '';
-  const resolvedAlcoholPolicyPlanUrl = validatedAlcoholPolicyPlanUrl || await validateOptionalMunicipalityUrl(fallbackPlanUrl, 'plan');
+  let resolvedAlcoholPolicyPlanUrl =
+    validatedAlcoholPolicyPlanUrl || await validateOptionalMunicipalityUrl(fallbackPlanUrl, 'plan');
+
+  const discoveredLinks = await discoverValidatedMunicipalityLinks({
+    siteUrl,
+    seedUrls: uniqueSources([
+      ...serviceLinks.map((link) => ({ url: link.url })),
+      ...regulationsLinks.map((link) => ({ url: link.url })),
+      ...bylawLinks.map((link) => ({ url: link.url })),
+      { url: resolvedAlcoholPolicyPlanUrl },
+      { url: validatedFormsUrl },
+      { url: validatedPublicRecordsUrl },
+      ...rawServiceLinks.slice(0, 2).map((link) => ({ url: link.url })),
+    ]).map((entry) => entry.url),
+  });
+
+  serviceLinks = mergeLabeledLinks(serviceLinks, discoveredLinks.serviceLinks);
+  regulationsLinks = mergeLabeledLinks(regulationsLinks, discoveredLinks.regulationsLinks);
+  bylawLinks = mergeLabeledLinks(bylawLinks, discoveredLinks.bylawLinks);
+  validatedFormsUrl = validatedFormsUrl || discoveredLinks.formsUrl;
+  validatedPublicRecordsUrl = validatedPublicRecordsUrl || discoveredLinks.publicRecordsUrl;
+  resolvedAlcoholPolicyPlanUrl = resolvedAlcoholPolicyPlanUrl || discoveredLinks.planUrl;
+  const publishedOpeningHoursRules = uniqueRulesBySignature(sourceOpeningHoursRules
+    .filter((rule) => !isDerivedRuleNote(rule.note))
+    .map((rule) => ({
+      ...rule,
+      note: sanitizeRuleNoteForPublication(rule.note, resolvedAlcoholPolicyPlanUrl),
+    }))
+    .filter((rule) => rule.note || rule.startTime || rule.endTime));
+  const publishedAlcoholServingRules = uniqueRulesBySignature(alcoholServingRules
+    .map((rule) => ({
+      ...rule,
+      note: sanitizeRuleNoteForPublication(rule.note, resolvedAlcoholPolicyPlanUrl),
+    }))
+    .filter((rule) => rule.note || rule.startTime || rule.endTime));
+  const evidenceProfile = deriveEvidenceProfile({
+    municipality,
+    adminCenter,
+    evidence: row.evidence || {},
+    publicRecordsPlatform,
+    openingHoursRules: sourceOpeningHoursRules,
+    alcoholServingRules: publishedAlcoholServingRules,
+    alcoholPolicyPlanUrl: resolvedAlcoholPolicyPlanUrl,
+  });
   const resolvedEditorialProfile = resolveEditorialProfile(editorialProfile, {
     municipality,
     publicRecordsPlatform,
-    openingHoursRules,
-    alcoholServingRules,
+    openingHoursRules: uniqueRulesBySignature([...publishedOpeningHoursRules, ...sourceOpeningHoursRules]),
+    alcoholServingRules: publishedAlcoholServingRules,
     regulationsLinks,
     bylawLinks,
     formsUrl: validatedFormsUrl,
     publicRecordsUrl: validatedPublicRecordsUrl,
     alcoholPolicyPlanUrl: resolvedAlcoholPolicyPlanUrl,
     serviceLinks,
+    evidenceProfile,
   });
 
   const title = buildPageTitle(municipality);
   const description = buildPageDescription({
     municipality,
-    alcoholServingRules,
-    openingHoursRules,
+    alcoholServingRules: publishedAlcoholServingRules,
+    openingHoursRules: publishedOpeningHoursRules,
     editorialProfile: resolvedEditorialProfile,
   });
 
-  const officialSourceCandidates = uniqueSources([
-    { label: 'Skjenketider eller alkoholpolitisk plan', url: validatedAlcoholPolicyPlanUrl },
-    { label: serviceLinks[0]?.label || 'Salg, servering og skjenking', url: serviceLinks[0]?.url },
-    { label: serviceLinks[1]?.label || 'Søknad eller endring', url: serviceLinks[1]?.url },
-    { label: 'Skjema og selvbetjening', url: validatedFormsUrl },
-    { label: 'Innsyn', url: validatedPublicRecordsUrl },
-  ]).slice(0, 4);
+  const officialSourceCandidates = selectOfficialSourceCandidates({
+    alcoholPolicyPlanUrl: resolvedAlcoholPolicyPlanUrl,
+    serviceLinks,
+    regulationsLinks,
+    bylawLinks,
+    formsUrl: validatedFormsUrl,
+    publicRecordsUrl: validatedPublicRecordsUrl,
+  });
+
+  logMunicipalityDebug({
+    municipality,
+    rowServiceUrls: row.alcohol_restaurant_urls || [],
+    rowServiceUrlChecks: (row.alcohol_restaurant_urls || []).map((url) => ({
+      url,
+      relevant: isAlcoholRelevantUrl(url),
+    })),
+    rawServiceLinks,
+    serviceLinks,
+    regulationsLinks,
+    bylawLinks,
+    formsUrl: validatedFormsUrl,
+    publicRecordsUrl: validatedPublicRecordsUrl,
+    alcoholPolicyPlanUrl: resolvedAlcoholPolicyPlanUrl,
+    officialSourceCandidates,
+  });
 
   const officialSources = (
     await Promise.all(
@@ -261,8 +304,8 @@ async function buildMunicipalPage(row, slug) {
     publicRecordsPlatform,
     formsUrl: validatedFormsUrl,
     alcoholPolicyPlanUrl: resolvedAlcoholPolicyPlanUrl,
-    openingHoursRules,
-    alcoholServingRules,
+    openingHoursRules: publishedOpeningHoursRules,
+    alcoholServingRules: publishedAlcoholServingRules,
     officialSources,
     editorialProfile: resolvedEditorialProfile,
   });
@@ -278,8 +321,8 @@ async function buildMunicipalPage(row, slug) {
     serviceLinks,
     regulationsLinks,
     bylawLinks,
-    openingHoursRules,
-    alcoholServingRules,
+    openingHoursRules: publishedOpeningHoursRules,
+    alcoholServingRules: publishedAlcoholServingRules,
   });
   const heroImage = await resolveMunicipalityHeroImage(slug, municipality, county);
 
@@ -305,8 +348,8 @@ async function buildMunicipalPage(row, slug) {
   const editorialTakeaways = resolvedEditorialProfile?.editorialTakeaways ?? [];
   const editorialLead = buildEditorialLead({
       municipality,
-      openingHoursRules,
-      alcoholServingRules,
+      openingHoursRules: publishedOpeningHoursRules,
+      alcoholServingRules: publishedAlcoholServingRules,
       editorialProfile: resolvedEditorialProfile,
       formsUrl: validatedFormsUrl,
       publicRecordsUrl: validatedPublicRecordsUrl,
@@ -343,8 +386,8 @@ async function buildMunicipalPage(row, slug) {
     `editorialLead: "${escapeDoubleQuotes(editorialLead)}"`,
     buildStringArray('localChecklist', localChecklist),
     buildLinkArray('relatedGuideLinks', relatedGuideLinks),
-    buildRuleArray('openingHoursRules', openingHoursRules),
-    buildAlcoholRuleArray('alcoholServingRules', alcoholServingRules),
+    buildRuleArray('openingHoursRules', publishedOpeningHoursRules),
+    buildAlcoholRuleArray('alcoholServingRules', publishedAlcoholServingRules),
     'sourceRepo: "Ola-Turmo/kommune.no.apimcp.site"',
     sourceLastChecked ? `sourceLastChecked: "${escapeDoubleQuotes(sourceLastChecked)}"` : null,
     buildQualityBlock(municipalityQuality),
@@ -358,7 +401,11 @@ async function buildMunicipalPage(row, slug) {
   const body = [
     editorialLead,
     '',
-    ...buildSpecificRuleBullets({ municipality, openingHoursRules, alcoholServingRules }),
+    ...buildSpecificRuleBullets({
+      municipality,
+      openingHoursRules: publishedOpeningHoursRules,
+      alcoholServingRules: publishedAlcoholServingRules,
+    }),
     '',
     ...editorialTakeaways.map((item) => `- ${item}`),
     '',
@@ -384,26 +431,6 @@ async function resolveMunicipalityHeroImage(slug, municipality, county) {
   }
 }
 
-async function draftLegacyMunicipalityPages(targetMunicipalities) {
-  const entries = await readdir(outputDir, { withFileTypes: true });
-  const allowedSlugs = new Set(targetMunicipalities.map((value) => slugify(value)));
-
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith('.mdx')) continue;
-    const slug = entry.name.replace(/\.mdx$/i, '');
-    if (allowedSlugs.has(slug)) continue;
-
-    const filePath = path.join(outputDir, entry.name);
-    const source = await readFile(filePath, 'utf8');
-    if (/publishable:\s*true/.test(source)) continue;
-    if (!/draft:\s*false/.test(source)) continue;
-
-    const updated = source.replace(/draft:\s*false/, 'draft: true');
-    await writeFile(filePath, updated, 'utf8');
-    console.log(`Drafted legacy municipality page ${path.relative(repoRoot, filePath)}`);
-  }
-}
-
 async function filterValidMunicipalityLinks(links) {
   const results = [];
   for (const link of links) {
@@ -418,6 +445,9 @@ async function filterValidMunicipalityLinks(links) {
 
 async function validateOptionalMunicipalityUrl(url, kind) {
   if (!url) return '';
+  if (kind === 'forms' && isGenericFormsUrl(url)) {
+    return '';
+  }
   const inspection = await inspectMunicipalityUrl(url, kind);
   return inspection.ok ? url : '';
 }
@@ -436,13 +466,82 @@ function resolveEditorialProfile(editorialProfile, context) {
   return {
     editorialTakeaways: uniqueValues([
       ...manualProfile.editorialTakeaways,
+      ...(context.evidenceProfile?.editorialTakeaways || []),
       ...derivedProfile.editorialTakeaways,
-    ]).slice(0, 4),
+    ]).slice(0, 6),
     practicalSteps: uniqueValues([
       ...manualProfile.practicalSteps,
+      ...(context.evidenceProfile?.practicalSteps || []),
       ...derivedProfile.practicalSteps,
-    ]).slice(0, 6),
+    ]).slice(0, 8),
   };
+}
+
+function deriveEvidenceProfile({
+  municipality,
+  adminCenter,
+  evidence,
+  publicRecordsPlatform,
+  openingHoursRules,
+  alcoholServingRules,
+  alcoholPolicyPlanUrl,
+}) {
+  const editorialTakeaways = [];
+  const practicalSteps = [];
+  const alcoholHoursNote = sanitizeEvidenceNote(evidence?.alcohol_hours?.note, alcoholPolicyPlanUrl);
+  const recordsNote = sanitizeEvidenceNote(evidence?.innsyn_url?.note, alcoholPolicyPlanUrl);
+  const formsNote = sanitizeEvidenceNote(evidence?.forms_url?.note, alcoholPolicyPlanUrl);
+  const servingPlaceRule = openingHoursRules.find((rule) => normalizeText(rule.appliesTo || '') === 'serving_place');
+  const primaryServingRule = alcoholServingRules.find((rule) => rule.endTime);
+
+  if (adminCenter && normalizeText(adminCenter) !== normalizeText(municipality)) {
+    editorialTakeaways.push(`${municipality} styres fra ${adminCenter}, så du bør kontrollere lokale sider og dokumentasjon direkte i kommunen før du låser drift eller søknadsløp.`);
+  }
+
+  if (/kontroll/iu.test(alcoholHoursNote)) {
+    editorialTakeaways.push(`${municipality} kobler skjenkesporet tydelig til kontroll. Det betyr at du bør lese både vilkår og oppfølging før du planlegger rutiner eller internkontroll.`);
+    practicalSteps.push('Les både skjenkesiden og kontrollsporet før du bestemmer rutiner for vakter, dokumentasjon eller internkontroll.');
+  }
+
+  if (/gebyr/iu.test(alcoholHoursNote)) {
+    editorialTakeaways.push(`${municipality} viser også til gebyrinformasjon i bevillingssporet. Det gjør kostnader og lokale satser til noe du bør avklare tidlig.`);
+    practicalSteps.push('Sjekk om kommunen legger gebyrinformasjon på samme spor som bevillingen før du sender inn noe eller budsjetterer oppstart.');
+  }
+
+  if (/rusmiddelpolit|ruspolit/iu.test(alcoholHoursNote)) {
+    editorialTakeaways.push(`${municipality} knytter bevillingssporet til rusmiddelpolitiske føringer. Det gjør lokal praksis viktigere enn å kopiere et standardskjema fra andre kommuner.`);
+  }
+
+  if (/sru|prokom/iu.test(recordsNote)) {
+    editorialTakeaways.push(`${municipality} bruker et SRU- eller Prokom-spor for innsyn. Det gjør det enklere å kontrollere tidligere saker uten å lete i flere ulike portaler.`);
+  }
+
+  if (/edialog|digitalt innsynskrav|personsensitivt/iu.test(recordsNote)) {
+    editorialTakeaways.push(`${municipality} peker også på eDialog eller digitalt innsynskrav for sensitive henvendelser. Det er nyttig hvis søknaden krever personopplysninger eller vedlegg.`);
+    practicalSteps.push('Velg eDialog eller tilsvarende sikker kanal hvis du må sende personsensitive opplysninger til kommunen.');
+  }
+
+  if (/aim|selvbetjening/iu.test(formsNote)) {
+    editorialTakeaways.push(`${municipality} har en tydelig selvbetjeningsflate for skjema. Det gjør det lettere å se hvilke vedlegg eller felter kommunen faktisk forventer.`);
+  }
+
+  if (servingPlaceRule?.endTime && primaryServingRule?.endTime && servingPlaceRule.endTime !== primaryServingRule.endTime) {
+    editorialTakeaways.push(`${municipality} skiller mellom skjenkeslutt og praktisk stengetid. Det betyr at vakter og avslutning må planlegges etter to klokkeslett, ikke bare ett.`);
+    practicalSteps.push('Skill mellom skjenkeslutt og stengetid når du planlegger vakter, gjesteflyt og avslutning av serveringen.');
+  }
+
+  return {
+    editorialTakeaways: uniqueValues(editorialTakeaways),
+    practicalSteps: uniqueValues(practicalSteps),
+  };
+}
+
+function sanitizeEvidenceNote(value, alcoholPolicyPlanUrl) {
+  return sanitizeRuleNoteForPublication(normalizeText(value || ''), alcoholPolicyPlanUrl)
+    .replace(/\bforms url found via http get check\. status 200\.?/iu, '')
+    .replace(/\bskjemaside funnet\.?/iu, 'Skjemaside bekreftet.')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function deriveEditorialProfile({
@@ -463,9 +562,19 @@ function deriveEditorialProfile({
   const applicationLink = allLinks.find((link) => classifyMunicipalLinkKind(link.url, link.label) === 'application');
   const controlsLink = allLinks.find((link) => ['controls', 'rules'].includes(classifyMunicipalLinkKind(link.url, link.label)));
   const singleEventLink = allLinks.find((link) => classifyMunicipalLinkKind(link.url, link.label) === 'singleEvent');
+  const examLink = allLinks.find((link) => classifyMunicipalLinkKind(link.url, link.label) === 'exam');
+  const salesLink = allLinks.find((link) => classifyMunicipalLinkKind(link.url, link.label) === 'sales');
+  const servingLicenseLink = allLinks.find((link) => classifyMunicipalLinkKind(link.url, link.label) === 'serving');
+  const serveringLicenseLink = allLinks.find((link) => classifyMunicipalLinkKind(link.url, link.label) === 'servering');
   const outdoorRule = openingHoursRules.find((rule) => normalizeText(rule.appliesTo || '') === 'outdoor_area');
+  const outdoorServingRule = alcoholServingRules.find((rule) => normalizeText(rule.area || '') === 'outdoor' && rule.endTime);
   const servingPlaceRule = openingHoursRules.find((rule) => normalizeText(rule.appliesTo || '') === 'serving_place');
-  const generalServingRule = alcoholServingRules.find((rule) => hasServingCoverage([rule]));
+  const generalServingRule = alcoholServingRules.find((rule) =>
+    hasConfirmedTimeCoverage({
+      openingHoursRules: [],
+      alcoholServingRules: [rule],
+    }),
+  );
   const wineBeerRule = alcoholServingRules.find(
     (rule) => Array.isArray(rule.groups) && rule.groups.includes('1') && rule.groups.includes('2') && rule.endTime,
   );
@@ -475,6 +584,12 @@ function deriveEditorialProfile({
   const hasLateDrift =
     alcoholServingRules.some((rule) => isLateNightCutoff(rule.endTime)) ||
     openingHoursRules.some((rule) => isLateNightCutoff(rule.endTime));
+  const hasRenewalSignal = [...openingHoursRules, ...alcoholServingRules].some((rule) =>
+    /\bfornyelse|fornye|automatisk fornyelse/iu.test(rule.note || ''),
+  );
+  const hasRevisionSignal = [...openingHoursRules, ...alcoholServingRules].some((rule) =>
+    /\brevisjon|under utarbeidelse|under revisjon/iu.test(rule.note || ''),
+  );
 
   if (hasLateDrift) {
     editorialTakeaways.push(`${municipality} åpner for sen drift sammenlignet med mange andre kommuner. Det gjør åpningstid, bemanning og intern kontroll mer operativt viktig.`);
@@ -488,6 +603,8 @@ function deriveEditorialProfile({
 
   if (outdoorRule?.endTime && (!servingPlaceRule?.endTime || outdoorRule.endTime !== servingPlaceRule.endTime)) {
     editorialTakeaways.push(`Uteservering følger en egen grense i ${municipality}, så ute- og innedrift bør ikke planlegges som om de er samme spor.`);
+  } else if (outdoorServingRule?.endTime) {
+    editorialTakeaways.push(`Uteservering har en egen praktisk grense i ${municipality}, så utearealet bør planlegges separat fra resten av driften.`);
   }
 
   if (applicationLink && controlsLink) {
@@ -496,12 +613,50 @@ function deriveEditorialProfile({
     editorialTakeaways.push(`Kommunen har et tydelig spor for søknad eller skjema. Det reduserer risikoen for å starte på feil side når driften skal opp eller endres.`);
   }
 
+  const distinctPermitTrackCount = [salesLink, servingLicenseLink, serveringLicenseLink].filter(Boolean).length;
+
+  if (distinctPermitTrackCount >= 3) {
+    editorialTakeaways.push(`${municipality} deler ulike bevillingstyper for salg, servering og skjenking i egne sider. Det gjør det enklere å velge riktig bevillingsspor før du sender inn noe.`);
+  } else if (distinctPermitTrackCount >= 2) {
+    editorialTakeaways.push(`${municipality} skiller tydelig mellom ulike bevillingstyper på egne sider. Det gjør det lettere å åpne riktig løp for akkurat din drift.`);
+  }
+
   if (singleEventLink) {
     editorialTakeaways.push(`${municipality} har også et eget spor for arrangementer eller enkeltanledninger. Det er nyttig hvis du ikke driver helårsservering.`);
   }
 
+  if (examLink) {
+    editorialTakeaways.push(`Kommunen har egne sider for etablererprøve eller kunnskapsprøve. Det er nyttig hvis styrer eller stedfortreder fortsatt mangler formell dokumentasjon.`);
+  }
+
+  if (alcoholPolicyPlanUrl) {
+    editorialTakeaways.push(`Kommunen har en bekreftet alkoholpolitisk plan eller retningslinje. Det gir et tydelig sted å kontrollere lokale føringer før du låser drift eller søknadsstrategi.`);
+  }
+
   if (publicRecordsUrl && publicRecordsPlatform) {
     editorialTakeaways.push(`${publicRecordsPlatform} gjør det mulig å kontrollere tidligere saker og vedtak før du sender inn noe selv.`);
+  } else if (publicRecordsUrl) {
+    editorialTakeaways.push(`${municipality} gjør innsyn eller offentlig journal tilgjengelig digitalt. Det gjør det enklere å kontrollere tidligere praksis før du sender inn noe.`);
+  }
+
+  if (hasRenewalSignal) {
+    editorialTakeaways.push(`${municipality} omtaler fornyelse eller videreføring av bevilling i de lokale notatene. Det er et signal om å kontrollere hvordan faste bevillinger følges opp lokalt.`);
+  }
+
+  if (hasRevisionSignal) {
+    editorialTakeaways.push(`${municipality} viser til regler eller retningslinjer som er under revisjon. Det gjør det ekstra viktig å kontrollere siste versjon før du låser drift eller åpningstider.`);
+  }
+
+  if ((openingHoursRules.length > 0 || alcoholServingRules.length > 0) && !hasLateDrift) {
+    editorialTakeaways.push(`${municipality} publiserer konkrete lokale tids- eller driftsnotater på egne sider. Det gjør det lettere å planlegge drift ut fra lokale rammer i stedet for generelle antakelser.`);
+  }
+
+  if (formsUrl && publicRecordsUrl) {
+    editorialTakeaways.push(`${municipality} gjør både søknad og innsyn tilgjengelig digitalt. Det gjør det lettere å forberede dokumentasjon og kontrollere hvordan kommunen følger opp saker.`);
+  }
+
+  if ((alcoholPolicyPlanUrl || regulationsLinks.length > 0 || bylawLinks.length > 0) && !hasRevisionSignal) {
+    editorialTakeaways.push(`${municipality} samler lokale regler eller retningslinjer i egne sider. Det gir et tydelig sted å kontrollere lokale krav før du bestemmer driftsopplegg.`);
   }
 
   if (applicationLink) {
@@ -522,12 +677,20 @@ function deriveEditorialProfile({
     practicalSteps.push('Bruk arrangementssporet direkte hvis behovet gjelder enkeltanledning eller tidsavgrenset arrangement, ikke ordinær drift.');
   }
 
+  if (distinctPermitTrackCount >= 2) {
+    practicalSteps.push('Åpne riktig underspor for salg, servering eller skjenking i stedet for å anta at samme prosess gjelder for alle bevillingstyper.');
+  }
+
   if (publicRecordsUrl && publicRecordsPlatform) {
     practicalSteps.push(`Bruk ${publicRecordsPlatform} hvis du vil se tidligere saker, vedtak eller hvordan kommunen faktisk følger opp bevillinger.`);
   }
 
   if (controlsLink) {
     practicalSteps.push('Åpne siden for regler eller kontroll hvis du vil bygge rutiner som passer med kommunens oppfølging etter at bevilling er gitt.');
+  }
+
+  if (hasRevisionSignal) {
+    practicalSteps.push('Kontroller at du leser siste publiserte versjon hvis kommunen opplyser at retningslinjer eller forskrift er under revisjon.');
   }
 
   return {
@@ -585,14 +748,19 @@ function supportsEditorialStatement(value, { openingHoursRules, formsUrl, public
   return true;
 }
 
-function hasServingCoverage(alcoholServingRules) {
-  if (alcoholServingRules.length >= 2) {
+function hasConfirmedTimeCoverage({ openingHoursRules, alcoholServingRules }) {
+  if (openingHoursRules.length >= 1) {
     return true;
   }
 
   return alcoholServingRules.some((rule) => {
     const groups = Array.isArray(rule.groups) ? rule.groups : [];
-    return groups.includes('1') && groups.includes('2') && groups.includes('3') && Boolean(rule.endTime);
+    const note = normalizeText(rule.note || '');
+    return (
+      Boolean(rule.startTime || rule.endTime) ||
+      /\bkl\.?\s*\d|\d{1,2}[:.]\d{2}|midnatt|30 minutter|halv time|skjenkeslutt|opphøre|opphore|stengetid/iu.test(note) ||
+      (groups.includes('1') && groups.includes('2') && groups.includes('3') && Boolean(note))
+    );
   });
 }
 
@@ -750,77 +918,108 @@ function uniqueSources(sources) {
   });
 }
 
+function selectOfficialSourceCandidates({
+  alcoholPolicyPlanUrl,
+  serviceLinks,
+  regulationsLinks,
+  bylawLinks,
+  formsUrl,
+  publicRecordsUrl,
+}) {
+  const prioritizedServiceLinks = [...serviceLinks, ...regulationsLinks, ...bylawLinks]
+    .map((link) => ({
+      ...link,
+      kind: classifyMunicipalLinkKind(link.url, link.label),
+    }))
+    .sort((a, b) => priorityForKind(a.kind) - priorityForKind(b.kind));
+
+  return uniqueSources([
+    { label: 'Skjenketider eller alkoholpolitisk plan', url: alcoholPolicyPlanUrl },
+    { label: 'Skjema og selvbetjening', url: formsUrl },
+    { label: 'Innsyn', url: publicRecordsUrl },
+    ...prioritizedServiceLinks.map((link) => ({ label: link.label, url: link.url })),
+  ]).slice(0, 6);
+}
+
+function priorityForKind(kind) {
+  const priorityOrder = [
+    'plan',
+    'serviceHub',
+    'application',
+    'rules',
+    'serving',
+    'sales',
+    'servering',
+    'controls',
+    'exam',
+    'singleEvent',
+    'outdoor',
+    'fees',
+    'renewal',
+  ];
+  const index = priorityOrder.indexOf(kind);
+  return index === -1 ? 999 : index;
+}
+
+function logMunicipalityDebug(payload) {
+  if (process.env.DEBUG_MUNICIPALITY !== payload.municipality) {
+    return;
+  }
+
+  console.log(
+    JSON.stringify(
+      {
+        municipality: payload.municipality,
+        rowServiceUrls: payload.rowServiceUrls,
+        rowServiceUrlChecks: payload.rowServiceUrlChecks,
+        rawServiceLinks: payload.rawServiceLinks,
+        serviceLinks: payload.serviceLinks,
+        regulationsLinks: payload.regulationsLinks,
+        bylawLinks: payload.bylawLinks,
+        formsUrl: payload.formsUrl,
+        publicRecordsUrl: payload.publicRecordsUrl,
+        alcoholPolicyPlanUrl: payload.alcoholPolicyPlanUrl,
+        officialSourceCandidates: payload.officialSourceCandidates,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 function uniqueValues(values) {
   return [...new Set(values.map((value) => normalizeText(value)).filter(Boolean))];
 }
 
-function isAlcoholRelevantUrl(value) {
+function uniqueRulesBySignature(rules) {
+  const seen = new Set();
+  const results = [];
+
+  for (const rule of rules) {
+    const signature = JSON.stringify({
+      appliesTo: normalizeText(rule.appliesTo || ''),
+      area: normalizeText(rule.area || ''),
+      groups: Array.isArray(rule.groups) ? [...rule.groups].sort() : [],
+      days: normalizeText(rule.days || ''),
+      startTime: rule.startTime || '',
+      endTime: rule.endTime || '',
+      note: normalizeText(rule.note || ''),
+    });
+    if (seen.has(signature)) continue;
+    seen.add(signature);
+    results.push(rule);
+  }
+
+  return results;
+}
+
+function isGenericFormsUrl(url) {
   try {
-    const pathname = new URL(value).pathname.toLowerCase();
-    if (bannedMunicipalLinkKeywords.some((keyword) => pathname.includes(keyword))) {
-      return false;
-    }
-    return alcoholKeywords.some((keyword) => pathname.includes(keyword));
+    const pathname = decodeURIComponent(new URL(url).pathname.toLowerCase()).replace(/\/+$/, '');
+    return pathname === '/selvbetjening' || pathname === '/for-ansatte' || pathname === '/selvbetjening/for-ansatte';
   } catch {
     return false;
   }
-}
-
-function classifyMunicipalLink(value, fallbackLabel = 'Salg, servering og skjenking') {
-  const kind = classifyMunicipalLinkKind(value, fallbackLabel);
-  if (kind === 'outdoor') return 'Uteservering';
-  if (kind === 'singleEvent') return 'Enkeltanledning og arrangement';
-  if (kind === 'fees') return 'Gebyr og satser';
-  if (kind === 'renewal') return 'Fornyelse av bevilling';
-  if (kind === 'controls') return 'Kontroll og tilsyn';
-  if (kind === 'exam') return 'Prøver og kunnskapskrav';
-  if (kind === 'sales') return 'Salgsbevilling';
-  if (kind === 'servering') return 'Serveringsbevilling';
-  if (kind === 'serving') return 'Skjenkebevilling';
-  if (kind === 'plan') return 'Lokale regler og tider';
-  if (kind === 'application') return 'Søke bevilling eller gjøre endringer';
-  if (kind === 'rules') return 'Regler og lokale vilkår';
-  if (kind === 'serviceHub') return 'Salg, servering og skjenking';
-  if (kind === 'forms') return 'Skjema og selvbetjening';
-  if (kind === 'publicRecords') return 'Innsyn og offentlig journal';
-  return fallbackLabel;
-}
-
-function classifyMunicipalLinkKind(value, fallbackKind = 'general') {
-  try {
-    const rawUrl = String(value).toLowerCase();
-    const source = `${rawUrl} ${String(fallbackKind).toLowerCase()}`;
-    const pathname = new URL(rawUrl).pathname;
-    if (/\/etablerer-og-kunnskapsprovene\/?$|\/kunnskapsprover?\/?$|\/kunnskapsprovene\/?$/.test(pathname)) return 'exam';
-    if (/\/kontroller?-og-regelbrudd\/?$|\/kontroll\/?$|\/kontroll-og-prikktildeling\/?$|\/omsetningsoppgave\/?$/.test(pathname)) return 'controls';
-    if (/\/skjenkebevilling.*enkelt.*arrangement\/?$|\/enkeltarrangement\/?$|\/enkelt-anledning\/?$|\/arrangement\/?$/.test(pathname)) return 'singleEvent';
-    if (/\/uteservering\/?$|\/uteserveringsordning\/?$/.test(pathname)) return 'outdoor';
-    if (/\/salgsbevilling(\/|$)/.test(pathname)) return 'sales';
-    if (/\/skjenkebevilling/.test(pathname)) return 'serving';
-    if (/\/serveringsbevilling/.test(pathname)) return 'servering';
-    if (/\/alkohol-servering-og-tobakk\/?$/.test(pathname)) return 'serviceHub';
-    if (/\/soke-om-bevillinger\/?$|\/soke-om-eller-endre-bevillinger\/?$|\/søke-om-bevillinger\/?$|\/søke-om-eller-endre-bevillinger\/?$/.test(pathname)) return 'application';
-    if (/\/regelverk-for-salgs-og-skjenkesteder\/?$|\/regler-for-salg-og-skjenking\/?$/.test(pathname)) return 'rules';
-    if (/handlingsplan|alkoholpolitisk/.test(source)) return 'plan';
-    if (/plan|retningslinje|skjenketider/.test(source)) return 'rules';
-    if (/enkelt.?anledning|enkeltarrangement|arrangement/.test(source)) return 'singleEvent';
-    if (/kontroll|regelbrudd|prikktildeling|omsetningsoppgave/.test(source)) return 'controls';
-    if (/prove|prøve|kunnskap|etablerer/.test(source)) return 'exam';
-    if (/uteserver|offentlig-areal/.test(source)) return 'outdoor';
-    if (/soke-bevilling|søke-bevilling|gjore-endringer|gjøre-endringer/.test(source)) return 'application';
-    if (/regler-for|lokale-regler|skjenketider/.test(source)) return 'rules';
-    if (/salg-servering-og-skjenking|alkohol-og-servering/.test(source)) return 'serviceHub';
-    if (/skjema|ekstern\/veiledere|\/skjema/.test(source)) return 'forms';
-    if (/innsyn|journal|einnsyn/.test(source)) return 'publicRecords';
-    if (/gebyr|satser/.test(source)) return 'fees';
-    if (/fornyelse|fornye/.test(source)) return 'renewal';
-    if (/serveringsbevilling|servering/.test(source)) return 'servering';
-    if (/skjenkebevilling|skjenking|alkohol/.test(source)) return 'serving';
-    if (/salgsbevilling|salg/.test(source)) return 'sales';
-  } catch {
-    return fallbackKind;
-  }
-  return fallbackKind;
 }
 
 async function fetchOfficialSourceSummary(url) {
@@ -1098,6 +1297,28 @@ function normalizeRuleNote(value) {
     .replace(/\bsoeke\b/gi, 'søke');
 }
 
+function sanitizeRuleNoteForPublication(value, alcoholPolicyPlanUrl) {
+  const normalized = normalizeRuleNote(value);
+  if (alcoholPolicyPlanUrl) {
+    return normalized;
+  }
+
+  return normalized
+    .replace(/(^|[\s.])[^.]*alkoholpolitiske?[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])[^.]*ruspolitiske?[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])[^.]*rusmiddelpolitiske?[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])alkoholpolitiske? retningslinjer[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])alkoholpolitisk handlingsplan[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])handlingsplan(?:en)?(?:\s+\d{4}\s*[-–]\s*\d{4})?[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])bevillingspolitiske? retningslinjer[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])ruspolitisk handlingsplan[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])ruspolitisk plan[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])rusmiddelpolitisk handlingsplan[^.]*\.\s*/iu, '$1')
+    .replace(/(^|[\s.])rusmiddelpolitisk plan[^.]*\.\s*/iu, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function capitalizeGroups(value) {
   const text = normalizeText(value);
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -1337,13 +1558,16 @@ function assessMunicipalityQuality({
       .filter((kind) => ['plan', 'application', 'rules', 'serviceHub', 'forms', 'publicRecords', 'sales', 'serving', 'servering', 'exam', 'fees', 'renewal', 'controls', 'outdoor', 'singleEvent'].includes(kind)),
   );
   const operationalLinkKindCount = [...linkKinds].filter((kind) =>
-    ['controls', 'singleEvent', 'outdoor', 'fees', 'renewal', 'exam'].includes(kind),
+    ['plan', 'application', 'forms', 'controls', 'singleEvent', 'outdoor', 'fees', 'renewal', 'exam', 'sales', 'serving', 'servering'].includes(kind),
   ).length;
   const operationalRuleCount = [...openingHoursRules, ...alcoholServingRules].filter(
     (rule) => rule.endTime || rule.startTime || /\bkl\.|\d{1,2}[:.]\d{2}|midnatt|døgnet|30 minutter|ute/i.test(rule.note || ''),
   ).length;
-  const operationalSignalCount = operationalRuleCount + Math.min(operationalLinkKindCount, 1);
-  const hasVerifiedServingCoverage = hasServingCoverage(alcoholServingRules);
+  const operationalSignalCount = operationalRuleCount + Math.min(operationalLinkKindCount, 2);
+  const hasConfirmedRuleCoverage = hasConfirmedTimeCoverage({
+    openingHoursRules,
+    alcoholServingRules,
+  });
   const verifiedOfficialSourceCount = officialSources.filter((entry) => entry.url).length;
   const verifiedActionLinkCount = [...serviceLinks, ...regulationsLinks, ...bylawLinks].length;
 
@@ -1353,7 +1577,7 @@ function assessMunicipalityQuality({
   if (operationalSignalCount >= 3) score += 3;
   else reasons.push(`${municipality} har for få tydelige lokale driftspunkter.`);
 
-  if (openingHoursRules.length >= 1 || hasVerifiedServingCoverage) score += 2;
+  if (hasConfirmedRuleCoverage) score += 2;
   else reasons.push(`${municipality} har for få bekreftede lokale tidsregler.`);
 
   if (formsUrl || linkKinds.has('application')) score += 1;
@@ -1373,7 +1597,7 @@ function assessMunicipalityQuality({
   const publishable =
     verifiedOfficialSourceCount >= 2 &&
     operationalSignalCount >= 3 &&
-    hasVerifiedServingCoverage &&
+    hasConfirmedRuleCoverage &&
     (Boolean(formsUrl) || linkKinds.has('application')) &&
     (linkKinds.size >= 3 || verifiedActionLinkCount >= 3) &&
     (editorialProfile?.editorialTakeaways?.length || 0) >= 3 &&
@@ -1385,6 +1609,75 @@ function assessMunicipalityQuality({
     publishable,
     reasons: publishable ? ['Kvalitetskrav oppfylt for publisering.'] : reasons,
   };
+}
+
+async function discoverValidatedMunicipalityLinks({ seedUrls, siteUrl }) {
+  const discovered = await discoverSupplementalMunicipalityLinks({
+    seedUrls,
+    siteUrl,
+    maxCandidates: 18,
+  });
+
+  const results = {
+    serviceLinks: [],
+    regulationsLinks: [],
+    bylawLinks: [],
+    formsUrl: '',
+    publicRecordsUrl: '',
+    planUrl: '',
+  };
+
+  for (const link of discovered) {
+    const kind = classifyMunicipalLinkKind(link.url, link.label);
+    const inspection = await inspectMunicipalityUrl(link.url, kind);
+    if (!inspection.ok) continue;
+
+    if (kind === 'forms' && !results.formsUrl) {
+      results.formsUrl = link.url;
+      continue;
+    }
+    if (kind === 'publicRecords' && !results.publicRecordsUrl) {
+      results.publicRecordsUrl = link.url;
+      continue;
+    }
+    if (kind === 'plan' && !results.planUrl) {
+      results.planUrl = link.url;
+    }
+
+    const normalizedLink = {
+      label: classifyMunicipalLink(link.url, link.label),
+      url: link.url,
+    };
+
+    if (kind === 'plan' || kind === 'rules' || kind === 'controls') {
+      results.regulationsLinks.push(normalizedLink);
+      continue;
+    }
+    if (kind === 'publicRecords' || kind === 'forms') {
+      continue;
+    }
+    results.serviceLinks.push(normalizedLink);
+  }
+
+  return {
+    serviceLinks: results.serviceLinks.slice(0, 6),
+    regulationsLinks: results.regulationsLinks.slice(0, 4),
+    bylawLinks: results.bylawLinks.slice(0, 2),
+    formsUrl: results.formsUrl,
+    publicRecordsUrl: results.publicRecordsUrl,
+    planUrl: results.planUrl,
+  };
+}
+
+function mergeLabeledLinks(primaryLinks, supplementalLinks) {
+  const merged = uniqueSources([
+    ...primaryLinks.map((link) => ({ ...link })),
+    ...supplementalLinks.map((link) => ({ ...link })),
+  ]);
+  return merged.slice(0, 6).map((link) => ({
+    label: classifyMunicipalLink(link.url, link.label),
+    url: link.url,
+  }));
 }
 
 function looksMojibake(value) {

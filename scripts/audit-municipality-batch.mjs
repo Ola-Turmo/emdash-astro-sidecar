@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { createServer } from 'node:http';
-import { stat, mkdir, writeFile, readFile } from 'node:fs/promises';
+import { stat, mkdir, writeFile, readFile, access } from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { chromium, devices } from 'playwright';
 import { loadMunicipalityPages } from './lib/municipality-pages.mjs';
 
@@ -24,8 +25,9 @@ async function main() {
 
   await mkdir(screenshotsDir, { recursive: true });
 
-  const server = args.liveBaseUrl ? null : await startStaticServer(distRoot);
-  const baseUrl = args.liveBaseUrl || `${server.origin}/kommune`;
+  const localMode = !args.liveBaseUrl;
+  const server = null;
+  const baseUrl = args.liveBaseUrl || null;
   const browser = await chromium.launch({ headless: true });
   const mobileDevice = devices['iPhone 13'];
   const results = [];
@@ -33,7 +35,11 @@ async function main() {
 
   try {
     for (const target of targets) {
-      const routeUrl = `${baseUrl.replace(/\/$/, '')}/${target.slug}/`;
+      const route = resolveRoute({ target, liveBaseUrl: args.liveBaseUrl, baseUrl });
+      if (route.localFilePath) {
+        await waitForLocalRoute(route.localFilePath);
+      }
+      const routeUrl = route.url;
       const desktopPage = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
       const mobilePage = await browser.newPage(mobileDevice);
 
@@ -78,6 +84,7 @@ async function main() {
       results.push({
         ...target,
         url: routeUrl,
+        mode: localMode ? 'local-file-or-server' : 'live-base-url',
         audit,
         screenshots: {
           desktop: path.relative(repoRoot, desktopScreenshot),
@@ -109,7 +116,7 @@ async function main() {
     `Generated: ${summary.generatedAt}`,
     `Targets: ${summary.targetCount}`,
     `Mode: ${args.mode}`,
-    args.liveBaseUrl ? `Base URL: ${args.liveBaseUrl}` : 'Base URL: local static server',
+    args.liveBaseUrl ? `Base URL: ${args.liveBaseUrl}` : 'Base URL: local file URLs',
     '',
     '## Findings',
     '',
@@ -149,6 +156,42 @@ async function main() {
   }
 
   console.log(`Municipality batch audit passed for ${results.length} pages`);
+}
+
+function resolveRoute({ target, liveBaseUrl, baseUrl }) {
+  if (liveBaseUrl) {
+    return {
+      url: `${liveBaseUrl.replace(/\/$/, '')}/${target.slug}/`,
+      localFilePath: null,
+    };
+  }
+
+  if (baseUrl) {
+    return {
+      url: `${baseUrl.replace(/\/$/, '')}/${target.slug}/`,
+      localFilePath: null,
+    };
+  }
+
+  const localFilePath = path.join(distRoot, 'kommune', target.slug, 'index.html');
+  return {
+    url: pathToFileURL(localFilePath).href,
+    localFilePath,
+  };
+}
+
+async function waitForLocalRoute(filePath, attempts = 20, delayMs = 250) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      await access(filePath);
+      return;
+    } catch (error) {
+      if (attempt === attempts - 1) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
 }
 
 function parseArgs(argv) {

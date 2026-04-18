@@ -11,6 +11,7 @@
     "dev": "pnpm --filter @emdash/blog dev",
     "design:clone": "node ./scripts/design-clone.mjs",
     "generate:municipal-pages": "node ./scripts/generate-municipal-pages.mjs",
+    "rollout:kommune-batches": "node ./scripts/rollout-kommune-batches.mjs",
     "promote:municipality-batch": "node ./scripts/promote-municipality-batch.mjs",
     "build:municipality-images": "python ./scripts/build-municipality-image-derivatives.py",
     "report:municipality": "node ./scripts/report-municipality-quality.mjs",

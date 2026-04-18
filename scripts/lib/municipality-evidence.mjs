@@ -1,4 +1,10 @@
+import path from 'node:path';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+
 const inspectionCache = new Map();
+let persistentInspectionCachePromise = null;
+let persistentInspectionCache = null;
+let persistQueue = Promise.resolve();
 
 const missingPagePatterns = [
   /beklager[, ]+du er kommet til en side som ikke eksisterer/i,
@@ -15,7 +21,7 @@ const semanticSignals = {
   forms: ['skjema', 'send inn', 'soknad', 'bevilling', 'selvbetjening'],
   publicRecords: ['innsyn', 'postliste', 'journal', 'offentlig', 'saksinnsyn', 'einnsyn'],
   serviceHub: ['salg', 'servering', 'skjenking', 'alkohol', 'bevilling'],
-  application: ['sok', 'soknad', 'endre', 'bevilling', 'melding'],
+  application: ['sok', 'soknad', 'endre', 'bevilling', 'melding', 'loyve', 'skjenkeloyve', 'salgsloyve', 'serveringsloyve', 'ambulerande', 'enkelthove'],
   rules: ['regel', 'vilkar', 'skjenking', 'salg', 'bevilling', 'prikktildeling'],
   sales: ['salgsbevilling', 'salg', 'alkohol', 'bevilling'],
   serving: ['skjenkebevilling', 'skjenking', 'alkohol', 'bevilling'],
@@ -42,9 +48,21 @@ export async function inspectMunicipalityUrl(url, expectedKind = 'general') {
     return inspectionCache.get(cacheKey);
   }
 
+  const persistentCache = await loadPersistentInspectionCache();
+  if (cacheKey in persistentCache) {
+    const cached = persistentCache[cacheKey];
+    inspectionCache.set(cacheKey, cached);
+    return cached;
+  }
+
   const promise = inspectMunicipalityUrlInner(url, expectedKind);
   inspectionCache.set(cacheKey, promise);
-  return promise;
+  const result = await promise;
+  persistentCache[cacheKey] = result;
+  persistQueue = persistQueue
+    .then(() => persistInspectionCache())
+    .catch(() => {});
+  return result;
 }
 
 async function inspectMunicipalityUrlInner(url, expectedKind) {
@@ -128,9 +146,22 @@ function matchesExpectedSemantics(url, expectedKind, haystack) {
     // ignore
   }
 
-  const semanticHaystack = asciiFold(haystack);
+  const semanticHaystack = asciiFold(`${url} ${haystack}`);
+  if (expectedKind === 'application') {
+    return (
+      hasSignal(semanticHaystack, semanticSignals.application) ||
+      hasSignal(semanticHaystack, semanticSignals.singleEvent) ||
+      hasSignal(semanticHaystack, semanticSignals.serving) ||
+      hasSignal(semanticHaystack, semanticSignals.sales) ||
+      hasSignal(semanticHaystack, semanticSignals.servering)
+    );
+  }
   const signals = semanticSignals[expectedKind] || [];
-  return signals.some((signal) => semanticHaystack.includes(signal));
+  return hasSignal(semanticHaystack, signals);
+}
+
+function hasSignal(haystack, signals) {
+  return signals.some((signal) => haystack.includes(signal));
 }
 
 function stripHtml(value) {
@@ -177,4 +208,36 @@ function asciiFold(value) {
 
 function countMarkers(value) {
   return [...String(value || '')].filter((character) => character === 'Â' || character === 'Ã').length;
+}
+
+async function loadPersistentInspectionCache() {
+  if (persistentInspectionCache) {
+    return persistentInspectionCache;
+  }
+  if (!persistentInspectionCachePromise) {
+    persistentInspectionCachePromise = (async () => {
+      const cachePath = getPersistentCachePath();
+      try {
+        const raw = await readFile(cachePath, 'utf8');
+        persistentInspectionCache = JSON.parse(raw);
+      } catch {
+        persistentInspectionCache = {};
+      }
+      return persistentInspectionCache;
+    })();
+  }
+  return persistentInspectionCachePromise;
+}
+
+async function persistInspectionCache() {
+  if (!persistentInspectionCache) {
+    return;
+  }
+  const cachePath = getPersistentCachePath();
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  await writeFile(cachePath, JSON.stringify(persistentInspectionCache, null, 2), 'utf8');
+}
+
+function getPersistentCachePath() {
+  return path.join(process.cwd(), 'output', '.cache', 'municipality-url-inspections.json');
 }
