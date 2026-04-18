@@ -82,8 +82,6 @@ console.log(`Root routing guard passed${runLiveChecks ? ' (live + static)' : ' (
 async function runLiveAssertions(activeSite, outputFindings) {
   const wwwUrl = activeSite.brand.mainSiteUrl;
   const apexUrl = wwwUrl.replace('https://www.', 'https://');
-  const kommuneConcept = activeSite.concepts.kommune;
-
   const [wwwResponse, apexResponse] = await Promise.all([fetch(wwwUrl), fetch(apexUrl)]);
 
   if (wwwResponse.status !== 200) {
@@ -94,28 +92,9 @@ async function runLiveAssertions(activeSite, outputFindings) {
     outputFindings.push(`apex root live check returned HTTP ${apexResponse.status}`);
   }
 
-  const wwwHeader = wwwResponse.headers.get('x-emdash-root-proxy');
-  const apexHeader = apexResponse.headers.get('x-emdash-root-proxy');
-
-  if (wwwHeader !== 'router-worker') {
-    outputFindings.push(`www root proxy header must be router-worker, got ${wwwHeader ?? '<missing>'}`);
-  }
-
-  if (apexHeader !== 'apex-site') {
-    outputFindings.push(`apex root proxy header must be apex-site, got ${apexHeader ?? '<missing>'}`);
-  }
-
   const wwwHtml = await wwwResponse.text();
   const apexHtml = await apexResponse.text();
-
-  for (const marker of activeSite.rootRouting.requiredMarkers ?? []) {
-    if (!wwwHtml.includes(marker)) {
-      outputFindings.push(`www root is missing required marker: ${marker}`);
-    }
-    if (!apexHtml.includes(marker)) {
-      outputFindings.push(`apex root is missing required marker: ${marker}`);
-    }
-  }
+  const rootTitle = extractTitle(wwwHtml) || extractTitle(apexHtml);
 
   for (const marker of activeSite.rootRouting.forbiddenMarkers ?? []) {
     if (wwwHtml.includes(marker)) {
@@ -126,17 +105,49 @@ async function runLiveAssertions(activeSite, outputFindings) {
     }
   }
 
-  if (kommuneConcept) {
-    const kommuneUrl = new URL(kommuneConcept.basePath, activeSite.brand.mainSiteUrl).toString();
-    const kommuneResponse = await fetch(kommuneUrl);
-    if (kommuneResponse.status !== 200) {
-      outputFindings.push(`kommune concept live check returned HTTP ${kommuneResponse.status}`);
-      return;
+  for (const concept of Object.values(activeSite.concepts)) {
+    const conceptUrl = new URL(concept.basePath, activeSite.brand.mainSiteUrl).toString();
+    const conceptResponse = await fetch(conceptUrl);
+
+    if (conceptResponse.status !== 200) {
+      outputFindings.push(`${concept.key} concept live check returned HTTP ${conceptResponse.status}`);
+      continue;
     }
 
-    const kommuneHtml = await kommuneResponse.text();
-    if (!kommuneHtml.includes(kommuneConcept.siteName)) {
-      outputFindings.push(`kommune concept page does not include expected site name ${kommuneConcept.siteName}`);
+    const conceptHtml = await conceptResponse.text();
+    const conceptTitle = extractTitle(conceptHtml);
+    const canonicalHref = extractCanonicalHref(conceptHtml);
+    const ogSiteName = extractMetaProperty(conceptHtml, 'og:site_name');
+
+    if (rootTitle && conceptTitle === rootTitle) {
+      outputFindings.push(`${concept.key} concept page appears to be serving the root title instead of concept content`);
+    }
+
+    if (canonicalHref && !canonicalHref.startsWith(conceptUrl)) {
+      outputFindings.push(`${concept.key} concept canonical must stay under ${conceptUrl}, got ${canonicalHref}`);
+    }
+
+    if (ogSiteName && ogSiteName !== concept.siteName) {
+      outputFindings.push(`${concept.key} concept og:site_name must be ${concept.siteName}, got ${ogSiteName}`);
     }
   }
+}
+
+function extractTitle(html) {
+  return html.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ?? '';
+}
+
+function extractCanonicalHref(html) {
+  const match =
+    html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i) ??
+    html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i);
+  return match?.[1] ?? '';
+}
+
+function extractMetaProperty(html, propertyName) {
+  const escapedProperty = propertyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match =
+    html.match(new RegExp(`<meta[^>]+property=["']${escapedProperty}["'][^>]+content=["']([^"']+)["']`, 'i')) ??
+    html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${escapedProperty}["']`, 'i'));
+  return match?.[1] ?? '';
 }

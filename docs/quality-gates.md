@@ -31,6 +31,8 @@ This repo now has reusable gates for the highest-value public quality risks.
   Checks sitemap freshness, canonical consistency, renderability, overlay regressions, and internal-link support.
 - `pnpm qa:parity`
   Compares built Astro output against live edge-served pages for key parity signals.
+- `pnpm qa:ownership`
+  Enforces public route ownership boundaries so this sidecar only claims and deploys `kurs.ing/guide` and `kurs.ing/kommune`, while the main `kurs.ing` root stays on its separate origin.
 
 ## Current Limits
 

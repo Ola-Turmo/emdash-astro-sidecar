@@ -9,7 +9,6 @@ interface Env {
 }
 
 const GUIDE_PREFIX = '/guide';
-const LEGACY_GUIDE_PREFIXES = ['/blog', '/category', '/author'];
 const GUIDE_RUM_PATH = `${GUIDE_PREFIX}/__rum`;
 
 function withSecurityHeaders(headers: Headers): Headers {
@@ -59,16 +58,6 @@ function responseWithBody(body: string, contentType: string): Response {
 function redirectToGuide(incomingUrl: URL): Response | null {
   if (incomingUrl.pathname === `${GUIDE_PREFIX}/`) {
     return Response.redirect(new URL(GUIDE_PREFIX, incomingUrl).toString(), 308);
-  }
-
-  if (incomingUrl.pathname === '/blog' || incomingUrl.pathname === '/blog/') {
-    return Response.redirect(new URL(GUIDE_PREFIX, incomingUrl).toString(), 308);
-  }
-
-  for (const prefix of LEGACY_GUIDE_PREFIXES) {
-    if (incomingUrl.pathname.startsWith(`${prefix}/`)) {
-      return Response.redirect(new URL(`${GUIDE_PREFIX}${incomingUrl.pathname}${incomingUrl.search}`, incomingUrl).toString(), 308);
-    }
   }
 
   return null;
@@ -134,7 +123,7 @@ export default {
 
     const shouldCheckEdgeFallback =
       request.method === 'GET' &&
-      (incomingUrl.pathname.startsWith(`${GUIDE_PREFIX}/blog/`) || incomingUrl.pathname.startsWith('/blog/'));
+      incomingUrl.pathname.startsWith(`${GUIDE_PREFIX}/blog/`);
     if (shouldCheckEdgeFallback) {
       const edgeArtifact = await findEdgeArticle(env.AUTONOMOUS_DB, incomingUrl, request.url);
       if (edgeArtifact) {
