@@ -23,8 +23,7 @@ function main() {
   const args = process.argv.slice(2);
   const shouldSkipPurge = args.includes('--skip-purge');
 
-  execFileSync(
-    process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
+  runPnpm(
     [
       'exec',
       'wrangler',
@@ -49,6 +48,24 @@ function main() {
       env: process.env,
     });
   }
+}
+
+function runPnpm(args, options) {
+  if (process.platform === 'win32') {
+    const commandLine = ['pnpm', ...args].map(quoteForCmd).join(' ');
+    execFileSync('cmd.exe', ['/d', '/s', '/c', commandLine], options);
+    return;
+  }
+
+  execFileSync('pnpm', args, options);
+}
+
+function quoteForCmd(value) {
+  if (!/[\s"]/u.test(value)) {
+    return value;
+  }
+
+  return `"${value.replace(/"/g, '""')}"`;
 }
 
 main();
