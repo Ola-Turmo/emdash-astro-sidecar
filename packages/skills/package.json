@@ -16,7 +16,7 @@
     "@emdash/design-clone": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^25.6.0",
     "typescript": "^5.7.2"
   }
 }
