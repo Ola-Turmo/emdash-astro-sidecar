@@ -365,6 +365,7 @@ const siteCopyRegistry = {
         nav: [
           { path: '/', label: 'Home' },
           { path: '/posts', label: 'How it works' },
+          { path: '/pricing', label: 'Pricing' },
           { path: '/contact', label: 'Contact' },
         ],
         callsToAction: {
@@ -432,6 +433,46 @@ const siteCopyRegistry = {
             articleMetaAuthorLabel: 'Author',
             articleMetaPurposeLabel: 'Purpose',
           },
+          pricingTiers: [
+            {
+              name: 'Starter',
+              price: '€299',
+              period: 'per month, per domain',
+              description: 'For growing companies ready to establish their first guide layer.',
+              highlighted: false,
+              ctaLabel: 'Start with Starter',
+              ctaHref: 'mailto:ola@emdash.no?subject=Starter%20plan%20%E2%80%94%20EmDash%20Sidecar',
+              features: [
+                { text: 'Up to 5 guide pages', included: true },
+                { text: 'FAQ schema markup', included: true },
+                { text: 'Lighthouse performance reports', included: true },
+                { text: 'RUM telemetry dashboard', included: true },
+                { text: 'Content model configuration', included: false },
+                { text: 'Custom domain setup', included: false },
+                { text: 'Priority schema & internal linking', included: false },
+                { text: 'Weekly ranking report', included: false },
+              ],
+            },
+            {
+              name: 'Growth',
+              price: '€799',
+              period: 'per month, per domain',
+              description: 'For companies ready to compound visibility across their entire domain.',
+              highlighted: true,
+              ctaLabel: 'Start with Growth',
+              ctaHref: 'mailto:ola@emdash.no?subject=Growth%20plan%20%E2%80%94%20EmDash%20Sidecar',
+              features: [
+                { text: 'Up to 20 guide pages', included: true },
+                { text: 'FAQ schema markup', included: true },
+                { text: 'Lighthouse performance reports', included: true },
+                { text: 'RUM telemetry dashboard', included: true },
+                { text: 'Content model configuration', included: true },
+                { text: 'Custom domain setup', included: true },
+                { text: 'Priority schema & internal linking', included: true },
+                { text: 'Weekly ranking report', included: true },
+              ],
+            },
+          ],
         },
       },
     },
@@ -619,6 +660,40 @@ function validateShell(siteKey, conceptKey, shell) {
       'sourceDomainLabel',
       'sourceLanguageLabel',
     ], `${siteKey}/${conceptKey}.shell.municipalityPage`);
+  }
+
+  if (shell.pricingTiers != null) {
+    if (!Array.isArray(shell.pricingTiers)) {
+      throw new Error(`${siteKey}/${conceptKey}.shell.pricingTiers must be an array`);
+    }
+    for (let i = 0; i < shell.pricingTiers.length; i++) {
+      const tier = shell.pricingTiers[i];
+      if (!tier || typeof tier !== 'object') {
+        throw new Error(`${siteKey}/${conceptKey}.shell.pricingTiers[${i}] must be an object`);
+      }
+      requireString(tier.name, `${siteKey}/${conceptKey}.shell.pricingTiers[${i}].name`);
+      requireString(tier.price, `${siteKey}/${conceptKey}.shell.pricingTiers[${i}].price`);
+      requireString(tier.period, `${siteKey}/${conceptKey}.shell.pricingTiers[${i}].period`);
+      requireString(tier.description, `${siteKey}/${conceptKey}.shell.pricingTiers[${i}].description`);
+      if (typeof tier.highlighted !== 'boolean') {
+        throw new Error(`${siteKey}/${conceptKey}.shell.pricingTiers[${i}].highlighted must be a boolean`);
+      }
+      requireString(tier.ctaLabel, `${siteKey}/${conceptKey}.shell.pricingTiers[${i}].ctaLabel`);
+      requireString(tier.ctaHref, `${siteKey}/${conceptKey}.shell.pricingTiers[${i}].ctaHref`);
+      if (!Array.isArray(tier.features)) {
+        throw new Error(`${siteKey}/${conceptKey}.shell.pricingTiers[${i}].features must be an array`);
+      }
+      for (let j = 0; j < tier.features.length; j++) {
+        const feature = tier.features[j];
+        if (!feature || typeof feature !== 'object') {
+          throw new Error(`${siteKey}/${conceptKey}.shell.pricingTiers[${i}].features[${j}] must be an object`);
+        }
+        requireString(feature.text, `${siteKey}/${conceptKey}.shell.pricingTiers[${i}].features[${j}].text`);
+        if (typeof feature.included !== 'boolean') {
+          throw new Error(`${siteKey}/${conceptKey}.shell.pricingTiers[${i}].features[${j}].included must be a boolean`);
+        }
+      }
+    }
   }
 }
 

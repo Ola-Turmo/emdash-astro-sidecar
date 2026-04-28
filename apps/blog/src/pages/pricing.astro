@@ -1,0 +1,115 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+  SHELL_COPY,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+} from '../consts';
+
+const pricingTiers = SHELL_COPY.pricingTiers ?? [];
+const pageTitle = `Pricing — ${SITE_NAME}`;
+---
+<BaseLayout title={pageTitle} description={SITE_DESCRIPTION}>
+  <Header />
+
+  <main>
+    <section class="overflow-hidden px-3 pb-14 pt-10 sm:px-4 md:pb-24 md:pt-20">
+      <div class="mx-auto max-w-6xl">
+        <div class="text-center max-w-3xl mx-auto">
+          <p class="eyebrow">Pricing</p>
+          <h1 class="display-title mt-4 text-4xl font-black leading-[1.03] text-slate-950 sm:text-5xl md:text-6xl">
+            Visibility that compounds, not just publishes
+          </h1>
+          <p class="mt-5 max-w-2xl mx-auto text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+            Every plan includes a mounted content layer on your domain, structured markup, Lighthouse reports, and a live RUM dashboard. No CMS migration. No rebuild. One domain at a time.
+          </p>
+        </div>
+
+        {pricingTiers.length > 0 ? (
+          <div class="mt-14 grid gap-6 sm:grid-cols-2 max-w-4xl mx-auto">
+            {pricingTiers.map((tier: (typeof pricingTiers)[number]) => (
+              <div class={`shell-card relative overflow-hidden p-6 md:p-8 flex flex-col ${tier.highlighted ? 'ring-2 ring-teal-600' : ''}`}>
+                {tier.highlighted && (
+                  <div class="absolute top-0 right-0 bg-teal-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                    Most popular
+                  </div>
+                )}
+                <div class="mb-6">
+                  <h2 class="text-2xl font-black text-slate-950">{tier.name}</h2>
+                  <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-4xl font-black text-slate-950">{tier.price}</span>
+                    <span class="text-slate-500 text-sm">{tier.period}</span>
+                  </div>
+                  <p class="mt-3 text-sm leading-6 text-slate-600">{tier.description}</p>
+                </div>
+
+                <ul class="space-y-3 flex-1 mb-6" role="list">
+                  {tier.features.map((feature: { text: string; included: boolean }) => (
+                    <li class="flex items-start gap-3 text-sm">
+                      {feature.included ? (
+                        <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      ) : (
+                        <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                      <span class={feature.included ? 'text-slate-700' : 'text-slate-400'}>{feature.text}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <a
+                  href={tier.ctaHref}
+                  class={`w-full text-center py-3 px-6 rounded-xl font-semibold text-sm transition-colors ${
+                    tier.highlighted
+                      ? 'bg-teal-600 text-white hover:bg-teal-700'
+                      : 'cta-primary'
+                  }`}
+                >
+                  {tier.ctaLabel}
+                </a>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div class="mt-14 text-center shell-card p-8 max-w-2xl mx-auto">
+            <p class="text-slate-600">Pricing plans coming soon. <a href="mailto:ola@emdash.no?subject=Pricing%20inquiry" class="text-teal-600 hover:underline">Contact us</a> to discuss your needs.</p>
+          </div>
+        )}
+
+        <div class="mt-14 text-center max-w-2xl mx-auto">
+          <h2 class="text-xl font-bold text-slate-950">All plans include</h2>
+          <div class="mt-6 grid gap-4 sm:grid-cols-3">
+            <div class="shell-card p-4 text-center">
+              <p class="text-lg font-bold text-slate-950">No rebuild</p>
+              <p class="mt-1 text-sm text-slate-600">Mounts on your existing converting pages</p>
+            </div>
+            <div class="shell-card p-4 text-center">
+              <p class="text-lg font-bold text-slate-950">&lt; 1 week</p>
+              <p class="mt-1 text-sm text-slate-600">From domain connection to first live guide</p>
+            </div>
+            <div class="shell-card p-4 text-center">
+              <p class="text-lg font-bold text-slate-950">95+ Lighthouse</p>
+              <p class="mt-1 text-sm text-slate-600">Performance target on every mounted page</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-14 text-center max-w-xl mx-auto">
+          <p class="text-slate-600 text-sm">
+            Need a custom plan for multiple domains or specific compliance requirements?{' '}
+            <a href="mailto:ola@emdash.no?subject=Custom%20plan%20inquiry" class="text-teal-600 hover:underline">
+              Talk to us
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
