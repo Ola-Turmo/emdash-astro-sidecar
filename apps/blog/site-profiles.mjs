@@ -281,6 +281,98 @@ const siteProfiles = {
       },
     },
   },
+  'emdash-no': {
+    key: 'emdash-no',
+    brand: {
+      mainSiteName: 'EmDash',
+      wordmark: 'EmDash',
+      mainSiteUrl: 'https://emdash.no',
+      locale: 'en-US',
+      supportEmail: 'ola@emdash.no',
+      defaultOgImagePath: '/images/og-default.png',
+      logoMark: 'e',
+    },
+    cloudflare: {
+      pagesProject: 'emdash-astro-sidecar',
+      pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
+    },
+    telemetry: {
+      rumEndpoint: '',
+      metricsWorkerUrl: '',
+    },
+    concepts: {
+      sidecar: {
+        key: 'sidecar',
+        label: 'Sidecar',
+        pageStructure: 'blog',
+        basePath: '/',
+        siteUrl: 'https://emdash.no',
+        siteName: 'EmDash Sidecar',
+        shellKey: 'emdash-no/sidecar',
+        routes: {
+          articlePrefix: '/posts',
+          categoryPrefix: '/category',
+          authorPrefix: '/author',
+        },
+        cloudflare: {
+          pagesProject: 'emdash-astro-sidecar',
+          pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
+          routeWorkerName: 'emdash-no-proxy',
+          routeWorkerDirectory: 'sidecar-proxy',
+        },
+        audit: {
+          sitemapUrls: [],
+          extraUrls: [],
+          lighthouse: {
+            runs: 1,
+            warmupRuns: 0,
+          },
+        },
+        quality: {
+          dashboardLabel: 'emdash.no',
+          flagshipUrls: ['https://emdash.no/'],
+          fieldTargets: {
+            release: {
+              LCP: 2500,
+              INP: 200,
+              CLS: 0.1,
+              TTFB: 800,
+              FCP: 1800,
+            },
+            flagship: {
+              LCP: 1500,
+              INP: 200,
+              CLS: 0.1,
+              TTFB: 800,
+              FCP: 1500,
+            },
+          },
+          lighthouseTargets: {
+            release: {
+              performance: 90,
+              accessibility: 90,
+              seo: 90,
+              bestPractices: 90,
+              tbt: 200,
+            },
+            flagship: {
+              performance: 95,
+              accessibility: 90,
+              seo: 90,
+              bestPractices: 90,
+              tbt: 200,
+            },
+          },
+          publishPolicy: [
+            'field-performance',
+            'lighthouse',
+            'structured-data',
+            'crawlability',
+          ],
+        },
+      },
+    },
+  },
 };
 
 function getConceptOutputDir(siteKey, conceptKey) {

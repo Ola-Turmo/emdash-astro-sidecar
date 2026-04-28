@@ -356,6 +356,86 @@ const siteCopyRegistry = {
       },
     },
   },
+  'emdash-no': {
+    courseLinks: [],
+    concepts: {
+      sidecar: {
+        description:
+          'EmDash mounts a visibility and answer-engine growth layer on top of your existing converting site — no rebuild, no new CMS, no content migration.',
+        nav: [
+          { path: '/', label: 'Home' },
+          { path: '/posts', label: 'How it works' },
+          { path: '/contact', label: 'Contact' },
+        ],
+        callsToAction: {
+          primary: {
+            href: 'mailto:ola@emdash.no?subject=Demo%20request%20%E2%80%94%20EmDash%20Sidecar',
+            label: 'Request a demo',
+          },
+          secondary: {
+            href: '/posts',
+            label: 'See how it works',
+          },
+        },
+        shell: {
+          subLabel: 'SaaS',
+          homeEyebrow: 'For growing companies that want to be found',
+          homeTitle: 'Launch a search-growth layer on top of your existing site — without rebuilding the pages that already make money.',
+          homeDescription:
+            'EmDash mounts structured guide pages, FAQ schema, and answer-engine markup directly on your domain. No new CMS. No content migration. No rebuild. Just a layer that compounds your visibility in AI search and Google.',
+          homeStats: [
+            {
+              value: '€299',
+              label: 'per month, per domain — no setup fee',
+            },
+            {
+              value: '< 1 week',
+              label: 'to first guide page live on your domain',
+            },
+            {
+              value: '95+',
+              label: 'Lighthouse score target on mounted pages',
+            },
+          ],
+          homeAsideEyebrow: 'Start with one domain',
+          homeAsideReasonTitle: 'Why this works for regulated SMBs',
+          homeAsideReasonText:
+            'Companies in alcohol, pharmacy, finance and healthcare have thin content layers on converting sites. EmDash fills that gap with structured pages that AI search engines and answer engines can read, cite, and surface.',
+          listingEyebrow: 'What you get',
+          listingTitle: 'From placeholder to proof-of-visibility in one mount.',
+          listingDescription:
+            'Every mounted guide page comes with Lighthouse reports, RUM telemetry, and a live dashboard so you can see exactly what your visibility looks like before and after.',
+          listingEmptyText: 'Mount your first guide page to get started.',
+          articleContextLabel: 'Guide',
+          articleLanguageBadge: 'English',
+          articlePrimaryActionText: 'Read the guide',
+          articleNextStepEyebrow: 'Next step',
+          articleNextStepText: 'Request a demo to see how EmDash mounts on your domain.',
+          articleAboutPurpose: 'Explains how EmDash builds visibility without rebuilding your site.',
+          footerEyebrow: 'EmDash',
+          footerTitle: 'Grow your search visibility without rebuilding what already works.',
+          footerDescription:
+            'EmDash mounts a structured content layer on your converting domain. No new CMS, no content migration, no downtime. One domain at a time.',
+          footerOffersLabel: 'Product',
+          footerTechnicalLabel: 'Platform',
+          footerContactLabel: 'Contact',
+          footerCopyright: 'All rights reserved.',
+          footerNote: 'Mount your first domain and see your Lighthouse score in days.',
+          contentMeta: {
+            authorEyebrow: 'Author',
+            articleListingTitle: 'Guides',
+            authorEmptyText: 'No articles from this author yet.',
+            categoryEyebrow: 'Category',
+            categoryEmptyText: 'No articles in this category yet.',
+            articleMetaEyebrow: 'About this guide',
+            articleMetaCategoryLabel: 'Category',
+            articleMetaAuthorLabel: 'Author',
+            articleMetaPurposeLabel: 'Purpose',
+          },
+        },
+      },
+    },
+  },
 };
 
 export function getResolvedSiteCopy(siteKey, conceptKey) {
