@@ -1,6 +1,7 @@
 const siteProfiles = {
   'kurs-ing': {
     key: 'kurs-ing',
+    contentModel: 'norway-alcohol',
     brand: {
       mainSiteName: 'Kurs.ing',
       wordmark: 'kurs.ing',
@@ -283,6 +284,7 @@ const siteProfiles = {
   },
   'emdash-no': {
     key: 'emdash-no',
+    contentModel: 'generic-structured',
     brand: {
       mainSiteName: 'EmDash',
       wordmark: 'EmDash',
@@ -397,6 +399,7 @@ function resolveActiveSiteRuntime(env = process.env) {
     conceptKey,
     site,
     concept,
+    contentModel: site.contentModel ?? 'norway-alcohol',
   };
 }
 
