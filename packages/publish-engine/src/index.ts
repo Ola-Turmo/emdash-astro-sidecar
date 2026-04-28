@@ -4,13 +4,20 @@ import {
   normalizeSearchText,
   repairExistingSlug,
 } from '../../model-runtime/src/index.js';
-import { buildControlledTags, inferControlledCategory, type ControlledCategory } from './taxonomy.js';
+import {
+  buildControlledTags,
+  inferControlledCategory,
+  resolveContentModel,
+  type ControlledCategory,
+  type ContentModel,
+} from './taxonomy.js';
 
 export interface PublicationHostContext {
   hostId: string;
   hostName: string;
   siteUrl: string;
   basePath: string;
+  contentModel?: ContentModel;
 }
 
 export interface PublicationDraftContext {
@@ -47,6 +54,10 @@ export function buildPublicationArtifact(
   host: PublicationHostContext,
   draft: PublicationDraftContext,
 ): PublicationArtifact {
+  const resolvedContentModel = resolveContentModel(
+    host.contentModel ??
+      (process.env['EMDASH_CONTENT_MODEL'] as ContentModel | undefined),
+  );
   const title = normalizeSearchText(draft.title?.trim() || toTitle(draft.topic));
   const sections = draft.sections.map((section) => ({
     heading: normalizeSearchText(section.heading),
@@ -57,19 +68,25 @@ export function buildPublicationArtifact(
   const slug = buildSemanticSlug(repairExistingSlug(draft.slug || draft.title || draft.topic, title || draft.topic), {
     fallback: title || draft.topic,
   });
-  const category = inferControlledCategory({
-    slug,
-    topic: draft.topic,
-    title,
-    sections,
-  });
-  const tags = buildControlledTags({
-    category,
-    slug,
-    topic: draft.topic,
-    title,
-    sections,
-  });
+  const category = inferControlledCategory(
+    {
+      slug,
+      topic: draft.topic,
+      title,
+      sections,
+    },
+    resolvedContentModel,
+  );
+  const tags = buildControlledTags(
+    {
+      category,
+      slug,
+      topic: draft.topic,
+      title,
+      sections,
+    },
+    resolvedContentModel,
+  );
   const url = new URL(`${normalizeBasePath(host.basePath)}/blog/${slug}/`, host.siteUrl).toString();
   const brand = buildBrandContext(host);
 
