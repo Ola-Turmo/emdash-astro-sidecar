@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - staging
+      - pricing-page-emd-36-gap4
   pull_request:
     branches:
       - main
       - staging
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '20'
@@ -126,6 +128,7 @@ jobs:
         env:
           EMDASH_SITE_KEY: emdash-no
           EMDASH_CONCEPT_KEY: sidecar
+          EMDASH_CONTENT_MODEL: generic-structured
 
       - name: Deploy emdash.no Preview
         id: deploy
