@@ -1,35 +1,49 @@
-User-agent: *
-Allow: /
+# Visibility.help — AI Search Visibility Platform
+# Strategy: Allow search/live-citation bots, block training ingestion bots
 
-# AI Crawlers - Allow all major AI search crawlers
+# ===== TRAINING BOTS (Block — protect IP from model ingestion) =====
 User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+# ===== SEARCH / LIVE-CITATION BOTS (Allow — enable AI answer citations) =====
+User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: ChatGPT-User
 Allow: /
 
-User-agent: Google-Extended
-Allow: /
-
-User-agent: Googlebot
-Allow: /
-
-User-agent: ClaudeBot
+User-agent: Claude-SearchBot
 Allow: /
 
 User-agent: Claude-Web
 Allow: /
 
-User-agent: CCBot
+User-agent: PerplexityBot
 Allow: /
 
-User-agent: PerplexityBot
+# ===== TRADITIONAL SEARCH CRAWLERS =====
+User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
 Allow: /
 
-User-agent: Bytespider
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
 Allow: /
 
 User-agent: Applebot
@@ -38,4 +52,10 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
+# ===== FALLBACK =====
+User-agent: *
+Allow: /
+
+# Sitemaps
 Sitemap: https://visibility.help/sitemap.xml
+Sitemap: https://visibility.help/sitemap-0.xml

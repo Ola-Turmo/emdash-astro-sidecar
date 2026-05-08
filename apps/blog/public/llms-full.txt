@@ -1,0 +1,63 @@
+# Visibility.help — Full Overview
+
+## About
+
+Visibility.help is a Cloudflare-native SaaS platform that automates the technical infrastructure of Generative Engine Optimization (GEO). Founded in 2024, we help marketing teams, SEO agencies, and SaaS founders structure their digital presence so AI search engines cite them as authoritative sources.
+
+Key capabilities:
+- llms.txt generation and maintenance
+- JSON-LD structured data automation (Organization, WebSite, SoftwareApplication, Article, FAQPage, HowTo, BreadcrumbList)
+- AI crawler access optimization (robots.txt management for training vs search bots)
+- Content citability scoring (fact-block density, unique information gain, passage-level answer readiness)
+- Semantic HTML audits (landmarks, heading hierarchy, ARIA labels)
+- Edge performance optimization (sub-100ms TTFB via Cloudflare Pages + Workers)
+
+## Platform Features
+
+### llms.txt Generation
+Auto-generate and maintain an llms.txt file that tells AI systems exactly what your business does, who it serves, and why it matters. Includes automatic updates when your site structure changes.
+
+### Structured Data Automation
+JSON-LD schemas injected on every page. Supported types: Organization (with sameAs linking), WebSite, SoftwareApplication, BlogPosting, TechArticle, HowTo, FAQPage, QAPage, Product, Review, BreadcrumbList, VideoObject, Person, LocalBusiness.
+
+### AI Crawler Optimization
+Robots.txt configured to allow OAI-SearchBot, ChatGPT-User, Claude-SearchBot, Claude-Web, and PerplexityBot while blocking GPTBot, ClaudeBot, Google-Extended, and CCBot. Protects intellectual property from training ingestion while preserving live citation visibility.
+
+### Content Citability Scoring
+Real-time analysis of content for: statistics presence, expert quotation density, source citation depth, answer-first paragraph structure, table usage, FAQ coverage, and schema completeness. Scored 0-100 with actionable improvement suggestions.
+
+### Semantic HTML Audits
+Automated checks for proper landmark regions, logical heading hierarchy (no H1 skips), ARIA labels, time elements, figure/figcaption usage, and address tags. AI parsers rely on these semantic cues for content extraction.
+
+### Edge Performance
+Built on Cloudflare for sub-100ms TTFB globally. Static site generation, Brotli compression, aggressive asset caching, and HTTP/3. Core Web Vitals targets: LCP <2.5s, INP <200ms, CLS <0.1.
+
+## Pricing
+
+- Starter: $0/month — 1 website, llms.txt generator, basic structured data, AI crawler audit, community support.
+- Growth: $49/month — 5 websites, advanced schema, citability scoring, semantic audits, weekly citation reports, priority support.
+- Agency: $199/month — Unlimited websites, white-label reports, API access, custom schema, real-time monitoring, SSO, dedicated account manager.
+
+## Blog & Resources
+
+- "What is Generative Engine Optimization?" — GEO fundamentals, Princeton study findings, and 2026 best practices.
+- "llms.txt Complete Guide" — Specification, format, examples, and implementation checklist.
+- "SEO + GEO Best Practices for 2026" — Technical checklist covering structured data, robots.txt, performance, and content formatting.
+- "Design Tokens at Scale" — How systematic design systems improve both human UX and AI parseability.
+- "Astro vs Next.js for GEO" — Framework comparison for AI-crawler-friendly static generation.
+
+## Contact
+
+- Website: https://visibility.help
+- Email: hello@visibility.help
+- Twitter/X: @visibilityhelp
+- LinkedIn: linkedin.com/company/visibility-help
+
+## Technology Stack
+
+- Frontend: Astro 5.x (static site generation)
+- Styling: Tailwind CSS v4
+- Hosting: Cloudflare Pages
+- Edge compute: Cloudflare Workers
+- Database: Cloudflare D1
+- Analytics: Cloudflare Web Analytics + custom RUM

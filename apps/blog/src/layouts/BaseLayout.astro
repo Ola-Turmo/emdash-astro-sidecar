@@ -158,7 +158,7 @@ const rumConfigScript = JSON.stringify({
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#115E59" />
-    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
     <meta name="author" content={author || MAIN_SITE_NAME} />
     <meta name="color-scheme" content="light" />
     <link rel="canonical" href={canonical} />
@@ -184,6 +184,7 @@ const rumConfigScript = JSON.stringify({
     <!-- Resource Hints -->
     <link rel="preconnect" href="https://visibility.help" />
     <link rel="dns-prefetch" href="https://emdash-metrics-worker.ola-turmo.workers.dev" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="preload" href={blogPath('/fonts/manrope.woff2')} as="font" type="font/woff2" crossorigin />
 
     <title>{fullTitle}</title>

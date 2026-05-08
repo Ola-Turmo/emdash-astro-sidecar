@@ -1,0 +1,79 @@
+---
+title: "How AI Search Engines Cite Sources in 2026"
+description: "ChatGPT, Perplexity, Gemini, and Claude each use different citation architectures. Understanding these differences is critical for GEO success."
+pubDate: 2026-05-08
+author: visibility-team
+category: geo-fundamentals
+tags: ["AI search", "citations", "ChatGPT", "Perplexity", "Gemini", "Claude", "GEO"]
+excerpt: "AI search platforms produce disjoint source sets on 35-40% of queries. Here's how each engine selects citations and what you can do about it."
+schemaType: "TechArticle"
+---
+
+AI search engines do not all cite the same sources. Research shows they produce completely disjoint source sets on **35-40% of queries**. Optimizing for only one platform means missing most of your citation opportunities.
+
+## How ChatGPT / OpenAI Cites Sources
+
+ChatGPT relies on a mix of pre-training data and real-time web retrieval. When web search is enabled, it uses **OAI-SearchBot** and **ChatGPT-User** crawlers for live citation.
+
+Key patterns:
+- ChatGPT "votes" based on consensus across multiple sources
+- Reddit and major publications carry disproportionate weight
+- Citation transparency is lower than Perplexity; sources are paraphrased and credited inline
+- Web-retrieval answers favor content with clear entity definitions and authoritative tone
+
+**What to optimize**: Ensure your content appears in major publications and maintain consistent entity definitions across your properties.
+
+## How Perplexity Cites Sources
+
+Perplexity is built on real-time retrieval with transparent multi-source citation. It heavily weights content that includes credible source citations.
+
+Key patterns:
+- Uses **PerplexityBot** for both indexing and live search
+- Cites multiple sources per answer and often quotes directly
+- Prioritizes content with inline references to industry studies and expert opinions
+- Favors pages with FAQPage schema and concise answer blocks
+
+**What to optimize**: Add statistics, expert quotations, and inline citations to your content. Structure FAQs with direct answers.
+
+## How Gemini / Google AI Overviews Cite Sources
+
+Gemini trusts what you declare on your domain as long as it is technically impeccable. **76% of AI Overview citations come from pages already ranking in the top 10 organic results.**
+
+Key patterns:
+- Strong reliance on Schema.org structured data, clean semantic HTML, and well-formatted FAQs
+- Organization and author entity linking via `sameAs` properties significantly increases citation confidence
+- Content freshness signals matter; update cornerstone content quarterly
+- FAQPage and HowTo schemas are heavily consumed
+
+**What to optimize**: Implement comprehensive JSON-LD schema with `sameAs` links. Maintain traditional SEO rankings. Update content regularly.
+
+## How Claude (Anthropic) Cites Sources
+
+Claude is more conservative on naming brands and explicit citation. It uses **ClaudeBot** and **Claude-Web** crawlers.
+
+Key patterns:
+- Favors content with clear entity definitions, descriptive headings, and structured formatting
+- Subject-matter depth signals improve entity recognition
+- Prefers comprehensive coverage of topic clusters over isolated pages
+- Citation is often implicit rather than explicit
+
+**What to optimize**: Build topic clusters with descriptive internal anchor text. Use clear heading hierarchies and comprehensive coverage.
+
+## Platform Comparison
+
+| Platform | Primary Crawler | Citation Style | Key Signal |
+|----------|----------------|----------------|------------|
+| ChatGPT | OAI-SearchBot | Consensus-based paraphrase | Major publication presence |
+| Perplexity | PerplexityBot | Direct multi-source quotes | Statistics + expert quotes |
+| Gemini | Googlebot + AI | Top-10 organic + schema | Structured data + sameAs |
+| Claude | Claude-Web | Implicit, depth-based | Topic cluster depth |
+
+## The Multi-Platform GEO Strategy
+
+Because platforms diverge so significantly, a successful GEO strategy must:
+
+1. **Cover all technical bases**: Proper robots.txt, schema markup, semantic HTML, and llms.txt for every platform
+2. **Diversify content signals**: Statistics for Perplexity, schema for Gemini, depth for Claude, publications for ChatGPT
+3. **Track platform-specific performance**: Monitor citations per platform, not just aggregate mentions
+
+Visibility's platform tracks citations across all four major engines and identifies which content tactics drive results on each.

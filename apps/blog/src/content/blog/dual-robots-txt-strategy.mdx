@@ -1,0 +1,108 @@
+---
+title: "The Dual robots.txt Strategy: Block Training Bots, Allow Search Bots"
+description: "In 2026, AI engines run dual crawler fleets. The standard practice is to block training ingestion bots while allowing live-citation search bots. Here's exactly how."
+pubDate: 2026-05-08
+author: visibility-team
+category: geo-fundamentals
+tags: ["robots.txt", "AI crawlers", "GPTBot", "ClaudeBot", "GEO", "SEO"]
+excerpt: "AI engines run training bots and search bots. Blocking training bots protects your IP while allowing search bots preserves live citation visibility."
+schemaType: "TechArticle"
+---
+
+In 2026, every major AI platform operates two distinct types of crawlers: **training bots** that ingest content into model weights, and **search bots** that retrieve pages for real-time answers. The standard practice for publishers is to block the former and allow the latter.
+
+## Why the Dual Strategy Matters
+
+When a training bot crawls your site, your content may be incorporated into the model's weights with no attribution. When a search bot crawls your site, your brand is cited as a source in real-time answers. The distinction determines whether you get visibility or get consumed.
+
+## The Two Types of AI Crawlers
+
+### Training Bots (Block These)
+
+Training bots ingest content to train or update foundation models. Your content becomes part of the model's parameters without live attribution.
+
+| Bot | Platform | Purpose |
+|-----|----------|---------|
+| GPTBot | OpenAI | Training data collection |
+| ClaudeBot | Anthropic | Model training ingestion |
+| anthropic-ai | Anthropic | Legacy training crawler |
+| Google-Extended | Google | Gemini training data |
+| CCBot | Common Crawl | Open training corpus |
+
+### Search / Live-Citation Bots (Allow These)
+
+Search bots retrieve pages in real time to generate answers with live citations.
+
+| Bot | Platform | Purpose |
+|-----|----------|---------|
+| OAI-SearchBot | OpenAI | ChatGPT search index |
+| ChatGPT-User | OpenAI | User-triggered retrieval |
+| Claude-SearchBot | Anthropic | Claude live search |
+| Claude-Web | Anthropic | Claude web retrieval |
+| PerplexityBot | Perplexity | Search and live retrieval |
+
+## The Recommended robots.txt
+
+```
+# ===== TRAINING BOTS (Block) =====
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+# ===== SEARCH BOTS (Allow) =====
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# ===== TRADITIONAL SEARCH =====
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://yourdomain.com/sitemap.xml
+```
+
+## Important Implementation Notes
+
+- **PerplexityBot serves both roles**: There is no separate training bot for Perplexity. If you want Perplexity citations, you must allow it.
+- **Google-Extended is distinct from Googlebot**: Blocking Google-Extended does not affect Google Search rankings.
+- **Keep robots.txt under 500KB**: Large files may be truncated by crawlers.
+- **Return HTTP 200**: Ensure the file returns a 200 status code, not a redirect.
+- **Use explicit Allow rules**: Do not rely on inference from wildcard rules.
+
+## Beyond robots.txt
+
+ robots.txt controls access. To maximize citation value, pair it with:
+
+- **llms.txt**: A machine-readable description of your business for AI systems
+- **Structured data**: JSON-LD schemas that help AI parsers extract meaning
+- **Semantic HTML**: Proper landmarks and heading hierarchy for content structure
+
+Visibility automates all three as part of our GEO platform.

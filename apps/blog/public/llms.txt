@@ -1,17 +1,17 @@
 # Visibility.help
 
-> Visibility.help is an AI-powered content optimization platform that helps SaaS companies build SEO and GEO content systems. We provide tools for keyword research, AI citation tracking, and automated content generation optimized for both search engines and generative AI assistants.
-
-## Optional
-
-- [Pricing](https://visibility.help/pricing): Subscription plans and feature comparison for teams of all sizes.
-- [Features](https://visibility.help/features): Full platform capabilities including llms.txt generation, structured data automation, and AI crawler optimization.
-- [Contact](https://visibility.help/contact): Get in touch for sales, support, or partnership inquiries.
-- [Blog](https://visibility.help/blog): Latest insights on SEO, GEO, and AI search optimization.
+> Visibility.help is a SaaS platform that automates Generative Engine Optimization (GEO) for teams who want their brand cited by ChatGPT, Perplexity, Gemini, and Claude. We generate llms.txt files, inject structured data, audit semantic HTML, and score content for AI citability — all deployed on Cloudflare's edge.
 
 ## Docs
 
-- [Getting Started](https://visibility.help/signup): Join the waitlist and start optimizing for AI search visibility.
-- [GEO Optimization Guide](https://visibility.help/blog/what-is-generative-engine-optimization): How to optimize content for ChatGPT, Claude, and Perplexity.
-- [SEO Technical Checklist](https://visibility.help/blog/seo-geo-best-practices): Core Web Vitals, schema markup, and crawl budget optimization.
+- [Getting Started](https://visibility.help/signup): Join the waitlist and start optimizing for AI search citations.
+- [GEO Optimization Guide](https://visibility.help/blog/what-is-generative-engine-optimization): How GEO works and why it matters in 2026.
 - [llms.txt Guide](https://visibility.help/blog/llms-txt-complete-guide): Complete guide to creating machine-readable site descriptions for AI crawlers.
+- [SEO + GEO Best Practices](https://visibility.help/blog/seo-geo-best-practices): Technical checklist for Core Web Vitals, schema markup, and crawl optimization.
+
+## Optional
+
+- [Pricing](https://visibility.help/pricing): Transparent subscription plans for individuals, teams, and agencies.
+- [Features](https://visibility.help/features): Full platform capabilities including structured data automation and AI crawler optimization.
+- [About](https://visibility.help/about): Our mission, approach, and team.
+- [Blog](https://visibility.help/blog): Latest research and tactics for AI search visibility.
