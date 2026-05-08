@@ -281,6 +281,101 @@ const siteProfiles = {
       },
     },
   },
+  'visibility-help': {
+    key: 'visibility-help',
+    brand: {
+      mainSiteName: 'Visibility',
+      wordmark: 'Visibility',
+      mainSiteUrl: 'https://visibility.help',
+      locale: 'en-US',
+      supportEmail: 'hello@visibility.help',
+      defaultOgImagePath: '/og-image.jpg',
+      logoMark: 'V',
+    },
+    cloudflare: {
+      pagesProject: 'visibility-help',
+      pagesPreviewAlias: 'visibility-help.pages.dev',
+    },
+    telemetry: {
+      rumEndpoint: 'https://emdash-metrics-worker.ola-turmo.workers.dev/rum',
+      metricsWorkerUrl: 'https://emdash-metrics-worker.ola-turmo.workers.dev',
+    },
+    courseLinkSetKey: 'visibility-help',
+    concepts: {
+      main: {
+        key: 'main',
+        label: 'Product',
+        pageStructure: 'saas',
+        basePath: '/',
+        siteUrl: 'https://visibility.help',
+        siteName: 'Visibility — AI Search Visibility Platform',
+        shellKey: 'visibility-help/main',
+        routes: {
+          articlePrefix: '/blog',
+          categoryPrefix: '/category',
+          authorPrefix: '/author',
+        },
+        cloudflare: {
+          pagesProject: 'visibility-help',
+          pagesPreviewAlias: 'visibility-help.pages.dev',
+          routeWorkerName: 'visibility-help-proxy',
+          routeWorkerDirectory: 'visibility-proxy',
+        },
+        audit: {
+          sitemapUrls: ['https://visibility.help/sitemap.xml'],
+          extraUrls: ['https://visibility.help/features/', 'https://visibility.help/pricing/'],
+          lighthouse: {
+            runs: 3,
+            warmupRuns: 1,
+          },
+        },
+        quality: {
+          dashboardLabel: 'Visibility.help',
+          flagshipUrls: ['https://visibility.help/'],
+          fieldTargets: {
+            release: {
+              LCP: 1500,
+              INP: 150,
+              CLS: 0.05,
+              TTFB: 600,
+              FCP: 1200,
+            },
+            flagship: {
+              LCP: 1200,
+              INP: 100,
+              CLS: 0.05,
+              TTFB: 400,
+              FCP: 1000,
+            },
+          },
+          lighthouseTargets: {
+            release: {
+              performance: 95,
+              accessibility: 95,
+              seo: 100,
+              bestPractices: 100,
+              tbt: 100,
+            },
+            flagship: {
+              performance: 98,
+              accessibility: 100,
+              seo: 100,
+              bestPractices: 100,
+              tbt: 50,
+            },
+          },
+          publishPolicy: [
+            'field-performance',
+            'lighthouse',
+            'browser-rum-proof',
+            'structured-data',
+            'crawlability',
+            'parity',
+          ],
+        },
+      },
+    },
+  },
 };
 
 function getConceptOutputDir(siteKey, conceptKey) {

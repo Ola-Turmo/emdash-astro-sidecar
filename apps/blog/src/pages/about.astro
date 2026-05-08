@@ -1,0 +1,106 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { PRIMARY_CTA, SECONDARY_CTA, SHELL_COPY } from '../consts';
+
+const title = 'About';
+const description = 'Visibility was built by operators who believe AI search is the new discovery layer. We help brands become the sources that AI engines cite.';
+
+const breadcrumbItems = [
+  { name: 'About', url: 'https://visibility.help/about/' },
+];
+
+const aboutSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: 'About Visibility',
+  description,
+  url: 'https://visibility.help/about/',
+  mainEntity: {
+    '@type': 'Organization',
+    name: 'Visibility',
+    url: 'https://visibility.help',
+    foundingDate: '2024',
+    description: 'AI-powered SEO and GEO optimization platform built on Cloudflare.',
+  },
+});
+---
+
+<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/about/" jsonLdScripts={[aboutSchema]} breadcrumbItems={breadcrumbItems}>
+  <Header />
+  <main>
+    <section class="px-3 pb-14 pt-10 sm:px-4 md:pb-24 md:pt-20">
+      <div class="mx-auto max-w-6xl">
+        <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
+          <div>
+            <p class="eyebrow">About Visibility</p>
+            <h1 class="display-title mt-4 text-4xl font-black leading-[1.03] text-slate-950 sm:text-5xl md:text-6xl">
+              Built for the AI Search Era
+            </h1>
+            <p class="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+              Search is changing. Over 40% of information-seeking sessions now start in AI engines like ChatGPT, Perplexity, Gemini, and Claude. Traditional SEO is necessary but no longer sufficient.
+            </p>
+            <p class="mt-4 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+              Visibility helps brands adapt by automating the technical infrastructure of Generative Engine Optimization. From llms.txt to structured data, from semantic HTML to AI crawler access, we handle the details so you can focus on your business.
+            </p>
+            <div class="mt-8 flex flex-wrap gap-3">
+              <a href={PRIMARY_CTA.href} class="cta-primary">{PRIMARY_CTA.label}</a>
+              <a href={SECONDARY_CTA.href} class="cta-secondary">{SECONDARY_CTA.label}</a>
+            </div>
+          </div>
+          <div class="shell-card relative overflow-hidden p-8 sm:p-12">
+            <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-teal-600/12 via-slate-900/8 to-amber-500/12"></div>
+            <div class="relative space-y-6">
+              <div>
+                <p class="text-3xl font-black text-slate-900">2024</p>
+                <p class="mt-1 text-sm text-slate-600">Founded after observing AI search citation patterns in the wild.</p>
+              </div>
+              <div>
+                <p class="text-3xl font-black text-slate-900">Cloudflare-native</p>
+                <p class="mt-1 text-sm text-slate-600">Built on Workers, Pages, D1, and KV for global edge performance.</p>
+              </div>
+              <div>
+                <p class="text-3xl font-black text-slate-900">Evidence-based</p>
+                <p class="mt-1 text-sm text-slate-600">Every recommendation is backed by measurable citation data, not SEO folklore.</p>
+              </div>
+              <div>
+                <p class="text-3xl font-black text-slate-900">Operator-led</p>
+                <p class="mt-1 text-sm text-slate-600">Created by teams who have shipped production content systems at scale.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="px-3 pb-14 sm:px-4 md:pb-24">
+      <div class="mx-auto max-w-6xl">
+        <div class="shell-card p-6 sm:p-10">
+          <h2 class="text-2xl font-bold text-slate-950 md:text-3xl">Our Approach to GEO</h2>
+          <div class="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <p class="text-sm font-bold uppercase tracking-wider text-teal-700">Technical Foundation</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                We start with crawler access, structured data, and semantic HTML. Without these foundations, no amount of content optimization will get you cited.
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-bold uppercase tracking-wider text-teal-700">Content Architecture</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                AI engines cite content that is factual, structured, and unique. We build fact blocks, definitions, and comparison tables that LLMs can extract confidently.
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-bold uppercase tracking-wider text-teal-700">Measurement</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">
+                What gets measured gets managed. We track AI citations, share of voice, and content freshness so you know what is working.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

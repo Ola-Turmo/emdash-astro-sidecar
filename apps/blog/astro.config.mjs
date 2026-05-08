@@ -17,6 +17,14 @@ export default defineConfig({
     mdx(),
     sitemap(),
   ],
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'viewport',
+  },
+  build: {
+    format: 'directory',
+    inlineStylesheets: 'auto',
+  },
   markdown: {
     shikiConfig: {
       theme: 'github-dark',

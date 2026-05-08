@@ -115,6 +115,7 @@ export function conceptPath(path = ''): string {
   const [pathname, suffix = ''] = normalized.split(/(?=[?#])/);
   const needsTrailingSlash = pathname !== '/' && !pathname.endsWith('/') && !/\.[a-z0-9]+$/i.test(pathname);
   const routePath = needsTrailingSlash ? `${pathname}/` : pathname;
+  if (BLOG_BASE_PATH === '/') return `${routePath}${suffix}`;
   return `${BLOG_BASE_PATH}${routePath}${suffix}`;
 }
 

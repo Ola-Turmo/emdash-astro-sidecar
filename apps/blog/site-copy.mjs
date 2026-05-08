@@ -356,6 +356,132 @@ const siteCopyRegistry = {
       },
     },
   },
+  'visibility-help': {
+    courseLinks: [
+      {
+        path: '/features',
+        label: 'Product Features',
+        description: 'AI-powered content generation, GEO optimization, and search visibility tools.',
+        quality: {
+          mode: 'keyword',
+          expectedHost: 'visibility.help',
+          requiredKeywords: ['features', 'AI', 'GEO'],
+        },
+      },
+      {
+        path: '/pricing',
+        label: 'Pricing Plans',
+        description: 'Transparent pricing for teams of every size. Start free, scale as you grow.',
+        quality: {
+          mode: 'keyword',
+          expectedHost: 'visibility.help',
+          requiredKeywords: ['pricing', 'plans', 'free'],
+        },
+      },
+      {
+        path: '/blog',
+        label: 'Visibility Blog',
+        description: 'Latest insights on GEO, AI search optimization, and digital visibility.',
+        quality: {
+          mode: 'keyword',
+          expectedHost: 'visibility.help',
+          requiredKeywords: ['blog', 'GEO', 'visibility'],
+        },
+      },
+    ],
+    concepts: {
+      main: {
+        description:
+          'Visibility is an AI search visibility platform that helps brands get discovered and cited by generative AI engines like ChatGPT, Perplexity, Gemini, and Claude.',
+        nav: [
+          { path: '/', label: 'Home' },
+          { path: '/features', label: 'Features' },
+          { path: '/pricing', label: 'Pricing' },
+          { path: '/blog', label: 'Blog' },
+          { path: '/about', label: 'About' },
+        ],
+        callsToAction: {
+          primary: {
+            href: 'https://visibility.help/signup',
+            label: 'Start Free Trial',
+            quality: {
+              mode: 'destination',
+              expectedHost: 'visibility.help',
+              pathIncludes: '/signup',
+            },
+          },
+          secondary: {
+            href: 'https://visibility.help/pricing',
+            label: 'View Pricing',
+            quality: {
+              mode: 'destination',
+              expectedHost: 'visibility.help',
+              pathIncludes: '/pricing',
+            },
+          },
+        },
+        shell: {
+          subLabel: 'AI Search Visibility',
+          homeEyebrow: 'Generative Engine Optimization',
+          homeTitle: 'Get Cited by AI Search Engines',
+          homeDescription:
+            'Visibility helps brands optimize for generative AI search. We structure your content so ChatGPT, Perplexity, Gemini, and Claude cite you as the authoritative source.',
+          homeStats: [
+            { value: '40%', label: 'of searches now start in AI engines' },
+            { value: '3x', label: 'more citations with structured GEO' },
+            { value: '<24h', label: 'to deploy optimized content' },
+          ],
+          homeAsideEyebrow: 'Why Visibility',
+          homeAsideReasonTitle: 'The AI Search Shift',
+          homeAsideReasonText:
+            'Traditional SEO is no longer enough. AI engines synthesize answers from multiple sources and only cite the best-structured, most authoritative content. Visibility ensures that content is yours.',
+          directorySearchEyebrow: 'GEO Resources',
+          directorySearchTitle: 'Search Our Knowledge Base',
+          directorySearchDescription: 'Find guides, templates, and research on generative engine optimization.',
+          directorySearchPlaceholder: 'Search articles, guides, and templates...',
+          directorySearchEmpty: 'No results found. Try a different keyword.',
+          directorySearchAriaLabel: 'Search knowledge base',
+          directorySearchActionLabel: 'Read',
+          directorySearchMetaFallback: 'Resource',
+          listingEyebrow: 'Latest Insights',
+          listingTitle: 'GEO & AI Search Research',
+          listingDescription: 'Evidence-based strategies for getting cited by AI search engines.',
+          listingEmptyText: 'No articles published yet. Check back soon.',
+          articleContextLabel: 'Insight',
+          articleLanguageBadge: 'In English',
+          articlePrimaryActionText: 'Read article',
+          articleNextStepEyebrow: 'Next step',
+          articleNextStepText: 'Start optimizing your content for AI search visibility.',
+          articleAboutPurpose: 'Helps you understand and implement GEO strategies.',
+          articleEyebrow: 'Insight',
+          articleCtaEyebrow: 'Ready to improve your AI visibility?',
+          articleCtaTitle: 'Start optimizing for generative search today.',
+          articleCtaDescription:
+            'Join teams that use Visibility to structure content for AI citation. Free trial, no credit card required.',
+          footerEyebrow: 'Get Started',
+          footerTitle: 'Be the Source AI Engines Cite',
+          footerDescription:
+            'Visibility structures your brand presence for generative AI search. From llms.txt to structured data, we handle the technical GEO so you can focus on your business.',
+          footerOffersLabel: 'Product',
+          footerTechnicalLabel: 'Resources',
+          footerContactLabel: 'Contact Us',
+          footerCopyright: 'All rights reserved.',
+          footerNote: 'Built for the AI search era.',
+          contentMeta: {
+            authorEyebrow: 'Author',
+            articleListingTitle: 'Articles',
+            authorEmptyText: 'No articles from this author yet.',
+            categoryEyebrow: 'Category',
+            categoryEmptyText: 'No articles in this category yet.',
+            articleMetaEyebrow: 'About this article',
+            articleMetaCategoryLabel: 'Category',
+            articleMetaAuthorLabel: 'Author',
+            articleMetaPurposeLabel: 'Purpose',
+          },
+        },
+      },
+    },
+  },
 };
 
 export function getResolvedSiteCopy(siteKey, conceptKey) {

@@ -1,0 +1,177 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { PRIMARY_CTA, SHELL_COPY } from '../consts';
+
+const title = 'Pricing';
+const description = 'Start free and scale as your AI search visibility grows. Transparent pricing for teams of every size.';
+
+const plans = [
+  {
+    name: 'Starter',
+    price: '$0',
+    period: 'forever',
+    description: 'For individuals and early-stage projects exploring GEO.',
+    features: [
+      '1 website',
+      'llms.txt generator',
+      'Basic structured data',
+      'AI crawler audit',
+      'Community support',
+    ],
+    cta: 'Get Started Free',
+    href: '/signup',
+    highlighted: false,
+  },
+  {
+    name: 'Growth',
+    price: '$49',
+    period: '/month',
+    description: 'For teams serious about AI search visibility.',
+    features: [
+      '5 websites',
+      'Advanced schema markup',
+      'Content citability scoring',
+      'Semantic HTML audits',
+      'Weekly AI citation reports',
+      'Priority email support',
+    ],
+    cta: 'Start Free Trial',
+    href: '/signup',
+    highlighted: true,
+  },
+  {
+    name: 'Agency',
+    price: '$199',
+    period: '/month',
+    description: 'For agencies managing multiple client brands.',
+    features: [
+      'Unlimited websites',
+      'White-label reports',
+      'API access',
+      'Custom schema types',
+      'Real-time citation monitoring',
+      'Dedicated account manager',
+      'SSO and team roles',
+    ],
+    cta: 'Contact Sales',
+    href: '/contact',
+    highlighted: false,
+  },
+];
+
+const faqs = [
+  { q: 'What is Generative Engine Optimization?', a: 'GEO is the practice of structuring your digital presence so AI language models like ChatGPT, Perplexity, Gemini, and Claude cite your brand as a relevant, authoritative source.' },
+  { q: 'How long until I see results?', a: 'Most customers see their first AI citations within 2-4 weeks of deploying optimized content. Full share-of-voice improvements typically appear within 90 days.' },
+  { q: 'Can I switch plans later?', a: 'Yes. Upgrade or downgrade at any time. Prorated billing means you only pay for what you use.' },
+  { q: 'Do you offer custom Enterprise plans?', a: 'Yes. Contact us for dedicated infrastructure, SLAs, custom integrations, and volume pricing.' },
+];
+
+const faqSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.a,
+    },
+  })),
+});
+
+const pricingSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Visibility.help',
+  description: 'AI-powered SEO and GEO optimization platform',
+  url: 'https://visibility.help/pricing/',
+  offers: plans.map((plan) => ({
+    '@type': 'Offer',
+    name: plan.name,
+    description: plan.description,
+    price: plan.price.replace('$', '').replace('/month', '').replace('forever', '0'),
+    priceCurrency: 'USD',
+    availability: 'https://schema.org/InStock',
+    url: `https://visibility.help${plan.href}`,
+  })),
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: '4.8',
+    ratingCount: '124',
+  },
+});
+
+const breadcrumbItems = [
+  { name: 'Pricing', url: 'https://visibility.help/pricing/' },
+];
+---
+
+<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/pricing/" jsonLdScripts={[faqSchema, pricingSchema]} breadcrumbItems={breadcrumbItems}>
+  <Header />
+  <main>
+    <section class="px-3 pb-14 pt-10 sm:px-4 md:pb-24 md:pt-20">
+      <div class="mx-auto max-w-6xl text-center">
+        <p class="eyebrow">Pricing</p>
+        <h1 class="display-title mt-4 text-4xl font-black leading-[1.03] text-slate-950 sm:text-5xl md:text-6xl">
+          Simple, Transparent Pricing
+        </h1>
+        <p class="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+          Start free. Scale as your AI search visibility grows. No hidden fees, no long-term contracts.
+        </p>
+      </div>
+    </section>
+
+    <section class="px-3 pb-14 sm:px-4 md:pb-24">
+      <div class="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
+        {plans.map((plan) => (
+          <div class={`shell-card p-6 sm:p-8 ${plan.highlighted ? 'ring-2 ring-teal-600' : ''}`}>
+            {plan.highlighted && (
+              <span class="inline-block rounded-full bg-teal-600 px-3 py-1 text-xs font-bold text-white">Most Popular</span>
+            )}
+            <h2 class="mt-4 text-xl font-extrabold tracking-tight text-slate-900">{plan.name}</h2>
+            <p class="mt-2 text-sm text-slate-600">{plan.description}</p>
+            <div class="mt-6 flex items-baseline gap-1">
+              <span class="text-4xl font-black text-slate-950">{plan.price}</span>
+              <span class="text-sm text-slate-500">{plan.period}</span>
+            </div>
+            <ul class="mt-6 space-y-3">
+              {plan.features.map((feature) => (
+                <li class="flex items-start gap-3 text-sm text-slate-700">
+                  <svg class="mt-0.5 h-5 w-5 shrink-0 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <a href={plan.href} class={`mt-8 block w-full rounded-2xl px-5 py-3 text-center text-sm font-bold transition-colors ${plan.highlighted ? 'bg-teal-700 text-white hover:bg-teal-800' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}`}>
+              {plan.cta}
+            </a>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="px-3 pb-14 sm:px-4 md:pb-24">
+      <div class="mx-auto max-w-3xl">
+        <h2 class="text-center text-2xl font-bold text-slate-950 md:text-3xl">Frequently Asked Questions</h2>
+        <div class="mt-10 space-y-4">
+          {faqs.map((faq, i) => (
+            <details class="shell-card group p-5" name="faq">
+              <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-bold text-slate-900 sm:text-base">
+                {faq.q}
+                <svg class="h-5 w-5 shrink-0 text-slate-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <p class="mt-3 text-sm leading-6 text-slate-600">{faq.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

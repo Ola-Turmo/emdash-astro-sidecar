@@ -1,0 +1,17 @@
+# Visibility.help
+
+> Visibility.help is an AI-powered content optimization platform that helps SaaS companies build SEO and GEO content systems. We provide tools for keyword research, AI citation tracking, and automated content generation optimized for both search engines and generative AI assistants.
+
+## Optional
+
+- [Pricing](https://visibility.help/pricing): Subscription plans and feature comparison for teams of all sizes.
+- [Features](https://visibility.help/features): Full platform capabilities including llms.txt generation, structured data automation, and AI crawler optimization.
+- [Contact](https://visibility.help/contact): Get in touch for sales, support, or partnership inquiries.
+- [Blog](https://visibility.help/blog): Latest insights on SEO, GEO, and AI search optimization.
+
+## Docs
+
+- [Getting Started](https://visibility.help/signup): Join the waitlist and start optimizing for AI search visibility.
+- [GEO Optimization Guide](https://visibility.help/blog/what-is-generative-engine-optimization): How to optimize content for ChatGPT, Claude, and Perplexity.
+- [SEO Technical Checklist](https://visibility.help/blog/seo-geo-best-practices): Core Web Vitals, schema markup, and crawl budget optimization.
+- [llms.txt Guide](https://visibility.help/blog/llms-txt-complete-guide): Complete guide to creating machine-readable site descriptions for AI crawlers.

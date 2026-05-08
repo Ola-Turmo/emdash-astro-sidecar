@@ -1,0 +1,105 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SUPPORT_EMAIL, PRIMARY_CTA, SHELL_COPY } from '../consts';
+
+const title = 'Contact';
+const description = 'Get in touch with the Visibility team. Questions about GEO, pricing, or Enterprise plans? We respond within one business day.';
+
+const breadcrumbItems = [
+  { name: 'Contact', url: 'https://visibility.help/contact/' },
+];
+
+const contactSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Contact Visibility',
+  description,
+  url: 'https://visibility.help/contact/',
+  mainEntity: {
+    '@type': 'Organization',
+    name: 'Visibility',
+    url: 'https://visibility.help',
+    email: SUPPORT_EMAIL,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'Customer Support',
+      email: SUPPORT_EMAIL,
+      availableLanguage: 'English',
+    },
+  },
+});
+---
+
+<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/contact/" jsonLdScripts={[contactSchema]} breadcrumbItems={breadcrumbItems}>
+  <Header />
+  <main>
+    <section class="px-3 pb-14 pt-10 sm:px-4 md:pb-24 md:pt-20">
+      <div class="mx-auto max-w-6xl">
+        <div class="grid gap-10 lg:grid-cols-2">
+          <div>
+            <p class="eyebrow">Contact</p>
+            <h1 class="display-title mt-4 text-4xl font-black leading-[1.03] text-slate-950 sm:text-5xl md:text-6xl">
+              Let's Talk AI Search
+            </h1>
+            <p class="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+              Questions about Generative Engine Optimization, pricing, or Enterprise plans? We read every message and respond within one business day.
+            </p>
+            <div class="mt-8 space-y-4">
+              <div class="flex items-center gap-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 text-teal-700">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-slate-900">Email</p>
+                  <a href={`mailto:${SUPPORT_EMAIL}`} class="text-sm text-slate-600 hover:text-teal-700">{SUPPORT_EMAIL}</a>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 text-teal-700">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-slate-900">Response Time</p>
+                  <p class="text-sm text-slate-600">Within 24 hours on business days</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="shell-card p-6 sm:p-8">
+            <form action={`mailto:${SUPPORT_EMAIL}`} method="post" enctype="text/plain" class="space-y-4">
+              <div>
+                <label for="name" class="block text-sm font-semibold text-slate-900">Name</label>
+                <input type="text" id="name" name="name" required class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600" />
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-semibold text-slate-900">Email</label>
+                <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600" />
+              </div>
+              <div>
+                <label for="subject" class="block text-sm font-semibold text-slate-900">Subject</label>
+                <select id="subject" name="subject" class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600">
+                  <option>General Inquiry</option>
+                  <option>Sales / Enterprise</option>
+                  <option>Technical Support</option>
+                  <option>Partnerships</option>
+                </select>
+              </div>
+              <div>
+                <label for="message" class="block text-sm font-semibold text-slate-900">Message</label>
+                <textarea id="message" name="message" rows="4" required class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"></textarea>
+              </div>
+              <button type="submit" class="cta-primary w-full">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

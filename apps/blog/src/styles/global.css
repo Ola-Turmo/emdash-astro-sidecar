@@ -8,6 +8,10 @@
   font-weight: 400 800;
   font-style: normal;
   font-display: swap;
+  size-adjust: 107%;
+  ascent-override: 95%;
+  descent-override: 25%;
+  line-gap-override: 0%;
 }
 
 @font-face {
@@ -16,6 +20,10 @@
   font-weight: 600 800;
   font-style: normal;
   font-display: swap;
+  size-adjust: 117%;
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
 }
 
 @layer base {
