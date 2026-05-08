@@ -23,7 +23,7 @@ export default defineConfig({
   },
   build: {
     format: 'directory',
-    inlineStylesheets: 'auto',
+    inlineStylesheets: 'always',
   },
   markdown: {
     shikiConfig: {
