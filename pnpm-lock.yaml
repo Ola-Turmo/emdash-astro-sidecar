@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@cloudflare/puppeteer':
-        specifier: ^1.0.7
-        version: 1.0.7
+        specifier: ^1.1.0
+        version: 1.1.0
       playwright:
         specifier: ^1.59.1
         version: 1.59.1
@@ -284,8 +284,8 @@ packages:
     resolution: {integrity: sha512-VERIM64vtTP1C4mxQ5thVT9fK0apjPFobqybMtA1UdUujWka24ERHbRHFGmpbbhp73MhV+KSsHQH9C6uOTdEQA==}
     engines: {node: '>=18'}
 
-  '@cloudflare/puppeteer@1.0.7':
-    resolution: {integrity: sha512-8kjmXjNoS2C1iOMcSmL+If4AOOH2ADbGhyI2V94DJSmuBrUKHZSVcCp6UJjojcCG9dLNNE27SabpRrqIGETF0w==}
+  '@cloudflare/puppeteer@1.1.0':
+    resolution: {integrity: sha512-lN10En49avRDQvz8Gpv/WiIoGvjjDiP6P+v2y9bA6rfPT5WHfnlg2O6MwjHc1POm8A9LXf1sMdgrsdW8xWapOw==}
     engines: {node: '>=18'}
 
   '@emmetio/abbreviation@2.3.3':
@@ -3216,7 +3216,7 @@ snapshots:
     dependencies:
       fontkitten: 1.0.3
 
-  '@cloudflare/puppeteer@1.0.7':
+  '@cloudflare/puppeteer@1.1.0':
     dependencies:
       '@puppeteer/browsers': 2.2.4
       debug: 4.4.3
