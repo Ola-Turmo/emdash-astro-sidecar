@@ -14,43 +14,38 @@ const categoryEntry = categoryId ? await getEntry('categories', categoryId) : un
 const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Article';
 ---
 
-<article class="shell-card group overflow-hidden reveal">
-  <a href={articlePath(post.slug)} class="block p-5 md:p-6">
+<article class="shell-card group overflow-hidden p-5 md:p-6">
+  <a href={articlePath(post.slug)} class="block">
     {featuredImage ? (
-      <div class="mb-5 aspect-[1.5] overflow-hidden rounded-lg bg-[var(--color-canvas)]">
+      <div class="mb-5 aspect-[1.4] overflow-hidden rounded-xl bg-[var(--surface-tertiary)]">
         <img
           src={featuredImage.src}
           alt={featuredImage.alt}
-          class="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
+          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
       </div>
     ) : (
-      <div class="mb-5 rounded-lg bg-[var(--color-accent-muted)] p-5">
-        <span class="tag-badge">{SHELL_COPY.articleContextLabel}</span>
-        <div class="mt-4 flex items-end justify-between gap-4">
-          <div>
-            <p class="display-title text-xl font-semibold text-[var(--color-ink)]">{categoryName}</p>
-            <p class="mt-1 max-w-xs text-sm leading-6 text-[var(--color-muted)]">{excerpt}</p>
-          </div>
-          <span class="tag-badge !bg-[var(--color-ink)] !text-white">
-            {SHELL_COPY.articleLanguageBadge}
-          </span>
+      <div class="mb-5 rounded-xl bg-[var(--accent-light)] p-6">
+        <span class="eyebrow">{SHELL_COPY.articleContextLabel}</span>
+        <div class="mt-4">
+          <p class="text-xl font-semibold">{categoryName}</p>
+          <p class="mt-2 max-w-xs text-sm leading-relaxed text-[var(--ink-secondary)]">{excerpt}</p>
         </div>
       </div>
     )}
 
     <span class="eyebrow">{categoryName}</span>
-    <h3 class="mt-2 text-xl font-semibold tracking-tight text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent)]">
+    <h3 class="mt-2 text-xl font-semibold tracking-tight transition-colors group-hover:text-[var(--accent-hover)]">
       {title}
     </h3>
-    <p class="mt-2 line-clamp-2 text-[0.9375rem] leading-7 text-[var(--color-muted)]">{excerpt}</p>
+    <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--ink-secondary)]">{excerpt}</p>
 
     <div class="mt-4 flex items-center justify-between gap-4 text-sm">
-      <time class="font-mono text-xs text-[var(--color-muted)]" datetime={pubDate.toISOString()}>
+      <time class="text-[var(--ink-muted)]" datetime={pubDate.toISOString()}>
         {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
       </time>
-      <span class="text-sm font-medium text-[var(--color-accent)]">{SHELL_COPY.articlePrimaryActionText}</span>
+      <span class="font-medium text-[var(--accent)]">{SHELL_COPY.articlePrimaryActionText}</span>
     </div>
   </a>
 </article>

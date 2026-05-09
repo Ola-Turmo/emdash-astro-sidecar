@@ -1,71 +1,91 @@
 ---
 import {
-  COURSE_LINKS,
   MAIN_SITE_URL,
   PRIMARY_CTA,
   SHELL_COPY,
   SITE_WORDMARK,
   SUPPORT_EMAIL,
-  blogPath,
+  MAIN_NAV,
 } from '../consts';
 
 const currentYear = new Date().getFullYear();
 const footerNav = [
-  { href: blogPath('/rss.xml'), label: 'RSS' },
-  { href: blogPath('/sitemap.xml'), label: 'Sitemap' },
-  { href: MAIN_SITE_URL, label: SITE_WORDMARK },
-  { href: `mailto:${SUPPORT_EMAIL}`, label: 'Email' },
+  { label: 'Features', href: '/features/' },
+  { label: 'Pricing', href: '/pricing/' },
+  { label: 'About', href: '/about/' },
+  { label: 'Blog', href: '/blog/' },
+  { label: 'Contact', href: '/contact/' },
 ];
 ---
 
-<footer class="mt-24 border-t border-[var(--color-border)]">
-  <div class="mx-auto max-w-6xl px-4 pt-16 pb-12 md:pt-24 md:pb-16">
-    <div class="grid gap-12 md:grid-cols-[1.2fr,0.8fr]">
-      <div class="space-y-5">
-        <p class="eyebrow">{SHELL_COPY.footerEyebrow}</p>
-        <h2 class="display-title text-2xl font-semibold text-[var(--color-ink)] md:text-3xl">
-          {SHELL_COPY.footerTitle}
-        </h2>
-        <p class="max-w-xl text-[0.9375rem] leading-7 text-[var(--color-muted)]">
-          {SHELL_COPY.footerDescription}
-        </p>
-        <div class="flex flex-wrap gap-3 pt-1">
-          <a href={PRIMARY_CTA.href} class="cta-primary">{PRIMARY_CTA.label}</a>
-          <a href={`mailto:${SUPPORT_EMAIL}`} class="cta-secondary">{SHELL_COPY.footerContactLabel}</a>
-        </div>
-      </div>
-
-      <div class="grid gap-10 sm:grid-cols-2 md:gap-8">
-        {COURSE_LINKS.length > 0 && (
-          <div>
-            <p class="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink)]">{SHELL_COPY.footerOffersLabel}</p>
-            <div class="space-y-3">
-              {COURSE_LINKS.map((link: (typeof COURSE_LINKS)[number]) => (
-                <a href={link.href} class="block transition-colors hover:text-[var(--color-accent)]">
-                  <span class="block text-sm font-medium text-[var(--color-ink)]">{link.label}</span>
-                  <span class="block text-sm text-[var(--color-muted)]">{link.description}</span>
-                </a>
-              ))}
-            </div>
+<footer class="border-t border-[var(--border)]" style="background: linear-gradient(180deg, var(--surface) 0%, var(--surface-secondary) 100%)">
+  <div class="section-container">
+    <!-- Main Footer -->
+    <div class="py-20 md:py-28">
+      <div class="grid gap-12 md:grid-cols-[1.2fr_1fr] lg:grid-cols-[1.3fr_1fr_1fr]">
+        <!-- Brand Column -->
+        <div class="max-w-md">
+          <a href="/" class="inline-flex items-center gap-2.5" aria-label={SITE_WORDMARK}>
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0f172a] text-[11px] font-bold text-white">
+              V
+            </span>
+            <span class="text-[15px] font-semibold tracking-tight">{SITE_WORDMARK}</span>
+          </a>
+          <p class="mt-5 text-sm leading-relaxed text-[var(--ink-secondary)]">
+            {SHELL_COPY.footerDescription}
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a href={PRIMARY_CTA.href} class="cta-primary cta-primary--accent text-[13px]">
+              {PRIMARY_CTA.label}
+              <span class="cta-arrow">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+              </span>
+            </a>
           </div>
-        )}
+        </div>
 
-        <div>
-          <p class="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink)]">{SHELL_COPY.footerTechnicalLabel}</p>
-          <div class="space-y-2.5 text-sm">
-            {footerNav.map((link) => (
-              <a href={link.href} class="block text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]">{link.label}</a>
-            ))}
+        <!-- Nav Columns -->
+        <div class="grid grid-cols-2 gap-8 md:gap-12">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)] mb-4">Product</p>
+            <ul class="space-y-3">
+              {footerNav.slice(0, 3).map((item) => (
+                <li>
+                  <a href={item.href} class="text-sm text-[var(--ink-secondary)] transition-colors duration-200 hover:text-[var(--ink)]">
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)] mb-4">Company</p>
+            <ul class="space-y-3">
+              {footerNav.slice(3).map((item) => (
+                <li>
+                  <a href={item.href} class="text-sm text-[var(--ink-secondary)] transition-colors duration-200 hover:text-[var(--ink)]">
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a href={`mailto:${SUPPORT_EMAIL}`} class="text-sm text-[var(--ink-secondary)] transition-colors duration-200 hover:text-[var(--ink)]">
+                  Email
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="border-t border-[var(--color-border)]">
-    <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-sm text-[var(--color-muted)] md:flex-row md:items-center md:justify-between">
-      <p>&copy; {currentYear} {SITE_WORDMARK}. {SHELL_COPY.footerCopyright}</p>
-      <p>{SHELL_COPY.footerNote}</p>
+    <!-- Bottom Bar -->
+    <div class="border-t border-[var(--border)] py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12px] text-[var(--ink-muted)]">
+      <p>&copy; {currentYear} {SITE_WORDMARK}. All rights reserved.</p>
+      <div class="flex items-center gap-4">
+        <a href="/privacy/" class="transition-colors duration-200 hover:text-[var(--ink-secondary)]">Privacy</a>
+        <a href="/terms/" class="transition-colors duration-200 hover:text-[var(--ink-secondary)]">Terms</a>
+      </div>
     </div>
   </div>
 </footer>

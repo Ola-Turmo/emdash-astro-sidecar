@@ -25,78 +25,62 @@ const aboutSchema = JSON.stringify({
     description: 'AI-powered SEO and GEO optimization platform built on Cloudflare.',
   },
 });
+
+const values = [
+  { title: 'Citation, not traffic', desc: 'We optimize for AI citations. The metric that matters is whether language models name you as a source.' },
+  { title: 'Infrastructure over hacks', desc: 'Structured data, semantic HTML, and proper crawler access. The stuff that compounds. No trickery.' },
+  { title: 'Open by default', desc: 'Every tool we build works with publicly available standards. No lock-in, no secret sauce, no gatekeeping.' },
+];
 ---
 
 <BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/about/" jsonLdScripts={[aboutSchema]} breadcrumbItems={breadcrumbItems}>
   <Header />
   <main>
-    <section class="px-3 pb-14 pt-10 sm:px-4 md:pb-24 md:pt-20">
-      <div class="mx-auto max-w-6xl">
-        <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
-          <div>
-            <p class="eyebrow">About Visibility</p>
-            <h1 class="display-title mt-4 text-4xl font-black leading-[1.03] text-slate-950 sm:text-5xl md:text-6xl">
-              Built for the AI Search Era
-            </h1>
-            <p class="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-              Search is changing. Over 40% of information-seeking sessions now start in AI engines like ChatGPT, Perplexity, Gemini, and Claude. Traditional SEO is necessary but no longer sufficient.
-            </p>
-            <p class="mt-4 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-              Visibility helps brands adapt by automating the technical infrastructure of Generative Engine Optimization. From llms.txt to structured data, from semantic HTML to AI crawler access, we handle the details so you can focus on your business.
-            </p>
-            <div class="mt-8 flex flex-wrap gap-3">
-              <a href={PRIMARY_CTA.href} class="cta-primary">{PRIMARY_CTA.label}</a>
-              <a href={SECONDARY_CTA.href} class="cta-secondary">{SECONDARY_CTA.label}</a>
-            </div>
-          </div>
-          <div class="shell-card relative overflow-hidden p-8 sm:p-12">
-            <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-teal-600/12 via-slate-900/8 to-amber-500/12"></div>
-            <div class="relative space-y-6">
-              <div>
-                <p class="text-3xl font-black text-slate-900">2024</p>
-                <p class="mt-1 text-sm text-slate-600">Founded after observing AI search citation patterns in the wild.</p>
-              </div>
-              <div>
-                <p class="text-3xl font-black text-slate-900">Cloudflare-native</p>
-                <p class="mt-1 text-sm text-slate-600">Built on Workers, Pages, D1, and KV for global edge performance.</p>
-              </div>
-              <div>
-                <p class="text-3xl font-black text-slate-900">Evidence-based</p>
-                <p class="mt-1 text-sm text-slate-600">Every recommendation is backed by measurable citation data, not SEO folklore.</p>
-              </div>
-              <div>
-                <p class="text-3xl font-black text-slate-900">Operator-led</p>
-                <p class="mt-1 text-sm text-slate-600">Created by teams who have shipped production content systems at scale.</p>
-              </div>
-            </div>
-          </div>
+    <section class="px-4 pt-20 pb-14 md:pt-28 md:pb-20">
+      <div class="section-container">
+        <div class="max-w-2xl reveal">
+          <p class="eyebrow">About</p>
+          <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] sm:text-5xl md:text-6xl">
+            Built for the AI Search Era
+          </h1>
+          <p class="mt-6 text-lg leading-relaxed text-[var(--ink-secondary)]">
+            Search is changing. Over 40% of information-seeking sessions now start in AI engines. Traditional SEO doesn't cover this. Visibility does.
+          </p>
+          <p class="mt-4 text-lg leading-relaxed text-[var(--ink-secondary)]">
+            We help brands become the sources that ChatGPT, Perplexity, Gemini, and Claude cite when answering questions. Not through tricks. Through proper infrastructure.
+          </p>
         </div>
       </div>
     </section>
 
-    <section class="px-3 pb-14 sm:px-4 md:pb-24">
-      <div class="mx-auto max-w-6xl">
-        <div class="shell-card p-6 sm:p-10">
-          <h2 class="text-2xl font-bold text-slate-950 md:text-3xl">Our Approach to GEO</h2>
-          <div class="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <p class="text-sm font-bold uppercase tracking-wider text-teal-700">Technical Foundation</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">
-                We start with crawler access, structured data, and semantic HTML. Without these foundations, no amount of content optimization will get you cited.
-              </p>
+    <section class="px-4 pb-14 md:pb-24">
+      <div class="section-container">
+        <div class="grid gap-4 md:grid-cols-3">
+          {values.map((v, i) => (
+            <div class={`shell-card p-6 md:p-8 reveal reveal-delay-${i + 1}`}>
+              <h3 class="text-lg font-semibold">{v.title}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-[var(--ink-secondary)]">{v.desc}</p>
             </div>
-            <div>
-              <p class="text-sm font-bold uppercase tracking-wider text-teal-700">Content Architecture</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">
-                AI engines cite content that is factual, structured, and unique. We build fact blocks, definitions, and comparison tables that LLMs can extract confidently.
-              </p>
-            </div>
-            <div>
-              <p class="text-sm font-bold uppercase tracking-wider text-teal-700">Measurement</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">
-                What gets measured gets managed. We track AI citations, share of voice, and content freshness so you know what is working.
-              </p>
-            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="px-4 pb-24 md:pb-32">
+      <div class="section-container">
+        <div class="shell-card p-8 md:p-16 text-center reveal">
+          <h2 class="display-title text-3xl font-bold md:text-4xl">Want to learn more?</h2>
+          <p class="mx-auto mt-4 max-w-xl text-[var(--ink-secondary)]">
+            We're always happy to talk about AI search visibility and how to build for it.
+          </p>
+          <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <a href={PRIMARY_CTA.href} class="cta-primary cta-primary--accent">
+              {PRIMARY_CTA.label}
+              <span class="cta-arrow">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+              </span>
+            </a>
+            <a href="/contact/" class="cta-secondary">Contact us</a>
           </div>
         </div>
       </div>

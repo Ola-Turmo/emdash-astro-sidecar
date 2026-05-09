@@ -6,55 +6,54 @@ import { SUPPORT_EMAIL } from '../consts';
 
 const title = 'Get Started';
 const description = 'Start your free trial of Visibility. No credit card required. Get cited by AI search engines within weeks.';
+
+const breadcrumbItems = [
+  { name: 'Get Started', url: 'https://visibility.help/signup/' },
+];
 ---
 
-<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/signup/">
+<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/signup/" breadcrumbItems={breadcrumbItems}>
   <Header />
   <main>
-    <section class="px-3 pb-14 pt-10 sm:px-4 md:pb-24 md:pt-20">
-      <div class="mx-auto max-w-xl">
-        <div class="text-center">
+    <section class="px-4 pt-20 pb-14 md:pt-28 md:pb-20">
+      <div class="section-container">
+        <div class="mx-auto max-w-md text-center reveal">
           <p class="eyebrow">Start Free</p>
-          <h1 class="display-title mt-4 text-4xl font-black leading-[1.03] text-slate-950 sm:text-5xl">
+          <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] sm:text-5xl">
             Join the Waitlist
           </h1>
-          <p class="mx-auto mt-5 max-w-lg text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+          <p class="mt-6 text-base leading-relaxed text-[var(--ink-secondary)]">
             Visibility is currently in early access. Enter your email to join the waitlist and be among the first to optimize for AI search citations.
           </p>
         </div>
-        <div class="mt-10 shell-card p-6 sm:p-8">
-          <form action={`mailto:${SUPPORT_EMAIL}`} method="post" enctype="text/plain" class="space-y-4">
-            <div>
-              <label for="email" class="block text-sm font-semibold text-slate-900">Work Email</label>
-              <input type="email" id="email" name="email" required placeholder="you@company.com" class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600" />
-            </div>
-            <div>
-              <label for="company" class="block text-sm font-semibold text-slate-900">Company</label>
-              <input type="text" id="company" name="company" placeholder="Acme Inc." class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600" />
-            </div>
-            <div>
-              <label for="website" class="block text-sm font-semibold text-slate-900">Website</label>
-              <input type="url" id="website" name="website" placeholder="https://example.com" class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600" />
-            </div>
-            <button type="submit" class="cta-primary w-full">Join Waitlist</button>
-            <p class="text-center text-xs text-slate-500">
-              We respect your privacy. No spam, ever. Unsubscribe anytime.
-            </p>
-          </form>
-        </div>
-        <div class="mt-8 grid gap-4 sm:grid-cols-3 text-center">
-          <div class="shell-card p-4">
-            <p class="text-2xl font-black text-slate-900">Free</p>
-            <p class="mt-1 text-xs text-slate-600">Starter plan forever</p>
+
+        <div class="mx-auto mt-10 max-w-md">
+          <div class="shell-card p-6 md:p-8 reveal reveal-delay-1">
+            <form action={`mailto:${SUPPORT_EMAIL}`} method="post" enctype="text/plain" class="space-y-5">
+              <div>
+                <label for="email" class="block text-sm font-medium mb-1.5">Work Email</label>
+                <input type="email" id="email" name="email" required placeholder="you@company.com" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
+              </div>
+              <div>
+                <label for="company" class="block text-sm font-medium mb-1.5">Company</label>
+                <input type="text" id="company" name="company" placeholder="Acme Inc" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
+              </div>
+              <div>
+                <label for="website" class="block text-sm font-medium mb-1.5">Website</label>
+                <input type="url" id="website" name="website" placeholder="https://example.com" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
+              </div>
+              <button type="submit" class="cta-primary cta-primary--accent w-full justify-center">
+                Join Waitlist
+                <span class="cta-arrow">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+                </span>
+              </button>
+            </form>
           </div>
-          <div class="shell-card p-4">
-            <p class="text-2xl font-black text-slate-900">No CC</p>
-            <p class="mt-1 text-xs text-slate-600">No credit card required</p>
-          </div>
-          <div class="shell-card p-4">
-            <p class="text-2xl font-black text-slate-900">2-4w</p>
-            <p class="mt-1 text-xs text-slate-600">Typical time to first citation</p>
-          </div>
+
+          <p class="mt-6 text-center text-sm text-[var(--ink-muted)]">
+            No credit card required. We'll reach out when your spot opens.
+          </p>
         </div>
       </div>
     </section>

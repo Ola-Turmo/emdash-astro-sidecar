@@ -1,7 +1,5 @@
 ---
 import {
-  ACTIVE_CONCEPT_KEY,
-  CONCEPT_PAGE_STRUCTURE,
   MAIN_NAV,
   PRIMARY_CTA,
   SECONDARY_CTA,
@@ -9,62 +7,118 @@ import {
   SITE_WORDMARK,
   SHELL_COPY,
   conceptPath,
-  articlePath,
 } from '../consts';
-import { getPublishedMunicipalPages } from '../lib/published-content';
 
-const isMunicipalityConcept = ACTIVE_CONCEPT_KEY === 'kommune' && CONCEPT_PAGE_STRUCTURE === 'directory';
-const municipalityNav = isMunicipalityConcept
-  ? (await getPublishedMunicipalPages())
-      .sort((a, b) => a.data.municipality.localeCompare(b.data.municipality, 'nb'))
-      .slice(0, 4)
-      .map((page) => ({
-        href: articlePath(page.slug),
-        label: page.data.municipality,
-      }))
-  : [];
-const resolvedNav: Array<{ href: string; label: string }> = isMunicipalityConcept
-  ? [{ href: conceptPath('/'), label: MAIN_NAV[0]?.label ?? 'Kommuner' }, ...municipalityNav]
-  : MAIN_NAV;
+const navItems = MAIN_NAV;
 ---
 
-<header class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[52rem]">
-  <nav class="mx-auto flex items-center justify-between gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/90 px-5 py-3 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-    <a href={conceptPath('/')} class="flex items-center gap-2.5 transition-opacity hover:opacity-70">
-      <span class="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--color-ink)] text-sm font-bold text-white">
+<header class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-[rgba(15,23,42,0.06)]">
+  <div class="section-container flex items-center justify-between h-16">
+    <!-- Logo -->
+    <a href={conceptPath('/')} class="flex items-center gap-2.5 group" aria-label={SITE_WORDMARK}>
+      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0f172a] text-[11px] font-bold text-white transition-transform duration-300 group-hover:scale-105">
         {SITE_LOGO_MARK}
       </span>
-      <span class="text-base font-semibold tracking-tight text-[var(--color-ink)]">{SITE_WORDMARK}</span>
+      <span class="text-[15px] font-semibold tracking-tight text-[var(--ink)]">
+        {SITE_WORDMARK}
+      </span>
     </a>
 
-    <div class="hidden items-center gap-7 lg:flex">
-      {resolvedNav.map((link: (typeof resolvedNav)[number]) => (
+    <!-- Desktop Nav -->
+    <nav class="hidden md:flex items-center gap-1" aria-label="Main navigation">
+      {navItems.map((item: { href: string; label: string }) => (
         <a
-          href={link.href}
-          class="text-[0.8125rem] font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]"
+          href={item.href}
+          class="px-3 py-1.5 text-[13px] font-medium text-[var(--ink-secondary)] transition-colors duration-200 hover:text-[var(--ink)] rounded-md hover:bg-[var(--surface-tertiary)]"
         >
-          {link.label}
+          {item.label}
         </a>
       ))}
-    </div>
+    </nav>
 
-    <div class="flex items-center gap-3">
-      <a href={SECONDARY_CTA.href} class="hidden text-[0.8125rem] font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)] sm:inline">
+    <!-- Desktop CTAs -->
+    <div class="hidden md:flex items-center gap-3">
+      <a href={SECONDARY_CTA.href} class="text-[13px] font-medium text-[var(--ink-secondary)] transition-colors duration-200 hover:text-[var(--ink)]">
         {SECONDARY_CTA.label}
       </a>
-      <a href={PRIMARY_CTA.href} class="cta-primary !py-2.5 !px-4 !text-[0.8125rem]">
+      <a href={PRIMARY_CTA.href} class="cta-primary cta-primary--accent text-[13px]">
         {PRIMARY_CTA.label}
+        <span class="cta-arrow">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+        </span>
       </a>
     </div>
-  </nav>
+
+    <!-- Mobile Menu Toggle -->
+    <button
+      id="mobile-menu-toggle"
+      class="md:hidden flex flex-col items-center justify-center w-9 h-9 gap-[5px] rounded-lg hover:bg-[var(--surface-tertiary)] transition-colors"
+      aria-label="Toggle menu"
+      aria-expanded="false"
+    >
+      <span class="mobile-menu-line block w-[18px] h-[1.5px] bg-[var(--ink)] transition-all duration-300 origin-center"></span>
+      <span class="mobile-menu-line block w-[18px] h-[1.5px] bg-[var(--ink)] transition-all duration-300 origin-center"></span>
+    </button>
+  </div>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="mobile-menu" class="fixed inset-0 z-40 md:hidden pointer-events-none opacity-0 transition-opacity duration-300">
+    <div class="absolute inset-0 bg-white/95 backdrop-blur-2xl"></div>
+    <nav class="relative flex flex-col items-center justify-center h-full gap-2 px-6">
+      {navItems.map((item: { href: string; label: string }, i: number) => (
+        <a
+          href={item.href}
+          class="mobile-menu-link text-2xl font-medium text-[var(--ink)] opacity-0 translate-y-4 transition-all duration-300"
+          style={`transition-delay: ${(i + 1) * 80}ms`}
+        >
+          {item.label}
+        </a>
+      ))}
+      <div class="mt-6 flex flex-col items-center gap-3 opacity-0 translate-y-4 transition-all duration-300" style={`transition-delay: ${(navItems.length + 1) * 80}ms`}>
+        <a href={PRIMARY_CTA.href} class="cta-primary cta-primary--accent">
+          {PRIMARY_CTA.label}
+        </a>
+        <a href={SECONDARY_CTA.href} class="text-sm text-[var(--ink-secondary)]">
+          {SECONDARY_CTA.label}
+        </a>
+      </div>
+    </nav>
+  </div>
 </header>
 
-<div class="lg:hidden border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-xl mt-[4.5rem]">
-  <div data-mobile-scroll class="mx-auto flex max-w-6xl gap-4 overflow-x-auto px-4 py-3 text-[0.8125rem] font-medium text-[var(--color-muted)]">
-    {resolvedNav.map((link: (typeof resolvedNav)[number]) => (
-      <a href={link.href} class="whitespace-nowrap transition-colors hover:text-[var(--color-ink)]">
-        {link.label}
-      </a>
-    ))}
-  </div>
-</div>
+<script is:inline>
+  const toggle = document.getElementById('mobile-menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const lines = toggle?.querySelectorAll('.mobile-menu-line');
+  const links = menu?.querySelectorAll('.mobile-menu-link, .mobile-menu-link + div');
+  let isOpen = false;
+
+  toggle?.addEventListener('click', () => {
+    isOpen = !isOpen;
+    toggle.setAttribute('aria-expanded', String(isOpen));
+
+    if (isOpen) {
+      menu?.classList.remove('pointer-events-none', 'opacity-0');
+      menu?.classList.add('pointer-events-auto', 'opacity-100');
+      lines?.forEach((line, i) => {
+        if (i === 0) line.style.transform = 'rotate(45deg) translate(2.5px, 2.5px)';
+        if (i === 1) line.style.transform = 'rotate(-45deg) translate(2.5px, -2.5px)';
+      });
+      // Animate links in
+      menu?.querySelectorAll('.mobile-menu-link, nav > div').forEach((el) => {
+        (el as HTMLElement).style.opacity = '1';
+        (el as HTMLElement).style.transform = 'translateY(0)';
+      });
+    } else {
+      menu?.querySelectorAll('.mobile-menu-link, nav > div').forEach((el) => {
+        (el as HTMLElement).style.opacity = '0';
+        (el as HTMLElement).style.transform = 'translateY(16px)';
+      });
+      lines?.forEach((line) => { line.style.transform = ''; });
+      setTimeout(() => {
+        menu?.classList.remove('pointer-events-auto', 'opacity-100');
+        menu?.classList.add('pointer-events-none', 'opacity-0');
+      }, 300);
+    }
+  });
+</script>

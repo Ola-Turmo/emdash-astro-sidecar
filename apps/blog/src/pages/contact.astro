@@ -35,67 +35,59 @@ const contactSchema = JSON.stringify({
 <BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/contact/" jsonLdScripts={[contactSchema]} breadcrumbItems={breadcrumbItems}>
   <Header />
   <main>
-    <section class="px-3 pb-14 pt-10 sm:px-4 md:pb-24 md:pt-20">
-      <div class="mx-auto max-w-6xl">
-        <div class="grid gap-10 lg:grid-cols-2">
-          <div>
-            <p class="eyebrow">Contact</p>
-            <h1 class="display-title mt-4 text-4xl font-black leading-[1.03] text-slate-950 sm:text-5xl md:text-6xl">
-              Let's Talk AI Search
-            </h1>
-            <p class="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-              Questions about Generative Engine Optimization, pricing, or Enterprise plans? We read every message and respond within one business day.
-            </p>
-            <div class="mt-8 space-y-4">
-              <div class="flex items-center gap-4">
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 text-teal-700">
-                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-bold text-slate-900">Email</p>
-                  <a href={`mailto:${SUPPORT_EMAIL}`} class="text-sm text-slate-600 hover:text-teal-700">{SUPPORT_EMAIL}</a>
-                </div>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 text-teal-700">
-                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-sm font-bold text-slate-900">Response Time</p>
-                  <p class="text-sm text-slate-600">Within 24 hours on business days</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="shell-card p-6 sm:p-8">
-            <form action={`mailto:${SUPPORT_EMAIL}`} method="post" enctype="text/plain" class="space-y-4">
+    <section class="px-4 pt-20 pb-14 md:pt-28 md:pb-20">
+      <div class="section-container">
+        <div class="max-w-2xl reveal">
+          <p class="eyebrow">Contact</p>
+          <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] sm:text-5xl">
+            Let's Talk AI Search
+          </h1>
+          <p class="mt-6 text-lg leading-relaxed text-[var(--ink-secondary)]">
+            Questions about GEO, pricing, or Enterprise? We respond within one business day.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="px-4 pb-24 md:pb-32">
+      <div class="section-container">
+        <div class="max-w-xl">
+          <div class="shell-card p-6 md:p-8 reveal">
+            <form action={`mailto:${SUPPORT_EMAIL}`} method="post" enctype="text/plain" class="space-y-5">
               <div>
-                <label for="name" class="block text-sm font-semibold text-slate-900">Name</label>
-                <input type="text" id="name" name="name" required class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600" />
+                <label for="name" class="block text-sm font-medium mb-1.5">Name</label>
+                <input type="text" id="name" name="name" required placeholder="Your name" class="block w-full rounded-xl border border-[var(--border-strong)] bg-var(--surface)] px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
               </div>
               <div>
-                <label for="email" class="block text-sm font-semibold text-slate-900">Email</label>
-                <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600" />
+                <label for="email" class="block text-sm font-medium mb-1.5">Work Email</label>
+                <input type="email" id="email" name="email" required placeholder="you@company.com" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
               </div>
               <div>
-                <label for="subject" class="block text-sm font-semibold text-slate-900">Subject</label>
-                <select id="subject" name="subject" class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600">
-                  <option>General Inquiry</option>
-                  <option>Sales / Enterprise</option>
-                  <option>Technical Support</option>
-                  <option>Partnerships</option>
-                </select>
+                <label for="company" class="block text-sm font-medium mb-1.5">Company</label>
+                <input type="text" id="company" name="company" placeholder="Acme Inc" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
               </div>
               <div>
-                <label for="message" class="block text-sm font-semibold text-slate-900">Message</label>
-                <textarea id="message" name="message" rows="4" required class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"></textarea>
+                <label for="message" class="block text-sm font-medium mb-1.5">Message</label>
+                <textarea id="message" name="message" required placeholder="Tell us about your project..." rows="4" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors resize-none"></textarea>
               </div>
-              <button type="submit" class="cta-primary w-full">Send Message</button>
+              <button type="submit" class="cta-primary cta-primary--accent w-full justify-center">
+                Send Message
+                <span class="cta-arrow">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+                </span>
+              </button>
             </form>
+          </div>
+
+          <div class="mt-8 grid grid-cols-2 gap-4 reveal reveal-delay-1">
+            <div class="shell-card p-5">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)]">Response time</p>
+              <p class="mt-2 text-sm font-medium">Within 1 business day</p>
+            </div>
+            <div class="shell-card p-5">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)]">Email</p>
+              <p class="mt-2 text-sm font-medium">{SUPPORT_EMAIL}</p>
+            </div>
           </div>
         </div>
       </div>

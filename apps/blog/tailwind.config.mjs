@@ -15,6 +15,10 @@ export default {
         muted: 'hsl(var(--color-muted))',
         'muted-foreground': 'hsl(var(--color-muted-foreground))',
       },
+      fontFamily: {
+        sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'Times New Roman', 'serif'],
+      },
     },
   },
   plugins: [
