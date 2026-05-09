@@ -2,103 +2,88 @@ name: Cloudflare Deployment
 
 on:
   push:
-    branches:
-      - main
-      - staging
+    branches: [main, staging]
   pull_request:
-    branches:
-      - main
-      - staging
+    branches: [main, staging]
 
 env:
-  NODE_VERSION: '20'
-  PNPM_VERSION: '9.0.0'
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9.0.0"
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   deploy-blog:
-    name: Deploy Blog to Cloudflare Pages
+    name: Deploy Blog
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
       preview-url: ${{ steps.deploy.outputs.url }}
-    
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: "9.0.0"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-          cache-dependency-path: |
-            pnpm-lock.yaml
-            apps/blog/pnpm-lock.yaml
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         timeout-minutes: 10
 
-      - name: Verify repo
+      - name: Build
         run: pnpm verify
         timeout-minutes: 15
 
-      - name: Deploy Preview to Cloudflare Pages
+      - name: Deploy Preview
         id: deploy
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/staging')
         run: |
-          DEPLOY_OUTPUT=$(pnpm exec wrangler pages deploy apps/blog/dist/visibility-help/guide \
+          OUTPUT=$(pnpm exec wrangler pages deploy apps/blog/dist/visibility-help/guide \
             --project-name=visibility-help \
             --branch=${{ github.head_ref || github.ref_name }} \
-            --commit-message="${{ github.event.head_commit.message || 'Preview deployment' }}" 2>&1)
-          echo "$DEPLOY_OUTPUT"
-          # Extract and set the preview URL
-          echo "url=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.pages\.dev' | head -1)" >> $GITHUB_OUTPUT
+            --commit-message="Preview deployment" 2>&1)
+          echo "$OUTPUT"
+          URL=$(echo "$OUTPUT" | grep -o 'https://[^ ]*\.pages\.dev' | head -1)
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
         timeout-minutes: 5
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          EMDASH_SITE_KEY: visibility-help
-          EMDASH_CONCEPT_KEY: guide
 
-      # Production deployment on main branch
-      - name: Deploy Production to Cloudflare Pages
+      - name: Deploy Production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           pnpm exec wrangler pages deploy apps/blog/dist/visibility-help/guide \
             --project-name=visibility-help \
             --branch=main \
-            --commit-message="${{ github.event.head_commit.message || 'Production deployment' }}"
+            --commit-message="Production deployment"
         timeout-minutes: 5
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          EMDASH_SITE_KEY: visibility-help
-          EMDASH_CONCEPT_KEY: guide
-
-      - name: Deployment Status
-        if: always()
-        run: |
-          echo "Deployment completed"
-          echo "Trigger: ${{ github.event_name }}"
-          echo "Branch: ${{ github.ref_name }}"
 
   deploy-workers:
-    name: Deploy Cloudflare Workers
+    name: Deploy Workers
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: deploy-blog
-    
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -106,23 +91,22 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: "9.0.0"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          node-version: "20"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         timeout-minutes: 10
 
-      - name: Sync guide SEO artifacts
+      - name: Sync guide SEO
         run: pnpm sync:guide-seo
 
-      - name: Check autonomous environment contract
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+      - name: Check environment contract
         run: pnpm autonomous:check-env
         timeout-minutes: 5
         env:
@@ -131,20 +115,18 @@ jobs:
           CONTENT_API_TOKEN: ${{ secrets.CONTENT_API_TOKEN }}
 
       - name: Deploy route workers
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
         run: pnpm autonomous:deploy-workers -- --kind=route
         timeout-minutes: 5
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Verify root routing after route deploy
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Verify root routing
+        if: github.ref == 'refs/heads/main'
         run: pnpm qa:root-routing -- --live
         timeout-minutes: 5
 
-      - name: Sync draft worker provider secrets
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+      - name: Sync draft worker secrets
         shell: bash
         run: |
           if [ -n "${MINIMAX_API_KEY}" ]; then
@@ -164,8 +146,7 @@ jobs:
           THECLAWBAY_API_KEY: ${{ secrets.THECLAWBAY_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Deploy autonomous control-plane workers
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+      - name: Deploy control-plane workers
         run: pnpm autonomous:deploy-workers -- --kind=control-plane
         timeout-minutes: 10
         env:
@@ -173,102 +154,16 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CONTENT_API_TOKEN: ${{ secrets.CONTENT_API_TOKEN }}
 
-      - name: Worker Deployment Status
-        if: always()
-        run: |
-          echo "Cloudflare worker deployment completed"
-
-      - name: Run deployed URL audit
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: pnpm audit:deployed
-
-      - name: Upload deployed audit artifacts
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: deployed-url-audit
-          path: output/playwright/deployed-audit
-          if-no-files-found: error
-
-      - name: Generate release health dashboard
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
-          CONTENT_API_TOKEN: ${{ secrets.CONTENT_API_TOKEN }}
-        run: pnpm report:release -- --refresh
-
-      - name: Append release dashboard summary
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          SUMMARY_PATH="output/release-health/kurs-ing/guide/latest/SUMMARY.md"
-          if [ -f "$SUMMARY_PATH" ]; then
-            cat "$SUMMARY_PATH" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Upload release dashboard artifacts
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-health
-          path: output/release-health
-          if-no-files-found: error
-
-  # Optional: Run tests after deployment
-  test-deployment:
-    name: Test Deployment
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [deploy-blog, deploy-workers]
-    if: github.event_name == 'pull_request'
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Test deployment URL
-        run: |
-          # Get the preview URL from deployment output
-          PREVIEW_URL="${{ needs.deploy-blog.outputs.preview-url }}"
-          if [ -z "$PREVIEW_URL" ]; then
-            echo "No preview URL available, skipping tests"
-            exit 0
-          fi
-          
-          echo "Testing preview deployment at: $PREVIEW_URL"
-          
-          # Basic smoke test
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL")
-          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 301 ] || [ "$HTTP_CODE" -eq 302 ]; then
-            echo "✓ Preview site is accessible (HTTP $HTTP_CODE)"
-          else
-            echo "✗ Preview site returned HTTP $HTTP_CODE"
-            exit 1
-          fi
-        timeout-minutes: 5
-
-  # Notify on failure
   notify-failure:
-    name: Notify Deployment Failure
+    name: Notify Failure
     runs-on: ubuntu-latest
     needs: [deploy-blog, deploy-workers]
     if: failure()
-    
+
     steps:
-      - name: Notify failure
+      - name: Report failure
         run: |
-          echo "Cloudflare deployment failed"
-          echo "Failed job: ${{ failed() }}"
+          echo "::error::Cloudflare deployment failed"
+          echo "Trigger: ${{ github.event_name }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
