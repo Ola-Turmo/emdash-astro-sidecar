@@ -4,7 +4,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://emdash-metrics-worker.ola-turmo.workers.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://emdash-metrics-worker.ola-turmo.workers.dev https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';
-  Link: </fonts/geist-sans.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/instrument-serif.woff2>; rel=preload; as=font; type=font/woff2; crossorigin
+  Link: </fonts/geist-sans.woff2>; rel=preload; as=font; type=font/woff2; crossorigin, </fonts/playfair-display.woff2>; rel=preload; as=font; type=font/woff2; crossorigin
 
 /*.woff2
   Cache-Control: public, max-age=31536000, immutable

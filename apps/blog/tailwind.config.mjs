@@ -5,7 +5,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
-        serif: ['Instrument Serif', 'Georgia', 'serif'],
+        serif: ['Playfair Display', 'Georgia', 'Times New Roman', 'serif'],
         mono: ['Geist Mono', 'ui-monospace', 'SF Mono', 'monospace'],
       },
       colors: {
@@ -15,13 +15,7 @@ export default {
         muted: 'hsl(var(--color-muted))',
         'muted-foreground': 'hsl(var(--color-muted-foreground))',
       },
-      fontFamily: {
-        sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
-        serif: ['Playfair Display', 'Georgia', 'Times New Roman', 'serif'],
-      },
     },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [],
 };
