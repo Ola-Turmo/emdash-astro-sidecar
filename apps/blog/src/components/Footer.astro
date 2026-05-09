@@ -10,55 +10,60 @@ import {
 } from '../consts';
 
 const currentYear = new Date().getFullYear();
+const footerNav = [
+  { href: blogPath('/rss.xml'), label: 'RSS' },
+  { href: blogPath('/sitemap.xml'), label: 'Sitemap' },
+  { href: MAIN_SITE_URL, label: SITE_WORDMARK },
+  { href: `mailto:${SUPPORT_EMAIL}`, label: 'Email' },
+];
 ---
 
-<footer class="mt-16 bg-slate-950 text-slate-300 sm:mt-24">
-  <div class="mx-auto grid max-w-6xl gap-10 px-3 py-12 sm:px-4 sm:py-14 md:grid-cols-[1.1fr,1fr]">
-    <div class="space-y-4">
-      <p class="eyebrow text-emerald-300">{SHELL_COPY.footerEyebrow}</p>
-      <h2 class="display-title text-2xl font-bold text-white sm:text-3xl md:text-4xl">
-        {SHELL_COPY.footerTitle}
-      </h2>
-      <p class="max-w-2xl text-sm leading-6 text-slate-300 sm:leading-7">
-        {SHELL_COPY.footerDescription}
-      </p>
-      <div class="flex flex-wrap gap-3">
-        <a href={PRIMARY_CTA.href} class="cta-primary text-sm">
-          {PRIMARY_CTA.label}
-        </a>
-        <a href={`mailto:${SUPPORT_EMAIL}`} class="cta-secondary text-sm !border-slate-700 !bg-slate-900 !text-white">
-          {SHELL_COPY.footerContactLabel}
-        </a>
-      </div>
-    </div>
-
-    <div class="grid gap-8 sm:grid-cols-2 sm:gap-10">
-      <div>
-        <p class="text-sm font-bold uppercase tracking-[0.18em] text-white">{SHELL_COPY.footerOffersLabel}</p>
-        <div class="mt-4 space-y-4">
-          {COURSE_LINKS.map((link: (typeof COURSE_LINKS)[number]) => (
-            <a href={link.href} class="block transition-colors hover:text-white">
-              <span class="block text-sm font-semibold">{link.label}</span>
-              <span class="block text-sm text-slate-300">{link.description}</span>
-            </a>
-          ))}
+<footer class="mt-24 border-t border-[var(--color-border)]">
+  <div class="mx-auto max-w-6xl px-4 pt-16 pb-12 md:pt-24 md:pb-16">
+    <div class="grid gap-12 md:grid-cols-[1.2fr,0.8fr]">
+      <div class="space-y-5">
+        <p class="eyebrow">{SHELL_COPY.footerEyebrow}</p>
+        <h2 class="display-title text-2xl font-semibold text-[var(--color-ink)] md:text-3xl">
+          {SHELL_COPY.footerTitle}
+        </h2>
+        <p class="max-w-xl text-[0.9375rem] leading-7 text-[var(--color-muted)]">
+          {SHELL_COPY.footerDescription}
+        </p>
+        <div class="flex flex-wrap gap-3 pt-1">
+          <a href={PRIMARY_CTA.href} class="cta-primary">{PRIMARY_CTA.label}</a>
+          <a href={`mailto:${SUPPORT_EMAIL}`} class="cta-secondary">{SHELL_COPY.footerContactLabel}</a>
         </div>
       </div>
 
-      <div>
-        <p class="text-sm font-bold uppercase tracking-[0.18em] text-white">{SHELL_COPY.footerTechnicalLabel}</p>
-        <div class="mt-4 space-y-4 text-sm">
-          <a href={blogPath('/rss.xml')} class="block transition-colors hover:text-white">RSS-feed</a>
-          <a href={blogPath('/sitemap.xml')} class="block transition-colors hover:text-white">Sitemap</a>
-          <a href={MAIN_SITE_URL} class="block transition-colors hover:text-white">{SITE_WORDMARK}</a>
-          <a href={`mailto:${SUPPORT_EMAIL}`} class="block transition-colors hover:text-white">{SUPPORT_EMAIL}</a>
+      <div class="grid gap-10 sm:grid-cols-2 md:gap-8">
+        {COURSE_LINKS.length > 0 && (
+          <div>
+            <p class="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink)]">{SHELL_COPY.footerOffersLabel}</p>
+            <div class="space-y-3">
+              {COURSE_LINKS.map((link: (typeof COURSE_LINKS)[number]) => (
+                <a href={link.href} class="block transition-colors hover:text-[var(--color-accent)]">
+                  <span class="block text-sm font-medium text-[var(--color-ink)]">{link.label}</span>
+                  <span class="block text-sm text-[var(--color-muted)]">{link.description}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <p class="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-ink)]">{SHELL_COPY.footerTechnicalLabel}</p>
+          <div class="space-y-2.5 text-sm">
+            {footerNav.map((link) => (
+              <a href={link.href} class="block text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]">{link.label}</a>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="border-t border-slate-800/80">
-    <div class="mx-auto flex max-w-6xl flex-col gap-3 px-3 py-5 text-sm text-slate-300 sm:px-4 md:flex-row md:items-center md:justify-between">
+  <div class="border-t border-[var(--color-border)]">
+    <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-sm text-[var(--color-muted)] md:flex-row md:items-center md:justify-between">
       <p>&copy; {currentYear} {SITE_WORDMARK}. {SHELL_COPY.footerCopyright}</p>
       <p>{SHELL_COPY.footerNote}</p>
     </div>

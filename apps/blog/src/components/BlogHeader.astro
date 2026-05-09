@@ -15,31 +15,29 @@ const isActive = (href: string) => {
 };
 ---
 
-<header class="header-component">
-  <nav class="container mx-auto max-w-4xl px-4">
-    <div class="flex h-16 items-center justify-between">
-      <a href={blogPath('/')} class="flex items-center gap-2 text-xl font-bold transition-colors hover:text-primary">
-        <span>{SITE_NAME}</span>
-      </a>
+<header class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[52rem]">
+  <nav class="mx-auto flex items-center justify-between gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/90 px-5 py-3 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <a href={blogPath('/')} class="text-base font-semibold tracking-tight text-[var(--color-ink)] transition-opacity hover:opacity-70">
+      {SITE_NAME}
+    </a>
 
-      <div class="hidden items-center gap-6 md:flex">
-        {navItems.map((item: (typeof navItems)[number]) => (
-          <a
-            href={item.href}
-            class:list={[
-              'text-sm font-medium transition-colors hover:text-primary',
-              isActive(item.href) ? 'text-primary' : 'text-muted-foreground',
-            ]}
-            aria-current={isActive(item.href) ? 'page' : undefined}
-          >
-            {item.label}
-          </a>
-        ))}
-      </div>
-
-      <a href={blogPath('/rss.xml')} class="text-sm text-muted-foreground transition-colors hover:text-foreground">
-        RSS
-      </a>
+    <div class="hidden items-center gap-7 md:flex">
+      {navItems.map((item: (typeof navItems)[number]) => (
+        <a
+          href={item.href}
+          class:list={[
+            'text-[0.8125rem] font-medium transition-colors',
+            isActive(item.href) ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]',
+          ]}
+          aria-current={isActive(item.href) ? 'page' : undefined}
+        >
+          {item.label}
+        </a>
+      ))}
     </div>
+
+    <a href={blogPath('/rss.xml')} class="text-xs font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]">
+      RSS
+    </a>
   </nav>
 </header>

@@ -3,6 +3,11 @@ export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Instrument Serif', 'Georgia', 'serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'SF Mono', 'monospace'],
+      },
       colors: {
         primary: 'hsl(var(--color-primary))',
         secondary: 'hsl(var(--color-secondary))',

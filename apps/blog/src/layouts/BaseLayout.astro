@@ -28,7 +28,6 @@ interface Props {
   author?: string;
   schemaType?: string;
   jsonLdScripts?: string[];
-  breadcrumbItems?: { name: string; url: string }[];
 }
 
 const {
@@ -41,7 +40,6 @@ const {
   author,
   schemaType = 'BlogPosting',
   jsonLdScripts = [],
-  breadcrumbItems = [],
 } = Astro.props;
 
 const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
@@ -56,10 +54,6 @@ const organizationSchema = JSON.stringify({
   url: MAIN_SITE_URL,
   email: SUPPORT_EMAIL,
   sameAs: [MAIN_SITE_URL],
-  logo: {
-    '@type': 'ImageObject',
-    url: `${MAIN_SITE_URL}/favicon.svg`,
-  },
 });
 
 const websiteSchema = JSON.stringify({
@@ -72,73 +66,6 @@ const websiteSchema = JSON.stringify({
     '@type': 'Organization',
     name: MAIN_SITE_NAME,
     url: MAIN_SITE_URL,
-  },
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: {
-      '@type': 'EntryPoint',
-      urlTemplate: `${SITE_URL}/blog?q={search_term_string}`,
-    },
-    'query-input': 'required name=search_term_string',
-  },
-});
-
-const softwareAppSchema = JSON.stringify({
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'Visibility.help',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'Any',
-  url: SITE_URL,
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
-  },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    ratingCount: '124',
-  },
-});
-
-const breadcrumbSchema = breadcrumbItems.length > 0
-  ? JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-        ...breadcrumbItems.map((item, index) => ({
-          '@type': 'ListItem',
-          position: index + 2,
-          name: item.name,
-          item: item.url,
-        })),
-      ],
-    })
-  : null;
-
-const webPageSchema = JSON.stringify({
-  '@context': 'https://schema.org',
-  '@type': 'WebPage',
-  name: title,
-  description,
-  url: canonical,
-  inLanguage: SITE_LOCALE,
-  datePublished: pubDate?.toISOString(),
-  dateModified: (updatedDate || pubDate)?.toISOString(),
-  author: author
-    ? { '@type': 'Person', name: author }
-    : { '@type': 'Organization', name: MAIN_SITE_NAME },
-  publisher: {
-    '@type': 'Organization',
-    name: MAIN_SITE_NAME,
-    url: MAIN_SITE_URL,
-  },
-  isPartOf: {
-    '@type': 'WebSite',
-    name: SITE_NAME,
-    url: SITE_URL,
   },
 });
 
@@ -157,13 +84,13 @@ const rumConfigScript = JSON.stringify({
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content="#115E59" />
-    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+    <meta name="theme-color" content="#111111" />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <meta name="author" content={author || MAIN_SITE_NAME} />
-    <meta name="color-scheme" content="light" />
     <link rel="canonical" href={canonical} />
-
-    <!-- Open Graph -->
+    <link rel="dns-prefetch" href={`${BLOG_BASE_PATH === '/' ? '' : BLOG_BASE_PATH}/fonts/`} />
+    <link rel="preload" href={`${BLOG_BASE_PATH === '/' ? '' : BLOG_BASE_PATH}/fonts/geist-sans.woff2`} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={`${BLOG_BASE_PATH === '/' ? '' : BLOG_BASE_PATH}/fonts/instrument-serif.woff2`} as="font" type="font/woff2" crossorigin />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content={ogType} />
@@ -171,35 +98,32 @@ const rumConfigScript = JSON.stringify({
     <meta property="og:image" content={ogImage} />
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:locale" content={SITE_LOCALE.replace('-', '_')} />
-    {pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
-    {updatedDate && <meta property="article:modified_time" content={updatedDate.toISOString()} />}
-    {author && <meta property="article:author" content={author} />}
-
-    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
-
-    <!-- Resource Hints -->
-    <link rel="preconnect" href="https://visibility.help" />
-    <link rel="dns-prefetch" href="https://emdash-metrics-worker.ola-turmo.workers.dev" />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="preload" href={blogPath('/fonts/manrope.woff2')} as="font" type="font/woff2" crossorigin />
-
+    {pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
+    {updatedDate && <meta property="article:modified_time" content={updatedDate.toISOString()} />}
+    {author && <meta property="article:author" content={author} />}
     <title>{fullTitle}</title>
-
-    <!-- Structured Data -->
     <script is:inline type="application/ld+json" set:html={organizationSchema} />
     <script is:inline type="application/ld+json" set:html={websiteSchema} />
-    <script is:inline type="application/ld+json" set:html={softwareAppSchema} />
-    <script is:inline type="application/ld+json" set:html={webPageSchema} />
-    {breadcrumbSchema && <script is:inline type="application/ld+json" set:html={breadcrumbSchema} />}
     {jsonLdScripts.map((script) => <script is:inline type="application/ld+json" set:html={script} />)}
   </head>
   <body class="antialiased">
     <slot />
     <script is:inline set:html={`window.__EMDASH_RUM__ = ${rumConfigScript};`} />
     <script is:inline set:html={rumClientScript} />
+    <script is:inline>
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+    </script>
   </body>
 </html>

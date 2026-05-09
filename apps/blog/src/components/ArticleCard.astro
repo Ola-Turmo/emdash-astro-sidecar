@@ -11,29 +11,29 @@ const { post } = Astro.props;
 const { title, excerpt, pubDate, featuredImage, category } = post.data;
 const categoryId = typeof category === 'string' ? category : ('id' in category ? category.id : category.slug);
 const categoryEntry = categoryId ? await getEntry('categories', categoryId) : undefined;
-const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
+const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Article';
 ---
 
-<article class="shell-card group overflow-hidden p-5 md:p-6">
-  <a href={articlePath(post.slug)} class="block">
+<article class="shell-card group overflow-hidden reveal">
+  <a href={articlePath(post.slug)} class="block p-5 md:p-6">
     {featuredImage ? (
-      <div class="mb-5 aspect-[1.4] overflow-hidden rounded-[1.35rem] bg-slate-100">
+      <div class="mb-5 aspect-[1.5] overflow-hidden rounded-lg bg-[var(--color-canvas)]">
         <img
           src={featuredImage.src}
           alt={featuredImage.alt}
-          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          class="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
           loading="lazy"
         />
       </div>
     ) : (
-      <div class="mb-5 rounded-[1.35rem] bg-gradient-to-br from-teal-50 via-white to-slate-100 p-6">
-        <span class="eyebrow">{SHELL_COPY.articleContextLabel}</span>
-        <div class="mt-5 flex items-end justify-between gap-4">
+      <div class="mb-5 rounded-lg bg-[var(--color-accent-muted)] p-5">
+        <span class="tag-badge">{SHELL_COPY.articleContextLabel}</span>
+        <div class="mt-4 flex items-end justify-between gap-4">
           <div>
-            <p class="display-title text-2xl font-bold text-slate-900">{categoryName}</p>
-            <p class="mt-2 max-w-xs text-sm leading-6 text-slate-600">{excerpt}</p>
+            <p class="display-title text-xl font-semibold text-[var(--color-ink)]">{categoryName}</p>
+            <p class="mt-1 max-w-xs text-sm leading-6 text-[var(--color-muted)]">{excerpt}</p>
           </div>
-          <span class="rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-teal-700">
+          <span class="tag-badge !bg-[var(--color-ink)] !text-white">
             {SHELL_COPY.articleLanguageBadge}
           </span>
         </div>
@@ -41,22 +41,16 @@ const categoryName = categoryEntry?.data.name ?? categoryId ?? 'Artikkel';
     )}
 
     <span class="eyebrow">{categoryName}</span>
-    <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 transition-colors group-hover:text-teal-800">
+    <h3 class="mt-2 text-xl font-semibold tracking-tight text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent)]">
       {title}
     </h3>
-    <p class="mt-3 line-clamp-3 text-sm leading-7 text-slate-600">{excerpt}</p>
+    <p class="mt-2 line-clamp-2 text-[0.9375rem] leading-7 text-[var(--color-muted)]">{excerpt}</p>
 
-    <div class="mt-5 flex items-center justify-between gap-4 text-sm">
-      <time class="font-semibold text-slate-500" datetime={pubDate.toISOString()}>
-        {pubDate.toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
+    <div class="mt-4 flex items-center justify-between gap-4 text-sm">
+      <time class="font-mono text-xs text-[var(--color-muted)]" datetime={pubDate.toISOString()}>
+        {pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
       </time>
-      <span class="font-bold text-teal-700">{SHELL_COPY.articlePrimaryActionText}</span>
+      <span class="text-sm font-medium text-[var(--color-accent)]">{SHELL_COPY.articlePrimaryActionText}</span>
     </div>
   </a>
-
-  <div class="mt-5 border-t border-slate-200/80 pt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-    <a href={SECONDARY_CTA.href} class="transition-colors hover:text-slate-900">{SECONDARY_CTA.label}</a>
-    <span class="mx-2">/</span>
-    <a href={PRIMARY_CTA.href} class="transition-colors hover:text-slate-900">{PRIMARY_CTA.label}</a>
-  </div>
 </article>

@@ -23,61 +23,61 @@ const heroImageSrc = heroImage?.src
   : null;
 ---
 
-<article class="shell-card group overflow-hidden p-5 md:p-6">
-  <a href={articlePath(page.slug)} class="block">
+<article class="shell-card group overflow-hidden reveal">
+  <a href={articlePath(page.slug)} class="block p-5 md:p-6">
     {heroImage && (
-      <div class="-mx-5 -mt-5 mb-5 overflow-hidden md:-mx-6 md:-mt-6">
+      <div class="-mx-5 -mt-5 mb-5 overflow-hidden rounded-t-[11px] md:-mx-6 md:-mt-6">
         <img
           src={heroImageSrc}
           alt={heroImage.alt}
-          class="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          class="h-44 w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
           loading="lazy"
         />
       </div>
     )}
 
     <span class="eyebrow">{county || SHELL_COPY.directoryCard?.metaFallback || SHELL_COPY.directorySearchMetaFallback}</span>
-    <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 transition-colors group-hover:text-teal-800">
+    <h3 class="mt-2 text-xl font-semibold tracking-tight text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent)]">
       {municipality}
     </h3>
-    <p class="mt-3 text-sm leading-7 text-slate-600">
+    <p class="mt-2 text-sm leading-7 text-[var(--color-muted)]">
       {municipalityView.cardSummary}
     </p>
 
-    <dl class="mt-5 grid gap-3 text-sm text-slate-600">
+    <dl class="mt-4 grid gap-2.5 text-sm text-[var(--color-muted)]">
       {municipalityNumber && (
         <div>
-          <dt class="font-bold text-slate-900">{SHELL_COPY.directoryCard?.municipalityNumberLabel}</dt>
+          <dt class="font-medium text-[var(--color-ink)]">{SHELL_COPY.directoryCard?.municipalityNumberLabel}</dt>
           <dd>{municipalityNumber}</dd>
         </div>
       )}
       {publicRecordsPlatform && (
         <div>
-          <dt class="font-bold text-slate-900">{SHELL_COPY.directoryCard?.publicRecordsLabel}</dt>
+          <dt class="font-medium text-[var(--color-ink)]">{SHELL_COPY.directoryCard?.publicRecordsLabel}</dt>
           <dd>{publicRecordsPlatform}</dd>
         </div>
       )}
       {municipalitySitePlatform && (
         <div>
-          <dt class="font-bold text-slate-900">{SHELL_COPY.directoryCard?.websiteLabel}</dt>
+          <dt class="font-medium text-[var(--color-ink)]">{SHELL_COPY.directoryCard?.websiteLabel}</dt>
           <dd>{municipalitySitePlatform}</dd>
         </div>
       )}
       {summaryRows.map((row) => (
         <div>
-          <dt class="font-bold text-slate-900">{row.label}</dt>
+          <dt class="font-medium text-[var(--color-ink)]">{row.label}</dt>
           <dd>{row.value}</dd>
         </div>
       ))}
     </dl>
 
-    <div class="mt-5 flex items-center justify-between gap-4 text-sm">
-      <span class="font-semibold text-slate-500">{county || 'Norge'}</span>
-      <span class="font-bold text-teal-700">{SHELL_COPY.articlePrimaryActionText}</span>
+    <div class="mt-4 flex items-center justify-between gap-4 text-sm">
+      <span class="text-[var(--color-muted)]">{county || 'Norge'}</span>
+      <span class="font-medium text-[var(--color-accent)]">{SHELL_COPY.articlePrimaryActionText}</span>
     </div>
   </a>
 
-  <div class="mt-5 border-t border-slate-200/80 pt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-    <a href={PRIMARY_CTA.href} class="transition-colors hover:text-slate-900">{PRIMARY_CTA.label}</a>
+  <div class="border-t border-[var(--color-border)] px-5 py-3 md:px-6">
+    <a href={PRIMARY_CTA.href} class="text-xs font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]">{PRIMARY_CTA.label}</a>
   </div>
 </article>
