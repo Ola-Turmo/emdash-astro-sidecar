@@ -106,13 +106,13 @@ const navItems = MAIN_NAV;
       });
       // Animate links in
       menu?.querySelectorAll('.mobile-menu-link, nav > div').forEach((el) => {
-        (el as HTMLElement).style.opacity = '1';
-        (el as HTMLElement).style.transform = 'translateY(0)';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
       });
     } else {
       menu?.querySelectorAll('.mobile-menu-link, nav > div').forEach((el) => {
-        (el as HTMLElement).style.opacity = '0';
-        (el as HTMLElement).style.transform = 'translateY(16px)';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(16px)';
       });
       lines?.forEach((line) => { line.style.transform = ''; });
       setTimeout(() => {

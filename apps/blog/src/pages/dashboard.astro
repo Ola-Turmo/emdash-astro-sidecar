@@ -166,20 +166,20 @@ async function loadDashboard() {
     
     // Update stats
     const stats = data.stats || {};
-    document.getElementById('stat-published').textContent = stats.articlesPublished || 0;
-    document.getElementById('stat-generated').textContent = stats.articlesGenerated || 0;
-    document.getElementById('stat-sites').textContent = stats.sitesConnected || 0;
-    document.getElementById('stat-seo').textContent = stats.seoScore ? `${stats.seoScore}/100` : '--';
+    document.getElementById('stat-published')!.textContent = stats.articlesPublished || 0;
+    document.getElementById('stat-generated')!.textContent = stats.articlesGenerated || 0;
+    document.getElementById('stat-sites')!.textContent = stats.sitesConnected || 0;
+    document.getElementById('stat-seo')!.textContent = stats.seoScore ? `${stats.seoScore}/100` : '--';
     
     // Update setup progress
     const projects = data.projects || [];
     let completed = 0;
     if (data.user?.name && data.user?.company) completed++;
     if (projects.length > 0) completed++;
-    if (projects.some(p => p.content_topics)) completed++;
+    if (projects.some((p: any) => p.content_topics)) completed++;
     // Article generation always pending for now
     
-    document.getElementById('setup-progress').textContent = `${completed}/4`;
+    document.getElementById('setup-progress')!.textContent = `${completed}/4`;
     
     // Mark completed steps
     const steps = ['profile', 'connect', 'topics', 'generate'];
@@ -188,8 +188,8 @@ async function loadDashboard() {
         const el = document.querySelector(`[data-step="${step}"]`);
         if (el) {
           el.classList.add('border-[var(--accent)]', 'bg-[var(--accent-bg)]');
-          el.querySelector('.rounded-full').classList.add('bg-[var(--accent)]', 'border-[var(--accent)]');
-          el.querySelector('.check-icon').classList.remove('hidden');
+          el.querySelector('.rounded-full')!.classList.add('bg-[var(--accent)]', 'border-[var(--accent)]');
+          el.querySelector('.check-icon')!.classList.remove('hidden');
           const link = el.querySelector('a');
           if (link) link.textContent = 'Done';
         }
@@ -198,7 +198,7 @@ async function loadDashboard() {
     
   } catch (err) {
     console.error('Dashboard load failed:', err);
-    document.getElementById('user-greeting').textContent = 'Welcome to Emdash. Sign up to start generating content.';
+    document.getElementById('user-greeting')!.textContent = 'Welcome to Emdash. Sign up to start generating content.';
   }
 }
 

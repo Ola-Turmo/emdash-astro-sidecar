@@ -71,20 +71,20 @@ const description = 'Start your free Emdash account. No credit card required. St
 </BaseLayout>
 
 <script>
-let mode = 'signup';
+let mode: string = 'signup';
 
-const form = document.getElementById('auth-form');
-const toggleBtn = document.getElementById('toggle-mode');
-const toggleText = document.getElementById('toggle-text');
-const formTitle = document.getElementById('form-title');
-const formSubtitle = document.getElementById('form-subtitle');
-const submitBtn = document.getElementById('submit-btn');
-const nameField = document.getElementById('name-field');
-const extraFields = document.getElementById('extra-fields');
-const errorDiv = document.getElementById('form-error');
-const successDiv = document.getElementById('form-success');
+const form = document.getElementById('auth-form') as HTMLFormElement;
+const toggleBtn = document.getElementById('toggle-mode') as HTMLButtonElement;
+const toggleText = document.getElementById('toggle-text')!;
+const formTitle = document.getElementById('form-title')!;
+const formSubtitle = document.getElementById('form-subtitle')!;
+const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+const nameField = document.getElementById('name-field')!;
+const extraFields = document.getElementById('extra-fields')!;
+const errorDiv = document.getElementById('form-error')!;
+const successDiv = document.getElementById('form-success')!;
 
-function setMode(newMode) {
+function setMode(newMode: string) {
   mode = newMode;
   if (mode === 'login') {
     formTitle.textContent = 'Welcome Back';
@@ -116,15 +116,15 @@ form.addEventListener('submit', async (e) => {
   submitBtn.disabled = true;
   submitBtn.classList.add('opacity-70');
   
-  const formData = {
-    email: document.getElementById('email').value,
-    password: document.getElementById('password').value,
+  const formData: Record<string, string> = {
+    email: (document.getElementById('email') as HTMLInputElement).value,
+    password: (document.getElementById('password') as HTMLInputElement).value,
   };
   
   if (mode === 'signup') {
-    formData.name = document.getElementById('name').value;
-    formData.company = document.getElementById('company').value;
-    formData.website = document.getElementById('website').value;
+    formData.name = (document.getElementById('name') as HTMLInputElement).value;
+    formData.company = (document.getElementById('company') as HTMLInputElement).value;
+    formData.website = (document.getElementById('website') as HTMLInputElement).value;
   }
   
   try {
