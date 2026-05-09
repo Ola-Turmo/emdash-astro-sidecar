@@ -293,8 +293,8 @@ const siteProfiles = {
       logoMark: 'v',
     },
     cloudflare: {
-      pagesProject: 'emdash-astro-sidecar',
-      pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
+      pagesProject: 'visibility-help',
+      pagesPreviewAlias: 'visibility-help.pages.dev',
     },
     telemetry: {
       rumEndpoint: 'https://emdash-metrics-worker.ola-turmo.workers.dev/rum',

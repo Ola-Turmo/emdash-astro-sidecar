@@ -15,16 +15,27 @@ on:
           - production
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.site_key }}-${{ matrix.concept_key }}
   cancel-in-progress: false
 
 jobs:
-  deploy-preview:
-    name: Deploy Preview
+  deploy:
+    name: Deploy ${{ matrix.site_key }}/${{ matrix.concept_key }}
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.inputs.environment == 'preview'
+    if: github.event_name == 'push' || github.event.inputs.environment == 'preview' || github.event.inputs.environment == 'production'
+    strategy:
+      matrix:
+        include:
+          - site_key: kurs-ing
+            concept_key: guide
+            project_name: emdash-astro-sidecar
+            directory: apps/blog/dist/kurs-ing/guide
+          - site_key: visibility-help
+            concept_key: guide
+            project_name: visibility-help
+            directory: apps/blog/dist/visibility-help/guide
     environment:
-      name: preview
+      name: ${{ github.event.inputs.environment || 'preview' }}
       url: ${{ steps.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v4
@@ -44,47 +55,18 @@ jobs:
       - name: Verify repo
         run: pnpm verify
 
-      - name: Deploy to Cloudflare Pages (Preview)
+      - name: Build Astro (${{ matrix.site_key }}/${{ matrix.concept_key }})
+        env:
+          EMDASH_SITE_KEY: ${{ matrix.site_key }}
+          EMDASH_CONCEPT_KEY: ${{ matrix.concept_key }}
+        run: pnpm --filter blog build
+
+      - name: Deploy to Cloudflare Pages (${{ matrix.site_key }}/${{ matrix.concept_key }})
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: emdash-astro-sidecar
-          directory: apps/blog/dist/kurs-ing/guide
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          wranglerVersion: '3'
-
-  deploy-production:
-    name: Deploy Production
-    runs-on: ubuntu-latest
-    if: github.event.inputs.environment == 'production'
-    environment:
-      name: production
-      url: ${{ vars.PRODUCTION_SITE_URL }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.0.0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Verify repo
-        run: pnpm verify
-
-      - name: Deploy to Cloudflare Pages (Production)
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: emdash-astro-sidecar
-          directory: apps/blog/dist/kurs-ing/guide
+          projectName: ${{ matrix.project_name }}
+          directory: ${{ matrix.directory }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: '3'
