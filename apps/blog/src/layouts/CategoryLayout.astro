@@ -18,25 +18,25 @@ const { name, description } = category.data;
   <Header />
 
   <main>
-    <section class="px-4 py-16">
+    <section class="section-container py-16 reveal">
       <div class="mx-auto max-w-6xl">
         <span class="eyebrow">{SHELL_COPY.contentMeta.categoryEyebrow}</span>
-        <h1 class="display-title mt-3 text-4xl font-bold text-slate-950 md:text-5xl">{name}</h1>
-        {description && <p class="mt-4 max-w-2xl text-lg leading-8 text-slate-600">{description}</p>}
+        <h1 class="display-title mt-3 text-4xl font-bold text-[var(--ink)] md:text-5xl">{name}</h1>
+        {description && <p class="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-secondary)]">{description}</p>}
       </div>
     </section>
 
-    <section class="mx-auto max-w-6xl px-4 pb-12">
+    <section class="mx-auto max-w-6xl px-4 pb-12 reveal">
       <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {posts.map((post) => (
           <div class="shell-card p-6">
-            <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">
-              <a href={articlePath(post.slug)} class="transition-colors hover:text-teal-800">
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--ink)]">
+              <a href={articlePath(post.slug)} class="transition-colors hover:text-[var(--accent)]">
                 {post.data.title}
               </a>
             </h2>
-            <p class="mt-3 text-sm leading-7 text-slate-600">{post.data.excerpt}</p>
-            <div class="mt-5 text-sm font-semibold text-slate-500">
+            <p class="mt-3 text-sm leading-7 text-[var(--ink-secondary)]">{post.data.excerpt}</p>
+            <div class="mt-5 text-sm font-medium text-[var(--ink-tertiary)]">
               <time datetime={post.data.pubDate.toISOString()}>
                 {post.data.pubDate.toLocaleDateString('nb-NO')}
               </time>
@@ -46,7 +46,7 @@ const { name, description } = category.data;
       </div>
 
       {posts.length === 0 && (
-        <p class="py-12 text-center text-slate-500">{SHELL_COPY.contentMeta.categoryEmptyText}</p>
+        <p class="py-12 text-center text-[var(--ink-secondary)]">{SHELL_COPY.contentMeta.categoryEmptyText}</p>
       )}
     </section>
   </main>

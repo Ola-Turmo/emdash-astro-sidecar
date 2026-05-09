@@ -133,6 +133,13 @@
     box-shadow: 0 8px 32px -8px rgba(15, 23, 42, 0.08);
   }
 
+  /* Inner card (nested within shell-card) */
+  .inner-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
   /* Eyebrow label */
   .eyebrow {
     color: var(--accent);

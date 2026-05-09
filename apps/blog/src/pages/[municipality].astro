@@ -1,4 +1,4 @@
-﻿---
+---
 import type { CollectionEntry } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import Footer from '../components/Footer.astro';
@@ -64,13 +64,13 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
 
   <main class="mx-auto max-w-6xl px-3 py-8 sm:px-4 md:py-14">
     <article>
-      <div class="mx-auto max-w-4xl">
+      <div class="mx-auto max-w-4xl reveal">
         <p class="eyebrow">{SHELL_COPY.articleContextLabel}</p>
-        <h1 class="display-title mt-4 text-4xl font-black leading-[1.05] text-slate-950 md:text-6xl">
+        <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] text-[var(--ink)] md:text-6xl">
           {title}
         </h1>
-        <p class="mt-5 max-w-3xl text-lg leading-8 text-slate-600">{description}</p>
-        <div class="mt-6 flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500">
+        <p class="mt-5 max-w-3xl text-lg leading-8 text-[var(--ink-secondary)]">{description}</p>
+        <div class="mt-6 flex flex-wrap items-center gap-4 text-sm font-medium text-[var(--ink-tertiary)]">
           <span>{municipality}</span>
           {county && <span>{county}</span>}
           {municipalityNumber && <span>Kommune {municipalityNumber}</span>}
@@ -88,23 +88,23 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
       <div class="mx-auto mt-10 grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr),20rem]">
         <div class="space-y-6">
           {heroImage && (
-            <section class="shell-card overflow-hidden p-2">
+            <section class="shell-card overflow-hidden p-2 reveal">
               <img
                 src={heroImageSrc}
                 alt={heroImage.alt}
-                class="h-[240px] w-full rounded-[1.35rem] object-cover sm:h-[320px]"
+                class="h-[240px] w-full rounded-xl object-cover sm:h-[320px]"
                 loading="eager"
               />
             </section>
           )}
 
-          <section class="shell-card overflow-hidden p-5 sm:p-6 md:p-10">
-            <p class="text-base leading-8 text-slate-700">{municipalityView.lead}</p>
+          <section class="shell-card overflow-hidden p-5 sm:p-6 md:p-10 reveal">
+            <p class="text-base leading-8 text-[var(--ink-secondary)]">{municipalityView.lead}</p>
             {municipalityView.facts.length > 0 && (
               <div class="mt-8 grid gap-4 md:grid-cols-2">
                 {municipalityView.facts.map((fact) => (
-                  <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
-                    <p class="text-sm leading-7 text-slate-700">{fact}</p>
+                  <article class="inner-card p-4">
+                    <p class="text-sm leading-7 text-[var(--ink-secondary)]">{fact}</p>
                   </article>
                 ))}
               </div>
@@ -112,25 +112,23 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
           </section>
 
           {municipalityView.timeline.length > 0 && (
-            <section class="shell-card p-5 sm:p-6">
+            <section class="shell-card p-5 sm:p-6 reveal">
               <p class="eyebrow">{SHELL_COPY.municipalityPage?.timelineEyebrow}</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {municipalityView.timeline.map((entry) => (
-                  <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
-                    <div class="flex items-center justify-between gap-3">
-                      <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-                        {entry.kind === 'sales' ? 'Salg' : entry.kind === 'serving' ? 'Skjenking' : 'Åpning'}
-                      </p>
-                    </div>
-                    <h2 class="mt-3 text-lg font-bold text-slate-950">{entry.label}</h2>
+                  <article class="inner-card p-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink-tertiary)]">
+                      {entry.kind === 'sales' ? 'Salg' : entry.kind === 'serving' ? 'Skjenking' : 'Åpning'}
+                    </p>
+                    <h2 class="mt-3 text-lg font-bold text-[var(--ink)]">{entry.label}</h2>
                     {(entry.days || entry.startTime || entry.endTime) && (
-                      <p class="mt-3 text-sm font-semibold text-teal-700">
+                      <p class="mt-3 text-sm font-medium text-[var(--accent)]">
                         {[entry.days, entry.startTime && entry.endTime ? `${entry.startTime}–${entry.endTime}` : entry.endTime ? `til ${entry.endTime}` : entry.startTime ? `fra ${entry.startTime}` : '']
                           .filter(Boolean)
                           .join(' · ')}
                       </p>
                     )}
-                    <p class="mt-3 text-sm leading-7 text-slate-600">{entry.note}</p>
+                    <p class="mt-3 text-sm leading-7 text-[var(--ink-secondary)]">{entry.note}</p>
                   </article>
                 ))}
               </div>
@@ -138,19 +136,19 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
           )}
 
           {municipalityView.salesNote && (
-            <section class="shell-card border border-amber-200/80 bg-amber-50/60 p-5 sm:p-6">
+            <section class="shell-card border border-amber-200/80 bg-amber-50/60 p-5 sm:p-6 reveal">
               <p class="eyebrow text-amber-700">{SHELL_COPY.municipalityPage?.salesEyebrow}</p>
-              <p class="mt-3 text-sm leading-7 text-slate-700">{municipalityView.salesNote}</p>
+              <p class="mt-3 text-sm leading-7 text-[var(--ink-secondary)]">{municipalityView.salesNote}</p>
             </section>
           )}
 
           {municipalityView.highlights.length > 0 && (
-            <section class="shell-card p-5 sm:p-6">
+            <section class="shell-card p-5 sm:p-6 reveal">
               <p class="eyebrow">{SHELL_COPY.municipalityPage?.highlightsEyebrowTemplate?.replace('{municipality}', municipality)}</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.highlights.map((highlight) => (
-                  <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
-                    <p class="text-sm leading-7 text-slate-700">{highlight}</p>
+                  <article class="inner-card p-4">
+                    <p class="text-sm leading-7 text-[var(--ink-secondary)]">{highlight}</p>
                   </article>
                 ))}
               </div>
@@ -158,14 +156,14 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
           )}
 
           {municipalityView.curatedLinks.length > 0 && (
-            <section class="shell-card p-5 sm:p-6">
+            <section class="shell-card p-5 sm:p-6 reveal">
               <p class="eyebrow">{SHELL_COPY.municipalityPage?.curatedLinksEyebrow}</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.curatedLinks.map((link) => (
-                  <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
-                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{link.displayLabel}</p>
-                    <p class="mt-3 text-sm leading-7 text-slate-600">{link.displayNote}</p>
-                    <p class="mt-4 text-sm font-semibold text-teal-700">
+                  <article class="inner-card p-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink-tertiary)]">{link.displayLabel}</p>
+                    <p class="mt-3 text-sm leading-7 text-[var(--ink-secondary)]">{link.displayNote}</p>
+                    <p class="mt-4 text-sm font-medium text-[var(--accent)]">
                       <a href={link.url}>{SHELL_COPY.municipalityPage?.curatedLinksActionLabel}</a>
                     </p>
                   </article>
@@ -175,12 +173,12 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
           )}
 
           {municipalityView.checklist.length > 0 && (
-            <section class="shell-card p-5 sm:p-6">
+            <section class="shell-card p-5 sm:p-6 reveal">
               <p class="eyebrow">{SHELL_COPY.municipalityPage?.checklistEyebrow}</p>
-              <ul class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+              <ul class="mt-4 space-y-3 text-sm leading-7 text-[var(--ink-secondary)]">
                 {municipalityView.checklist.map((item) => (
                   <li class="flex gap-3">
-                    <span class="mt-2 h-2 w-2 rounded-full bg-teal-600"></span>
+                    <span class="mt-2 h-2 w-2 rounded-full bg-[var(--accent)]"></span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -189,15 +187,15 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
           )}
 
           {municipalityView.usefulSources.length >= 2 && (
-            <section class="shell-card p-5 sm:p-6">
+            <section class="shell-card p-5 sm:p-6 reveal">
               <p class="eyebrow">{SHELL_COPY.municipalityPage?.usefulSourcesEyebrow}</p>
               <div class="mt-4 grid gap-4 md:grid-cols-2">
                 {municipalityView.usefulSources.map((source) => (
-                  <article class="rounded-[1.35rem] border border-slate-200/80 bg-white/90 p-4">
-                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{source.label}</p>
-                    {source.title && <h2 class="mt-2 text-lg font-bold text-slate-950">{source.title}</h2>}
-                    {source.summary && <p class="mt-2 text-sm leading-7 text-slate-600">{source.summary}</p>}
-                    <p class="mt-4 text-sm font-semibold text-teal-700">
+                  <article class="inner-card p-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ink-tertiary)]">{source.label}</p>
+                    {source.title && <h2 class="mt-2 text-lg font-bold text-[var(--ink)]">{source.title}</h2>}
+                    {source.summary && <p class="mt-2 text-sm leading-7 text-[var(--ink-secondary)]">{source.summary}</p>}
+                    <p class="mt-4 text-sm font-medium text-[var(--accent)]">
                       <a href={source.url}>{SHELL_COPY.municipalityPage?.usefulSourcesActionLabel}</a>
                     </p>
                   </article>
@@ -208,47 +206,47 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
         </div>
 
         <aside class="space-y-5">
-          <div class="shell-card p-5">
+          <div class="shell-card p-5 reveal">
             <p class="eyebrow">{SHELL_COPY.articleNextStepEyebrow}</p>
-            <p class="mt-3 text-sm leading-7 text-slate-600">{SHELL_COPY.articleNextStepText}</p>
+            <p class="mt-3 text-sm leading-7 text-[var(--ink-secondary)]">{SHELL_COPY.articleNextStepText}</p>
             <div class="mt-4 flex flex-col gap-3">
               <a href={PRIMARY_CTA.href} class="cta-primary text-sm">{PRIMARY_CTA.label}</a>
               <a href={SECONDARY_CTA.href} class="cta-secondary text-sm">{SECONDARY_CTA.label}</a>
             </div>
           </div>
 
-          <div class="shell-card p-5">
+          <div class="shell-card p-5 reveal">
             <p class="eyebrow">{SHELL_COPY.municipalityPage?.summaryEyebrow}</p>
             <dl class="mt-4 space-y-3 text-sm">
               <div>
-                <dt class="font-bold text-slate-900">{SHELL_COPY.municipalityPage?.summaryMunicipalityLabel}</dt>
-                <dd class="text-slate-600">{municipality}</dd>
+                <dt class="font-bold text-[var(--ink)]">{SHELL_COPY.municipalityPage?.summaryMunicipalityLabel}</dt>
+                <dd class="text-[var(--ink-secondary)]">{municipality}</dd>
               </div>
               {county && (
                 <div>
-                  <dt class="font-bold text-slate-900">{SHELL_COPY.municipalityPage?.summaryCountyLabel}</dt>
-                  <dd class="text-slate-600">{county}</dd>
+                  <dt class="font-bold text-[var(--ink)]">{SHELL_COPY.municipalityPage?.summaryCountyLabel}</dt>
+                  <dd class="text-[var(--ink-secondary)]">{county}</dd>
                 </div>
               )}
               {municipalityView.summaryRows.map((row) => (
                 <div>
-                  <dt class="font-bold text-slate-900">{row.label}</dt>
-                  <dd class="text-slate-600">{row.value}</dd>
+                  <dt class="font-bold text-[var(--ink)]">{row.label}</dt>
+                  <dd class="text-[var(--ink-secondary)]">{row.value}</dd>
                 </div>
               ))}
               {siteLastUpdated?.value && (
                 <div>
-                  <dt class="font-bold text-slate-900">{SHELL_COPY.municipalityPage?.summarySiteUpdatedLabel}</dt>
-                  <dd class="text-slate-600">{siteLastUpdated.value}</dd>
+                  <dt class="font-bold text-[var(--ink)]">{SHELL_COPY.municipalityPage?.summarySiteUpdatedLabel}</dt>
+                  <dd class="text-[var(--ink-secondary)]">{siteLastUpdated.value}</dd>
                 </div>
               )}
             </dl>
           </div>
 
           {relatedGuideLinks.length > 0 && (
-            <div class="shell-card p-5">
+            <div class="shell-card p-5 reveal">
               <p class="eyebrow">{SHELL_COPY.municipalityPage?.relatedGuidesEyebrow}</p>
-              <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+              <div class="mt-4 space-y-3 text-sm leading-7 text-[var(--ink-secondary)]">
                 {relatedGuideLinks.map((link: (typeof relatedGuideLinks)[number]) => (
                   <p><a href={link.url}>{link.label}</a></p>
                 ))}
@@ -256,9 +254,9 @@ const ogImage = heroImageSrc ? new URL(heroImageSrc, SITE_URL).href : undefined;
             </div>
           )}
 
-          <div class="shell-card p-5">
+          <div class="shell-card p-5 reveal">
             <p class="eyebrow">{SHELL_COPY.municipalityPage?.sourcesEyebrow}</p>
-            <div class="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+            <div class="mt-4 space-y-3 text-sm leading-7 text-[var(--ink-secondary)]">
               {sourceRepo && <p><strong>{SHELL_COPY.municipalityPage?.sourceRepoLabel}:</strong> {sourceRepo}</p>}
               {sourceLastChecked && <p><strong>{SHELL_COPY.municipalityPage?.sourceLastCheckedLabel}:</strong> {sourceLastChecked}</p>}
               {municipalitySiteUrl && (
