@@ -55,8 +55,8 @@ jobs:
         id: deploy
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/staging')
         run: |
-          DEPLOY_OUTPUT=$(pnpm exec wrangler pages deploy apps/blog/dist/kurs-ing/guide \
-            --project-name=emdash-astro-sidecar \
+          DEPLOY_OUTPUT=$(pnpm exec wrangler pages deploy apps/blog/dist/visibility-help/guide \
+            --project-name=visibility-help \
             --branch=${{ github.head_ref || github.ref_name }} \
             --commit-message="${{ github.event.head_commit.message || 'Preview deployment' }}" 2>&1)
           echo "$DEPLOY_OUTPUT"
@@ -66,19 +66,23 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          EMDASH_SITE_KEY: visibility-help
+          EMDASH_CONCEPT_KEY: guide
 
       # Production deployment on main branch
       - name: Deploy Production to Cloudflare Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          pnpm exec wrangler pages deploy apps/blog/dist/kurs-ing/guide \
-            --project-name=emdash-astro-sidecar \
+          pnpm exec wrangler pages deploy apps/blog/dist/visibility-help/guide \
+            --project-name=visibility-help \
             --branch=main \
             --commit-message="${{ github.event.head_commit.message || 'Production deployment' }}"
         timeout-minutes: 5
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          EMDASH_SITE_KEY: visibility-help
+          EMDASH_CONCEPT_KEY: guide
 
       - name: Deployment Status
         if: always()
