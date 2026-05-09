@@ -5,22 +5,22 @@ import Footer from '../components/Footer.astro';
 import { PRIMARY_CTA, SECONDARY_CTA, SHELL_COPY } from '../consts';
 
 const title = 'Pricing';
-const description = 'Start free and scale as your AI search visibility grows. Transparent pricing for teams of every size.';
+const description = 'Start generating content for free. Scale as your publishing volume grows. Transparent pricing with no surprises.';
 
 const plans = [
   {
     name: 'Starter',
     price: '$0',
     period: 'forever',
-    description: 'For individuals exploring GEO.',
+    description: 'For solo founders testing the water.',
     features: [
       '1 website',
-      'llms.txt generator',
-      'Basic structured data',
-      'AI crawler audit',
+      '5 AI-generated articles / month',
+      'Basic SEO optimization',
+      'GEO-ready structure',
       'Community support',
     ],
-    cta: 'Get Started Free',
+    cta: 'Start Free',
     href: '/signup/',
     highlighted: false,
   },
@@ -28,13 +28,13 @@ const plans = [
     name: 'Growth',
     price: '$49',
     period: '/mo',
-    description: 'For teams serious about AI visibility.',
+    description: 'For teams publishing weekly.',
     features: [
-      '5 websites',
-      'Advanced schema markup',
-      'Content citability scoring',
-      'Semantic HTML audits',
-      'Weekly AI citation reports',
+      '3 websites',
+      '50 AI-generated articles / month',
+      'Advanced SEO + structured data',
+      'Brand voice training',
+      'Real-time SEO scoring',
       'Priority support',
     ],
     cta: 'Start Free Trial',
@@ -42,29 +42,31 @@ const plans = [
     highlighted: true,
   },
   {
-    name: 'Agency',
-    price: '$199',
+    name: 'Scale',
+    price: '$149',
     period: '/mo',
-    description: 'For agencies managing multiple brands.',
+    description: 'For teams publishing daily across multiple brands.',
     features: [
-      'Unlimited websites',
-      'White-label reports',
-      'API access',
+      '10 websites',
+      '200 AI-generated articles / month',
+      'Bulk generation queue',
       'Custom schema types',
-      'Real-time citation monitoring',
-      'Dedicated account manager',
+      'White-label exports',
+      'API access',
+      'Dedicated support',
     ],
-    cta: 'Contact Sales',
-    href: '/contact/',
+    cta: 'Start Free Trial',
+    href: '/signup/',
     highlighted: false,
   },
 ];
 
 const faqs = [
-  { q: 'What is Generative Engine Optimization?', a: 'GEO is the practice of structuring your digital presence so AI language models like ChatGPT, Perplexity, Gemini, and Claude cite your brand as a relevant, authoritative source.' },
-  { q: 'How long until I see results?', a: 'Most customers see their first AI citations within 2-4 weeks of deploying optimized content. Full share-of-voice improvements typically appear within 90 days.' },
-  { q: 'Can I switch plans later?', a: 'Yes. Upgrade or downgrade at any time. Prorated billing means you only pay for what you use.' },
-  { q: 'Do you offer custom Enterprise plans?', a: 'Yes. Contact us for dedicated infrastructure, SLAs, custom integrations, and volume pricing.' },
+  { q: 'What happens when I hit my article limit?', a: 'You can upgrade instantly from your dashboard. Your unused articles do not roll over to the next month.' },
+  { q: 'How long does it take to generate an article?', a: 'Most articles are ready in 2-3 minutes. Long-form deep dives (3000+ words) may take up to 5 minutes.' },
+  { q: 'Can I edit articles before publishing?', a: 'Yes. Every article goes to your review queue. You can edit, reject, or approve before it goes live.' },
+  { q: 'Do I own the content?', a: 'Absolutely. Every word Emdash generates is yours. We do not train our models on your content or resell it.' },
+  { q: 'Can I switch plans later?', a: 'Yes. Upgrade or downgrade at any time from your dashboard. Prorated billing means you only pay for what you use.' },
 ];
 
 const faqSchema = JSON.stringify({
@@ -80,8 +82,8 @@ const faqSchema = JSON.stringify({
 const pricingSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'Product',
-  name: 'Visibility.help',
-  description: 'AI-powered SEO and GEO optimization platform',
+  name: 'Emdash',
+  description: 'AI content engine for websites',
   url: 'https://visibility.help/pricing/',
   offers: plans.map((plan) => ({
     '@type': 'Offer',
@@ -92,11 +94,6 @@ const pricingSchema = JSON.stringify({
     availability: 'https://schema.org/InStock',
     url: `https://visibility.help${plan.href}`,
   })),
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    ratingCount: '124',
-  },
 });
 
 const breadcrumbItems = [
@@ -112,10 +109,10 @@ const breadcrumbItems = [
       <div class="section-container text-center">
         <p class="eyebrow reveal">Pricing</p>
         <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] sm:text-5xl md:text-6xl reveal reveal-delay-1">
-          Simple, Transparent Pricing
+          Publish More. Pay Less.
         </h1>
         <p class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-[var(--ink-secondary)] reveal reveal-delay-2">
-          Start free. Scale as your AI search visibility grows. No hidden fees, no contracts.
+          Start free and scale as your content engine warms up. Every plan includes full GEO optimization and structured data.
         </p>
       </div>
     </section>

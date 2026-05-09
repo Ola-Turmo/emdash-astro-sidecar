@@ -1,0 +1,117 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Setup Guide';
+const description = 'Connect Emdash to your website in under 10 minutes. Step-by-step guide to start generating AI-powered content.';
+
+const steps = [
+  {
+    num: 1,
+    title: 'Create your account',
+    body: 'Sign up for free at visibility.help/signup. No credit card required. You will get instant access to the dashboard.',
+    code: null,
+  },
+  {
+    num: 2,
+    title: 'Add your site',
+    body: 'In your dashboard, click "Connect Site" and enter your domain. Emdash will scan your existing content to understand your brand voice and topic areas.',
+    code: null,
+  },
+  {
+    num: 3,
+    title: 'Configure your content profile',
+    body: 'Tell us what you want to write about. Add 3-5 topic areas, your target audience, and your preferred tone (professional, casual, technical, etc.).',
+    code: null,
+  },
+  {
+    num: 4,
+    title: 'Install the Emdash sidecar',
+    body: 'Add the Emdash Astro sidecar to your existing site or use our hosted option. The sidecar runs alongside your main site and handles all content generation, SEO, and publishing.',
+    code: `git clone https://github.com/emdash/emdash-astro-sidecar.git
+cd emdash-astro-sidecar
+npm install
+npx emdash init --site your-domain.com`,
+  },
+  {
+    num: 5,
+    title: 'Connect your API key',
+    body: 'Copy your API key from the dashboard and add it to your environment variables. This lets the sidecar push content directly to your site.',
+    code: `# .env
+EMDASH_API_KEY=your-key-from-dashboard
+EMDASH_SITE_ID=your-site-id`,
+  },
+  {
+    num: 6,
+    title: 'Generate your first article',
+    body: 'Click "Generate Article" in the dashboard. Emdash researches your topic, writes a full SEO-optimized article with structured data, and queues it for your review. You approve, it publishes automatically.',
+    code: null,
+  },
+  {
+    num: 7,
+    title: 'Deploy to Cloudflare',
+    body: 'Emdash is built for Cloudflare Pages and Workers. One command deploys your content sidecar to the edge, making it fast everywhere.',
+    code: `npm run build
+npx wrangler pages deploy dist`,
+  },
+];
+---
+
+<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/setup/">
+  <Header />
+  <main>
+    <section class="px-4 pt-20 pb-14 md:pt-28 md:pb-20">
+      <div class="section-container">
+        <div class="mx-auto max-w-2xl text-center reveal">
+          <p class="eyebrow">Get Started</p>
+          <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] sm:text-5xl">
+            Connect Emdash to Your Site
+          </h1>
+          <p class="mt-6 text-base leading-relaxed text-[var(--ink-secondary)]">
+            Seven steps to turn your website into an AI-powered content engine. Most teams are publishing their first article within 30 minutes.
+          </p>
+        </div>
+
+        <div class="mx-auto mt-14 max-w-2xl">
+          {steps.map((step, i) => (
+            <div class={`reveal ${i > 0 ? 'reveal-delay-1' : ''}`}>
+              <div class="flex gap-5">
+                <div class="flex shrink-0 flex-col items-center">
+                  <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-white">
+                    {step.num}
+                  </div>
+                  {i < steps.length - 1 && (
+                    <div class="mt-2 w-px grow bg-[var(--border-strong)]"></div>
+                  )}
+                </div>
+                <div class={`pb-10 ${i === steps.length - 1 ? '' : ''}`}>
+                  <h3 class="text-lg font-semibold">{step.title}</h3>
+                  <p class="mt-2 text-sm leading-relaxed text-[var(--ink-secondary)]">{step.body}</p>
+                  {step.code && (
+                    <div class="mt-4 rounded-xl bg-[var(--ink)] p-4 overflow-x-auto">
+                      <pre class="text-xs leading-relaxed text-[var(--surface)] font-mono"><code>{step.code}</code></pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="mx-auto mt-8 max-w-2xl text-center reveal">
+          <a href="/signup/" class="cta-primary cta-primary--accent inline-flex items-center justify-center">
+            Start Setup Now
+            <span class="cta-arrow">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+            </span>
+          </a>
+          <p class="mt-4 text-sm text-[var(--ink-muted)]">
+            Need help? Contact us at <a href="mailto:hello@visibility.help" class="underline hover:text-[var(--ink)]">hello@visibility.help</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

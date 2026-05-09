@@ -5,7 +5,7 @@ import Footer from '../components/Footer.astro';
 import { PRIMARY_CTA, SECONDARY_CTA, SHELL_COPY } from '../consts';
 
 const title = 'About';
-const description = 'Visibility was built by operators who believe AI search is the new discovery layer. We help brands become the sources that AI engines cite.';
+const description = 'Emdash was built by a team tired of watching great companies lose search traffic because they could not publish fast enough. We fix that.';
 
 const breadcrumbItems = [
   { name: 'About', url: 'https://visibility.help/about/' },
@@ -14,22 +14,22 @@ const breadcrumbItems = [
 const aboutSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'AboutPage',
-  name: 'About Visibility',
+  name: 'About Emdash',
   description,
   url: 'https://visibility.help/about/',
   mainEntity: {
     '@type': 'Organization',
-    name: 'Visibility',
+    name: 'Emdash',
     url: 'https://visibility.help',
     foundingDate: '2024',
-    description: 'AI-powered SEO and GEO optimization platform built on Cloudflare.',
+    description: 'AI content engine that generates, optimizes, and publishes SEO-ready articles to websites.',
   },
 });
 
 const values = [
-  { title: 'Citation, not traffic', desc: 'We optimize for AI citations. The metric that matters is whether language models name you as a source.' },
-  { title: 'Infrastructure over hacks', desc: 'Structured data, semantic HTML, and proper crawler access. The stuff that compounds. No trickery.' },
-  { title: 'Open by default', desc: 'Every tool we build works with publicly available standards. No lock-in, no secret sauce, no gatekeeping.' },
+  { title: 'Speed beats perfection', desc: 'The teams winning in search publish 10x more content than their competitors. We help you do that without hiring 10 writers.' },
+  { title: 'AI writes. You steer.', desc: 'Emdash generates the draft. You review, edit, and approve. You stay in control of what goes live on your site.' },
+  { title: 'Built for publishers', desc: 'Every feature is designed for teams that need to ship content regularly. No fluff. No SEO theater. Just publish.' },
 ];
 ---
 
@@ -41,13 +41,16 @@ const values = [
         <div class="max-w-2xl reveal">
           <p class="eyebrow">About</p>
           <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] sm:text-5xl md:text-6xl">
-            Built for the AI Search Era
+            We Built Emdash Because We Were Tired of Losing to Content Farms
           </h1>
           <p class="mt-6 text-lg leading-relaxed text-[var(--ink-secondary)]">
-            Search is changing. Over 40% of information-seeking sessions now start in AI engines. Traditional SEO doesn't cover this. Visibility does.
+            Every great company we worked with had the same problem: they knew content was the key to search visibility, but they could not publish fast enough. Writers were expensive. Freelancers were inconsistent. And AI search engines were eating traditional SEO alive.
           </p>
           <p class="mt-4 text-lg leading-relaxed text-[var(--ink-secondary)]">
-            We help brands become the sources that ChatGPT, Perplexity, Gemini, and Claude cite when answering questions. Not through tricks. Through proper infrastructure.
+            So we built Emdash: an AI content engine that generates, optimizes, and publishes articles to your website. You enter a topic. Emdash researches, writes, and structures the content for both Google and AI search engines. You review and click approve. Done.
+          </p>
+          <p class="mt-4 text-lg leading-relaxed text-[var(--ink-secondary)]">
+            No more staring at blank pages. No more waiting two weeks for a blog post. Just a content pipeline that runs while you sleep.
           </p>
         </div>
       </div>
@@ -69,9 +72,9 @@ const values = [
     <section class="px-4 pb-24 md:pb-32">
       <div class="section-container">
         <div class="shell-card p-8 md:p-16 text-center reveal">
-          <h2 class="display-title text-3xl font-bold md:text-4xl">Want to learn more?</h2>
+          <h2 class="display-title text-3xl font-bold md:text-4xl">Ready to outpublish your competition?</h2>
           <p class="mx-auto mt-4 max-w-xl text-[var(--ink-secondary)]">
-            We're always happy to talk about AI search visibility and how to build for it.
+            Start free. No credit card required. Your first article can be live in 30 minutes.
           </p>
           <div class="mt-8 flex flex-wrap justify-center gap-4">
             <a href={PRIMARY_CTA.href} class="cta-primary cta-primary--accent">
@@ -80,7 +83,7 @@ const values = [
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
               </span>
             </a>
-            <a href="/contact/" class="cta-secondary">Contact us</a>
+            <a href="/setup/" class="cta-secondary">See how it works</a>
           </div>
         </div>
       </div>

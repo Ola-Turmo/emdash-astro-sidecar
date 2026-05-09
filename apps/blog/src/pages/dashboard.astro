@@ -1,0 +1,206 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Dashboard';
+const description = 'Your Emdash content engine dashboard. Track published articles, SEO scores, and manage your content pipeline.';
+---
+
+<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/dashboard/">
+  <Header />
+  <main>
+    <section class="px-4 pt-20 pb-8 md:pt-28">
+      <div class="section-container">
+        <div class="reveal">
+          <p class="eyebrow">Your Content Engine</p>
+          <h1 class="display-title mt-3 text-3xl font-bold leading-[1.1] sm:text-4xl">
+            Dashboard
+          </h1>
+          <p id="user-greeting" class="mt-3 text-base text-[var(--ink-secondary)]">
+            Loading your workspace...
+          </p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" id="stats-grid">
+          <div class="shell-card p-5 reveal reveal-delay-1">
+            <p class="text-sm font-medium text-[var(--ink-muted)]">Articles Published</p>
+            <p class="mt-1 text-3xl font-bold tabular-nums" id="stat-published">--</p>
+            <div class="mt-2 h-1 w-12 rounded bg-[var(--accent)]"></div>
+          </div>
+          <div class="shell-card p-5 reveal reveal-delay-2">
+            <p class="text-sm font-medium text-[var(--ink-muted)]">Generated This Month</p>
+            <p class="mt-1 text-3xl font-bold tabular-nums" id="stat-generated">--</p>
+            <div class="mt-2 h-1 w-12 rounded bg-[var(--accent)]"></div>
+          </div>
+          <div class="shell-card p-5 reveal reveal-delay-3">
+            <p class="text-sm font-medium text-[var(--ink-muted)]">Sites Connected</p>
+            <p class="mt-1 text-3xl font-bold tabular-nums" id="stat-sites">--</p>
+            <div class="mt-2 h-1 w-12 rounded bg-[var(--accent)]"></div>
+          </div>
+          <div class="shell-card p-5 reveal reveal-delay-4">
+            <p class="text-sm font-medium text-[var(--ink-muted)]">Avg. SEO Score</p>
+            <p class="mt-1 text-3xl font-bold tabular-nums" id="stat-seo">--</p>
+            <div class="mt-2 h-1 w-12 rounded bg-[var(--accent)]"></div>
+          </div>
+        </div>
+
+        <!-- Setup Progress & Quick Actions -->
+        <div class="mt-8 grid gap-6 lg:grid-cols-3">
+          <!-- Setup Checklist -->
+          <div class="shell-card p-6 lg:col-span-2 reveal">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold">Get Started Checklist</h2>
+              <span class="rounded-full bg-[var(--accent)] px-2.5 py-0.5 text-xs font-medium text-white" id="setup-progress">0/4</span>
+            </div>
+            <p class="mt-1 text-sm text-[var(--ink-secondary)]">Complete these steps to start generating content.</p>
+            
+            <div class="mt-5 space-y-3" id="setup-list">
+              <div class="setup-item flex items-start gap-3 rounded-xl border border-[var(--border-strong)] bg-white p-4" data-step="profile">
+                <div class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-[var(--border-strong)]">
+                  <svg class="check-icon hidden h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium">Complete your profile</p>
+                  <p class="text-xs text-[var(--ink-muted)]">Add your company name and website</p>
+                </div>
+                <a href="/setup/" class="shrink-0 text-xs font-medium text-[var(--accent)] hover:underline">Do this</a>
+              </div>
+              
+              <div class="setup-item flex items-start gap-3 rounded-xl border border-[var(--border-strong)] bg-white p-4" data-step="connect">
+                <div class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-[var(--border-strong)]">
+                  <svg class="check-icon hidden h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium">Connect your first site</p>
+                  <p class="text-xs text-[var(--ink-muted)]">Link your domain to start publishing</p>
+                </div>
+                <a href="/setup/" class="shrink-0 text-xs font-medium text-[var(--accent)] hover:underline">Do this</a>
+              </div>
+              
+              <div class="setup-item flex items-start gap-3 rounded-xl border border-[var(--border-strong)] bg-white p-4" data-step="topics">
+                <div class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-[var(--border-strong)]">
+                  <svg class="check-icon hidden h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium">Set your content topics</p>
+                  <p class="text-xs text-[var(--ink-muted)]">Tell us what you want to write about</p>
+                </div>
+                <a href="/setup/" class="shrink-0 text-xs font-medium text-[var(--accent)] hover:underline">Do this</a>
+              </div>
+              
+              <div class="setup-item flex items-start gap-3 rounded-xl border border-[var(--border-strong)] bg-white p-4" data-step="generate">
+                <div class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-[var(--border-strong)]">
+                  <svg class="check-icon hidden h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-medium">Generate your first article</p>
+                  <p class="text-xs text-[var(--ink-muted)]">AI writes it. You review and publish.</p>
+                </div>
+                <span class="shrink-0 text-xs text-[var(--ink-muted)]">Coming soon</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="shell-card p-6 reveal reveal-delay-1">
+            <h2 class="text-lg font-semibold">Quick Actions</h2>
+            <div class="mt-4 space-y-3">
+              <a href="/setup/" class="flex items-center gap-3 rounded-xl border border-[var(--border-strong)] bg-white p-4 transition-colors hover:border-[var(--accent)]">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-white">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium">Setup Guide</p>
+                  <p class="text-xs text-[var(--ink-muted)]">Connect Emdash to your site</p>
+                </div>
+              </a>
+              <a href="/blog/" class="flex items-center gap-3 rounded-xl border border-[var(--border-strong)] bg-white p-4 transition-colors hover:border-[var(--accent)]">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-raised)] text-[var(--ink)]">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium">View Content</p>
+                  <p class="text-xs text-[var(--ink-muted)]">Browse published articles</p>
+                </div>
+              </a>
+              <button onclick="document.getElementById('coming-soon').classList.remove('hidden')" class="flex w-full items-center gap-3 rounded-xl border border-[var(--border-strong)] bg-white p-4 transition-colors hover:border-[var(--accent)] text-left">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-raised)] text-[var(--ink)]">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium">New Article</p>
+                  <p class="text-xs text-[var(--ink-muted)]">Generate fresh content</p>
+                </div>
+              </button>
+            </div>
+            <div id="coming-soon" class="hidden mt-3 rounded-lg bg-[var(--accent-bg)] px-3 py-2 text-xs text-[var(--accent)]">
+              Article generation is launching soon. Join the waitlist to get early access.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+async function loadDashboard() {
+  try {
+    const res = await fetch('/api/dashboard');
+    if (res.status === 401) {
+      window.location.href = '/signup/';
+      return;
+    }
+    const data = await res.json();
+    
+    // Update greeting
+    const greeting = document.getElementById('user-greeting');
+    if (greeting && data.user?.name) {
+      greeting.textContent = `Welcome back, ${data.user.name}. Here is your content pipeline.`;
+    } else if (greeting) {
+      greeting.textContent = 'Welcome to your content engine. Get started below.';
+    }
+    
+    // Update stats
+    const stats = data.stats || {};
+    document.getElementById('stat-published').textContent = stats.articlesPublished || 0;
+    document.getElementById('stat-generated').textContent = stats.articlesGenerated || 0;
+    document.getElementById('stat-sites').textContent = stats.sitesConnected || 0;
+    document.getElementById('stat-seo').textContent = stats.seoScore ? `${stats.seoScore}/100` : '--';
+    
+    // Update setup progress
+    const projects = data.projects || [];
+    let completed = 0;
+    if (data.user?.name && data.user?.company) completed++;
+    if (projects.length > 0) completed++;
+    if (projects.some(p => p.content_topics)) completed++;
+    // Article generation always pending for now
+    
+    document.getElementById('setup-progress').textContent = `${completed}/4`;
+    
+    // Mark completed steps
+    const steps = ['profile', 'connect', 'topics', 'generate'];
+    steps.forEach((step, i) => {
+      if (i < completed) {
+        const el = document.querySelector(`[data-step="${step}"]`);
+        if (el) {
+          el.classList.add('border-[var(--accent)]', 'bg-[var(--accent-bg)]');
+          el.querySelector('.rounded-full').classList.add('bg-[var(--accent)]', 'border-[var(--accent)]');
+          el.querySelector('.check-icon').classList.remove('hidden');
+          const link = el.querySelector('a');
+          if (link) link.textContent = 'Done';
+        }
+      }
+    });
+    
+  } catch (err) {
+    console.error('Dashboard load failed:', err);
+    document.getElementById('user-greeting').textContent = 'Welcome to Emdash. Sign up to start generating content.';
+  }
+}
+
+loadDashboard();
+</script>

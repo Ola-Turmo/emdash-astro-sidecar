@@ -2,61 +2,155 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SUPPORT_EMAIL } from '../consts';
 
 const title = 'Get Started';
-const description = 'Start your free trial of Visibility. No credit card required. Get cited by AI search engines within weeks.';
-
-const breadcrumbItems = [
-  { name: 'Get Started', url: 'https://visibility.help/signup/' },
-];
+const description = 'Start your free Emdash account. No credit card required. Start generating SEO-ready content in minutes.';
 ---
 
-<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/signup/" breadcrumbItems={breadcrumbItems}>
+<BaseLayout title={title} description={description} canonicalUrl="https://visibility.help/signup/">
   <Header />
   <main>
     <section class="px-4 pt-20 pb-14 md:pt-28 md:pb-20">
       <div class="section-container">
         <div class="mx-auto max-w-md text-center reveal">
           <p class="eyebrow">Start Free</p>
-          <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] sm:text-5xl">
-            Join the Waitlist
+          <h1 class="display-title mt-4 text-4xl font-bold leading-[1.05] sm:text-5xl" id="form-title">
+            Create Your Account
           </h1>
-          <p class="mt-6 text-base leading-relaxed text-[var(--ink-secondary)]">
-            Visibility is currently in early access. Enter your email to join the waitlist and be among the first to optimize for AI search citations.
+          <p class="mt-6 text-base leading-relaxed text-[var(--ink-secondary)]" id="form-subtitle">
+            Join teams already using Emdash to publish AI-powered content. No credit card required.
           </p>
         </div>
 
         <div class="mx-auto mt-10 max-w-md">
           <div class="shell-card p-6 md:p-8 reveal reveal-delay-1">
-            <form action={`mailto:${SUPPORT_EMAIL}`} method="post" enctype="text/plain" class="space-y-5">
+            <form id="auth-form" class="space-y-5">
               <div>
                 <label for="email" class="block text-sm font-medium mb-1.5">Work Email</label>
                 <input type="email" id="email" name="email" required placeholder="you@company.com" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
               </div>
-              <div>
-                <label for="company" class="block text-sm font-medium mb-1.5">Company</label>
-                <input type="text" id="company" name="company" placeholder="Acme Inc" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
+              <div id="name-field">
+                <label for="name" class="block text-sm font-medium mb-1.5">Your Name</label>
+                <input type="text" id="name" name="name" placeholder="Jane Smith" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
               </div>
               <div>
-                <label for="website" class="block text-sm font-medium mb-1.5">Website</label>
-                <input type="url" id="website" name="website" placeholder="https://example.com" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
+                <label for="password" class="block text-sm font-medium mb-1.5">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Min 8 characters" minlength="8" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
               </div>
-              <button type="submit" class="cta-primary cta-primary--accent w-full justify-center">
-                Join Waitlist
+              <div id="extra-fields" class="space-y-5">
+                <div>
+                  <label for="company" class="block text-sm font-medium mb-1.5">Company (optional)</label>
+                  <input type="text" id="company" name="company" placeholder="Acme Inc" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
+                </div>
+                <div>
+                  <label for="website" class="block text-sm font-medium mb-1.5">Website (optional)</label>
+                  <input type="url" id="website" name="website" placeholder="https://example.com" class="block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--ink-muted)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors" />
+                </div>
+              </div>
+              <button type="submit" id="submit-btn" class="cta-primary cta-primary--accent w-full justify-center">
+                Create Account
                 <span class="cta-arrow">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
                 </span>
               </button>
             </form>
+            
+            <div id="form-error" class="mt-4 hidden rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700"></div>
+            <div id="form-success" class="mt-4 hidden rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700"></div>
+            
+            <p class="mt-6 text-center text-sm text-[var(--ink-muted)]">
+              <span id="toggle-text">Already have an account?</span>
+              <button type="button" id="toggle-mode" class="font-medium text-[var(--accent)] hover:underline ml-1">Log in</button>
+            </p>
           </div>
-
-          <p class="mt-6 text-center text-sm text-[var(--ink-muted)]">
-            No credit card required. We'll reach out when your spot opens.
-          </p>
         </div>
       </div>
     </section>
   </main>
   <Footer />
 </BaseLayout>
+
+<script>
+let mode = 'signup';
+
+const form = document.getElementById('auth-form');
+const toggleBtn = document.getElementById('toggle-mode');
+const toggleText = document.getElementById('toggle-text');
+const formTitle = document.getElementById('form-title');
+const formSubtitle = document.getElementById('form-subtitle');
+const submitBtn = document.getElementById('submit-btn');
+const nameField = document.getElementById('name-field');
+const extraFields = document.getElementById('extra-fields');
+const errorDiv = document.getElementById('form-error');
+const successDiv = document.getElementById('form-success');
+
+function setMode(newMode) {
+  mode = newMode;
+  if (mode === 'login') {
+    formTitle.textContent = 'Welcome Back';
+    formSubtitle.textContent = 'Log in to your Emdash dashboard.';
+    submitBtn.innerHTML = `Log In <span class="cta-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>`;
+    nameField.classList.add('hidden');
+    extraFields.classList.add('hidden');
+    toggleText.textContent = "Don't have an account?";
+    toggleBtn.textContent = 'Sign up';
+  } else {
+    formTitle.textContent = 'Create Your Account';
+    formSubtitle.textContent = 'Join teams already using Emdash to publish AI-powered content. No credit card required.';
+    submitBtn.innerHTML = `Create Account <span class="cta-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>`;
+    nameField.classList.remove('hidden');
+    extraFields.classList.remove('hidden');
+    toggleText.textContent = 'Already have an account?';
+    toggleBtn.textContent = 'Log in';
+  }
+  errorDiv.classList.add('hidden');
+  successDiv.classList.add('hidden');
+}
+
+toggleBtn.addEventListener('click', () => setMode(mode === 'signup' ? 'login' : 'signup'));
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorDiv.classList.add('hidden');
+  successDiv.classList.add('hidden');
+  submitBtn.disabled = true;
+  submitBtn.classList.add('opacity-70');
+  
+  const formData = {
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value,
+  };
+  
+  if (mode === 'signup') {
+    formData.name = document.getElementById('name').value;
+    formData.company = document.getElementById('company').value;
+    formData.website = document.getElementById('website').value;
+  }
+  
+  try {
+    const endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok) {
+      errorDiv.textContent = data.error || 'Something went wrong. Please try again.';
+      errorDiv.classList.remove('hidden');
+    } else {
+      successDiv.textContent = mode === 'signup' ? 'Account created! Redirecting to your dashboard...' : 'Welcome back! Redirecting...';
+      successDiv.classList.remove('hidden');
+      setTimeout(() => window.location.href = '/dashboard/', 800);
+    }
+  } catch (err) {
+    errorDiv.textContent = 'Network error. Please try again.';
+    errorDiv.classList.remove('hidden');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('opacity-70');
+  }
+});
+</script>
