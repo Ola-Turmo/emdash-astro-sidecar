@@ -189,7 +189,11 @@ jobs:
 
       - name: Deploy EmDash Sidecar to Cloudflare Pages
         run: |
+          echo 'name = "emdash-astro-sidecar"' > /tmp/wrangler-pages.toml && \
+          echo 'pages_build_output_dir = "dist"' >> /tmp/wrangler-pages.toml && \
+          echo 'compatibility_date = "2024-12-01"' >> /tmp/wrangler-pages.toml && \
           npx --yes wrangler@latest pages deploy apps/blog/dist/emdash-no/sidecar \
+            --config /tmp/wrangler-pages.toml \
             --project-name=emdash-astro-sidecar \
             --branch=main \
             --commit-message="EmDash Sidecar landing page deploy"
