@@ -158,7 +158,6 @@ jobs:
     name: Deploy EmDash Sidecar
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: deploy-blog
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
