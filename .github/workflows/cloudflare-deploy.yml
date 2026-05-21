@@ -154,6 +154,51 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CONTENT_API_TOKEN: ${{ secrets.CONTENT_API_TOKEN }}
 
+  deploy-emdash:
+    name: Deploy EmDash Sidecar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: deploy-blog
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "9.0.0"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        timeout-minutes: 10
+
+      - name: Build EmDash Sidecar (emdash.no)
+        run: EMDASH_SITE_KEY=emdash-no EMDASH_CONCEPT_KEY=sidecar pnpm --filter @emdash/blog build
+        timeout-minutes: 10
+        env:
+          NODE_ENV: development
+
+      - name: Deploy EmDash Sidecar to Cloudflare Pages
+        run: |
+          pnpm exec wrangler pages deploy apps/blog/dist/emdash-no/sidecar \
+            --project-name=emdash-astro-sidecar \
+            --branch=main \
+            --commit-message="EmDash Sidecar landing page deploy"
+        timeout-minutes: 5
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
   notify-failure:
     name: Notify Failure
     runs-on: ubuntu-latest

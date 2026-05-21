@@ -9,7 +9,6 @@ const bannedShellPhrases = [
   'structured dataset',
   'structured data source',
   'content wave',
-  'sidecar',
 ];
 
 const mojibakePatterns = [
@@ -351,6 +350,79 @@ const siteCopyRegistry = {
             articleMetaCategoryLabel: 'Category',
             articleMetaAuthorLabel: 'Author',
             articleMetaPurposeLabel: 'Purpose',
+          },
+        },
+      },
+    },
+  },
+  'emdash-no': {
+    courseLinks: [],
+    concepts: {
+      sidecar: {
+        description:
+          'EmDash Sidecar gjor bedriftens nettside synlig for AI-sokemotorer — uten a bygge om noe. Strukturert innhold, automatisk GEO-optimalisering, og malbar synlighet pa ChatGPT, Perplexity, Google AI Overviews og Gemini.',
+        nav: [
+          { path: '/', label: 'Produkt' },
+          { path: '/features/', label: 'Funksjoner' },
+          { path: '/blog/', label: 'Blogg' },
+          { path: '/contact/', label: 'Kontakt' },
+        ],
+        callsToAction: {
+          primary: {
+            href: '/signup/',
+            label: 'Kom i gang gratis',
+          },
+          secondary: {
+            href: '/features/',
+            label: 'Se hvordan det fungerer',
+          },
+        },
+        shell: {
+          subLabel: 'EmDash Sidecar',
+          homeEyebrow: 'Synlig der kundene soker — med AI',
+          homeTitle: 'Nettsiden din synlig i AI-sok pa minutter.',
+          homeDescription:
+            'EmDash Sidecar monteres pa eksisterende nettsider og strukturerer innholdet for AI-sokemotorer. Du far bedre synlighet i ChatGPT, Perplexity, Google AI Overviews og Gemini — uten a bygge om koden.',
+          homeStats: [
+            { value: '5 min', label: 'Oppsett' },
+            { value: '100%', label: 'Uten ombygging' },
+            { value: '4+', label: 'AI-plattformer' },
+          ],
+          homeAsideEyebrow: 'Hvorfor EmDash',
+          homeAsideReasonTitle: 'AI-sok endrer alt. Nettsiden din er fortsatt HTML.',
+          homeAsideReasonText:
+            'Google AI Overviews, ChatGPT og Perplexity henter svar direkte fra strukturert innhold. Hvis innholdet ditt ikke er strukturert, blir du ikke synlig. EmDash Sidecar loser dette pa fa minutter.',
+          listingEyebrow: 'Artikler',
+          listingTitle: 'Laer hvordan AI-sok endrer konkurransen',
+          listingDescription:
+            'Guider om GEO-optimalisering, hvordan AI-sokemotorer fungerer, og hvordan du gjor nettsiden klar for det neste soket.',
+          listingEmptyText: 'Ingen artikler er publisert enna.',
+          articleContextLabel: 'Artikkel',
+          articleLanguageBadge: 'Pa norsk',
+          articlePrimaryActionText: 'Les artikkelen',
+          articleNextStepEyebrow: 'Neste steg',
+          articleNextStepText:
+            'Prov EmDash Sidecar pa nettsiden din og se forskjellen i AI-synlighet.',
+          articleAboutPurpose: 'Hjelper deg a forsta og utnytte AI-sok for din virksomhet.',
+          footerEyebrow: 'EmDash Sidecar',
+          footerTitle: 'Synlig pa AI-sok. Uten a bygge om.',
+          footerDescription:
+            'EmDash Sidecar er det enkleste veien til synlighet i AI-sokemotorer. Strukturer innholdet ditt, forbedr GEO-rankingen, og na kunder som bruker ChatGPT, Perplexity og Google AI Overviews.',
+          footerOffersLabel: 'Produkt',
+          footerTechnicalLabel: 'Utviklere',
+          footerContactLabel: 'Kontakt',
+          footerCopyright: 'EmDash — AI-synlighet for norske bedrifter.',
+          footerNote: 'Bygget for bedrifter som vil bli funnet.',
+          contentMeta: {
+            authorEyebrow: 'Forfatter',
+            articleListingTitle: 'Artikler',
+            authorEmptyText: 'Ingen artikler fra denne forfatteren enna.',
+            categoryEyebrow: 'Kategori',
+            categoryEmptyText: 'Ingen artikler i denne kategorien enna.',
+            articleMetaEyebrow: 'Om artikkelen',
+            articleMetaCategoryLabel: 'Kategori',
+            articleMetaAuthorLabel: 'Forfatter',
+            articleMetaPurposeLabel: 'Formal',
           },
         },
       },

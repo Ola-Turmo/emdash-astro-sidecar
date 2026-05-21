@@ -281,6 +281,105 @@ const siteProfiles = {
       },
     },
   },
+  'emdash-no': {
+    key: 'emdash-no',
+    brand: {
+      mainSiteName: 'EmDash',
+      wordmark: 'emdash.no',
+      mainSiteUrl: 'https://emdash.no',
+      locale: 'nb-NO',
+      supportEmail: 'ola@emdash.no',
+      defaultOgImagePath: '/images/og-default.png',
+      logoMark: 'e',
+    },
+    cloudflare: {
+      pagesProject: 'emdash-astro-sidecar',
+      pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
+    },
+    telemetry: {
+      rumEndpoint: 'https://emdash-metrics-worker.ola-turmo.workers.dev/rum',
+      metricsWorkerUrl: 'https://emdash-metrics-worker.ola-turmo.workers.dev',
+    },
+    rootRouting: {
+      rootOrigin: 'https://emdash.no',
+      requiredMarkers: ['<title>EmDash</title>'],
+      forbiddenMarkers: [],
+      exactBypassPaths: ['/robots.txt', '/sitemap.xml', '/sitemap-index.xml'],
+    },
+    courseLinkSetKey: 'emdash-no',
+    concepts: {
+      sidecar: {
+        key: 'sidecar',
+        label: 'EmDash Sidecar',
+        pageStructure: 'blog',
+        basePath: '/',
+        siteUrl: 'https://emdash.no',
+        siteName: 'EmDash Sidecar',
+        shellKey: 'emdash-no/sidecar',
+        routes: {
+          articlePrefix: '/blog',
+          categoryPrefix: '/category',
+          authorPrefix: '/author',
+        },
+        cloudflare: {
+          pagesProject: 'emdash-astro-sidecar',
+          pagesPreviewAlias: 'master.emdash-astro-sidecar.pages.dev',
+          routeWorkerName: 'emdash-no-sidecar-proxy',
+          routeWorkerDirectory: 'emdash-no-proxy',
+        },
+        audit: {
+          sitemapUrls: ['https://emdash.no/sitemap.xml'],
+          extraUrls: ['https://emdash.no/'],
+          lighthouse: {
+            runs: 1,
+            warmupRuns: 0,
+          },
+        },
+        quality: {
+          dashboardLabel: 'EmDash Sidecar',
+          flagshipUrls: ['https://emdash.no/'],
+          fieldTargets: {
+            release: {
+              LCP: 2500,
+              INP: 200,
+              CLS: 0.1,
+              TTFB: 800,
+              FCP: 1800,
+            },
+            flagship: {
+              LCP: 1500,
+              INP: 200,
+              CLS: 0.1,
+              TTFB: 800,
+              FCP: 1500,
+            },
+          },
+          lighthouseTargets: {
+            release: {
+              performance: 90,
+              accessibility: 90,
+              seo: 90,
+              bestPractices: 90,
+              tbt: 200,
+            },
+            flagship: {
+              performance: 95,
+              accessibility: 90,
+              seo: 90,
+              bestPractices: 90,
+              tbt: 200,
+            },
+          },
+          publishPolicy: [
+            'field-performance',
+            'lighthouse',
+            'structured-data',
+            'crawlability',
+          ],
+        },
+      },
+    },
+  },
   'visibility-help': {
     key: 'visibility-help',
     brand: {
