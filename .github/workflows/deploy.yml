@@ -34,6 +34,10 @@ jobs:
             concept_key: guide
             project_name: visibility-help
             directory: apps/blog/dist/visibility-help/guide
+          - site_key: emdash-no
+            concept_key: sidecar
+            project_name: emdash-no
+            directory: apps/blog/dist/emdash-no/sidecar
     environment:
       name: ${{ github.event.inputs.environment || 'preview' }}
       url: ${{ steps.deploy.outputs.url }}
